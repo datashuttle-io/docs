@@ -5,7 +5,7 @@ This guide walks you through installing DataShuttle, starting the dev infrastruc
 ## Prerequisites
 
 - **Rust 1.82+** — install via [rustup](https://rustup.rs/)
-- **Docker + Docker Compose** — for MinIO, Nessie, PostgreSQL
+- **Docker + Docker Compose** — for MinIO, Polaris, PostgreSQL
 - **Node.js 20+** — only if you want to modify the Web UI
 
 ## Step 1: Clone and build
@@ -26,7 +26,7 @@ docker compose -f docker/docker-compose.yaml up -d
 
 This starts:
 - **MinIO** on `:9000` — S3-compatible object storage (warehouse)
-- **Nessie** on `:19120` — Iceberg REST catalog
+- **Apache Polaris** on `:8181` — Iceberg REST catalog (with credential vending)
 - **PostgreSQL** on `:5432` — example source database
 - **MySQL** on `:3306` — example source database
 
