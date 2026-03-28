@@ -2,30 +2,28 @@
 
 The latest release is [**v0.1.0-alpha**](https://github.com/evgenyestepanov-star/datashuttle/releases/tag/v0.1.0-alpha).
 
-Pre-built binaries for 5 platforms are attached to every [GitHub Release](https://github.com/evgenyestepanov-star/datashuttle/releases), each with a SHA256 checksum file.
+Pre-built binaries are attached to every [GitHub Release](https://github.com/evgenyestepanov-star/datashuttle/releases), each with a SHA256 checksum file.
 
 ## Available platforms
 
 | Platform | Archive |
 |----------|---------|
-| Linux x86_64 | `datashuttle-x86_64-unknown-linux-gnu.tar.gz` |
-| Linux ARM64 | `datashuttle-aarch64-unknown-linux-gnu.tar.gz` |
-| macOS x86_64 | `datashuttle-x86_64-apple-darwin.tar.gz` |
-| macOS ARM64 (Apple Silicon) | `datashuttle-aarch64-apple-darwin.tar.gz` |
-| Windows x86_64 | `datashuttle-x86_64-pc-windows-msvc.zip` |
+| Linux x86_64 | `datashuttle-linux-amd64.tar.gz` |
+| Linux ARM64 | `datashuttle-linux-arm64.tar.gz` |
+| macOS ARM64 (Apple Silicon) | `datashuttle-macos-arm64.tar.gz` |
 
 ## Download and install
 
 ```bash
 # Download binary + checksum
-curl -LO https://github.com/evgenyestepanov-star/datashuttle/releases/latest/download/datashuttle-x86_64-unknown-linux-gnu.tar.gz
-curl -LO https://github.com/evgenyestepanov-star/datashuttle/releases/latest/download/datashuttle-x86_64-unknown-linux-gnu.tar.gz.sha256
+curl -LO https://github.com/evgenyestepanov-star/datashuttle/releases/latest/download/datashuttle-linux-amd64.tar.gz
+curl -LO https://github.com/evgenyestepanov-star/datashuttle/releases/latest/download/datashuttle-linux-amd64.tar.gz.sha256
 
 # Verify integrity
-sha256sum -c datashuttle-x86_64-unknown-linux-gnu.tar.gz.sha256
+sha256sum -c datashuttle-linux-amd64.tar.gz.sha256
 
 # Extract and install
-tar xzf datashuttle-x86_64-unknown-linux-gnu.tar.gz
+tar xzf datashuttle-linux-amd64.tar.gz
 sudo mv datashuttle /usr/local/bin/
 ```
 
