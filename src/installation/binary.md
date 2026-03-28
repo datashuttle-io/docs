@@ -1,8 +1,27 @@
 # Binary Download
 
-The latest release is [**v0.1.0-alpha**](https://github.com/evgenyestepanov-star/datashuttle/releases/tag/v0.1.0-alpha).
-
 Pre-built binaries are attached to every [GitHub Release](https://github.com/evgenyestepanov-star/datashuttle/releases), each with a SHA256 checksum file.
+
+## Quick install (recommended)
+
+The install script detects your OS and architecture, downloads the binary, verifies the checksum, and installs to `/usr/local/bin`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/evgenyestepanov-star/datashuttle/main/install.sh | bash
+```
+
+### Options
+
+```bash
+# Install a specific version
+curl -fsSL ... | bash -s -- --version v0.1.0
+
+# Install to a custom directory
+curl -fsSL ... | bash -s -- --install-dir ~/.local/bin
+
+# Or set via environment variables
+DATASHUTTLE_VERSION=v0.1.0 DATASHUTTLE_INSTALL_DIR=~/.local/bin bash install.sh
+```
 
 ## Available platforms
 
@@ -12,7 +31,7 @@ Pre-built binaries are attached to every [GitHub Release](https://github.com/evg
 | Linux ARM64 | `datashuttle-linux-arm64.tar.gz` |
 | macOS ARM64 (Apple Silicon) | `datashuttle-macos-arm64.tar.gz` |
 
-## Download and install
+## Manual download and install
 
 ```bash
 # Download binary + checksum
