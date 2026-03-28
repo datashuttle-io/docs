@@ -2,23 +2,13 @@
 
 This guide walks you through installing DataShuttle, starting the dev infrastructure, creating your first CDC pipeline, and verifying the data in Iceberg.
 
+For installation options, see [Installation](./installation.md).
+
 ## Prerequisites
 
-- **Rust 1.82+** — install via [rustup](https://rustup.rs/)
-- **Docker + Docker Compose** — for MinIO, Polaris, PostgreSQL
-- **Node.js 20+** — only if you want to modify the Web UI
+For the quickstart below you need **Docker + Docker Compose** to run the supporting infrastructure (MinIO, Polaris, Postgres, MySQL). DataShuttle itself can be installed by any method from the Installation page.
 
-## Step 1: Clone and build
-
-```bash
-git clone https://github.com/evgenyestepanov-star/datashuttle.git
-cd datashuttle
-cargo build --release
-```
-
-The binary is at `./target/release/datashuttle`.
-
-## Step 2: Start dev infrastructure
+## Step 1: Start dev infrastructure
 
 ```bash
 docker compose -f docker/docker-compose.yaml up -d
@@ -36,19 +26,25 @@ Verify everything is running:
 docker compose -f docker/docker-compose.yaml ps
 ```
 
-## Step 3: Start DataShuttle
+## Step 2: Start DataShuttle
 
 ```bash
-./target/release/datashuttle start --config datashuttle.yaml
+datashuttle start --config datashuttle.yaml
+```
+
+Or with Docker:
+
+```bash
+docker run -p 8080:8080 --network host ghcr.io/evgenyestepanov-star/datashuttle:latest
 ```
 
 The server starts on:
-- `:8080` — REST API + Web UI
+- `:8080` — REST API + embedded Web UI
 - `:9090` — Prometheus metrics
 
 Open http://localhost:8080 in your browser to see the Web UI.
 
-## Step 4: Create a source connection
+## Step 3: Create a source connection
 
 Using the CLI:
 
@@ -74,7 +70,7 @@ curl -X POST http://localhost:8080/api/v1/connections \
   -d '{"sql": "CREATE CONNECTION demo_pg TYPE POSTGRES PROPERTIES (host = '\''localhost'\'', port = '\''5432'\'', database = '\''postgres'\'', username = '\''postgres'\'', password = '\''postgres'\'')"}'
 ```
 
-## Step 5: Create a CDC pipeline
+## Step 4: Create a CDC pipeline
 
 ```bash
 ./target/release/datashuttle sql -e "
@@ -90,7 +86,7 @@ curl -X POST http://localhost:8080/api/v1/connections \
 "
 ```
 
-## Step 6: Monitor
+## Step 5: Monitor
 
 ### CLI
 
@@ -122,7 +118,7 @@ datashuttle_pipeline_rows_total{pipeline="orders_cdc",table="orders"} 42000
 datashuttle_pipeline_commits_total{pipeline="orders_cdc"} 84
 ```
 
-## Step 7: Pipeline lifecycle
+## Step 6: Pipeline lifecycle
 
 ```bash
 # Pause

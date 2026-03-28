@@ -4,6 +4,7 @@
 
 # Getting Started
 
+- [Installation](./installation.md)
 - [Quick Start](./getting-started.md)
 
 # Concepts
@@ -21,6 +22,7 @@
 
 # Operations
 
+- [Deployment](./operations/deployment.md)
 - [Monitoring & Metrics](./operations/monitoring.md)
 - [GitOps](./operations/gitops.md)
 - [Cluster Management](./operations/cluster.md)
@@ -37,3 +39,4 @@
 - [Building from Source](./development/building.md)
 - [Project Structure](./development/structure.md)
 - [Testing](./development/testing.md)
+- [Release Process](./development/releasing.md)

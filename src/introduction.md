@@ -6,12 +6,13 @@ DataShuttle replaces the Debezium → Kafka → Flink → Iceberg pipeline with 
 
 ## What you'll find here
 
+- **Installation** — Docker, binary download, Homebrew, DEB/RPM, cargo install, from source
 - **Getting Started** — 5-minute quickstart with Docker Compose
 - **Concepts** — architecture, pipeline lifecycle, safety guarantees
 - **Connectors** — PostgreSQL, MySQL, MongoDB, S3 setup guides
-- **Operations** — monitoring, GitOps, cluster management, troubleshooting
+- **Operations** — deployment, monitoring, GitOps, cluster management, troubleshooting
 - **API Reference** — REST API, CLI, WebSocket events
-- **Development** — build, test, project structure
+- **Development** — build, test, project structure, release process
 
 ## Quick links
 
