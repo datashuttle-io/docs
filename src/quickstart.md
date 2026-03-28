@@ -4,6 +4,8 @@ Get DataShuttle running and replicate your first table in 5 minutes.
 
 ## Prerequisites
 
+> **Prefer a binary?** Download the latest release from [GitHub Releases](https://github.com/evgenyestepanov-star/datashuttle/releases/latest) and skip Docker for DataShuttle itself. You will still need Docker for Polaris and MinIO.
+
 - **Docker** and **Docker Compose** (v2)
 
 That's it. Everything runs in containers.

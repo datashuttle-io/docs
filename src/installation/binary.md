@@ -1,5 +1,7 @@
 # Binary Download
 
+The latest release is [**v0.1.0-alpha**](https://github.com/evgenyestepanov-star/datashuttle/releases/tag/v0.1.0-alpha).
+
 Pre-built binaries for 5 platforms are attached to every [GitHub Release](https://github.com/evgenyestepanov-star/datashuttle/releases), each with a SHA256 checksum file.
 
 ## Available platforms
