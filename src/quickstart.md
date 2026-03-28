@@ -4,62 +4,95 @@ Get DataShuttle running and replicate your first table in 5 minutes.
 
 ## Prerequisites
 
-- **Docker + Docker Compose** — to run supporting infrastructure (MinIO, Polaris, PostgreSQL)
-- **DataShuttle binary** — installed via any method from the [Installation](./installation/docker.md) section, or use Docker
+- **Docker** and **Docker Compose** (v2)
 
-## Step 1: Start the infrastructure
+That's it. Everything runs in containers.
+
+## Step 1: Start the stack
+
+Clone the repository and start DataShuttle with its infrastructure:
 
 ```bash
-docker compose -f docker/docker-compose.yaml up -d
+git clone https://github.com/evgenyestepanov-star/datashuttle.git
+cd datashuttle
+docker compose up -d
 ```
 
-This starts:
+This starts three services:
 
 | Service | Port | Purpose |
 |---------|------|---------|
-| MinIO | `:9000` | S3-compatible object storage (Iceberg warehouse) |
-| Apache Polaris | `:8181` | Iceberg REST catalog with credential vending |
-| PostgreSQL | `:5432` | Example source database with sample data |
-| MySQL | `:3306` | Example source database |
+| DataShuttle | [localhost:8080](http://localhost:8080) | Ingestion engine (API + Web UI) |
+| Apache Polaris | `:8181` | Iceberg REST catalog |
+| MinIO | [localhost:9001](http://localhost:9001) | S3-compatible object storage |
 
-Verify everything is healthy:
+Wait for everything to be healthy:
 
 ```bash
-docker compose -f docker/docker-compose.yaml ps
+docker compose ps
 ```
 
-## Step 2: Start DataShuttle
+All services should show `healthy` status. This usually takes 15–30 seconds.
 
-If you installed the binary:
+> **No source databases are included.** This stack is just DataShuttle + catalog + storage. You connect it to your own PostgreSQL, MySQL, or MongoDB. For a full demo with sample source databases, see [examples/](https://github.com/evgenyestepanov-star/datashuttle/tree/main/examples).
+
+## Step 2: Start a source database
+
+For this quickstart, we'll run a PostgreSQL instance with sample data. In a separate terminal:
 
 ```bash
-datashuttle start --config datashuttle.yaml
+docker run -d \
+  --name quickstart-postgres \
+  --network datashuttle_default \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=demo \
+  -p 5432:5432 \
+  postgres:16 \
+  -c wal_level=logical \
+  -c max_replication_slots=10 \
+  -c max_wal_senders=10
 ```
 
-Or run entirely via Docker:
+Wait for PostgreSQL to be ready, then create a sample table:
 
 ```bash
-docker run -p 8080:8080 --network host ghcr.io/evgenyestepanov-star/datashuttle:latest
+docker exec -i quickstart-postgres psql -U postgres -d demo <<'SQL'
+CREATE TABLE orders (
+    id SERIAL PRIMARY KEY,
+    customer TEXT NOT NULL,
+    product TEXT NOT NULL,
+    quantity INT NOT NULL,
+    price NUMERIC(10,2) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+INSERT INTO orders (customer, product, quantity, price) VALUES
+    ('Alice', 'Widget A', 5, 29.99),
+    ('Bob', 'Widget B', 2, 49.99),
+    ('Charlie', 'Widget A', 10, 29.99),
+    ('Alice', 'Widget C', 1, 99.99),
+    ('Diana', 'Widget B', 3, 49.99);
+
+CREATE PUBLICATION datashuttle_pub FOR TABLE orders;
+SQL
 ```
 
-The server starts on:
-- `:8080` — REST API + embedded Web UI
-- `:9090` — Prometheus metrics
+## Step 3: Create a connection
 
-Open <http://localhost:8080> to see the Web UI.
-
-## Step 3: Create a source connection
+Tell DataShuttle how to reach your PostgreSQL:
 
 ```bash
-datashuttle sql -e "
+docker exec datashuttle-datashuttle-1 datashuttle sql -e "
   CREATE CONNECTION demo_pg
     TYPE POSTGRES
     PROPERTIES (
-      host = 'localhost',
+      host = 'quickstart-postgres',
       port = '5432',
-      database = 'postgres',
+      database = 'demo',
       username = 'postgres',
-      password = 'postgres'
+      password = 'postgres',
+      publication = 'datashuttle_pub'
     );
 "
 ```
@@ -67,13 +100,13 @@ datashuttle sql -e "
 ## Step 4: Create a CDC pipeline
 
 ```bash
-datashuttle sql -e "
+docker exec datashuttle-datashuttle-1 datashuttle sql -e "
   CREATE PIPELINE orders_cdc
     SOURCE demo_pg TABLE orders
     TARGET warehouse.raw
     WITH (
       mode = 'CDC',
-      commit_interval = '30 seconds',
+      commit_interval = '10 seconds',
       delete_mode = 'deletion_vectors',
       schema_evolution = 'compatible'
     );
@@ -81,65 +114,61 @@ datashuttle sql -e "
 ```
 
 This single statement:
-1. Creates an initial snapshot of the `orders` table
+1. Takes an initial snapshot of the `orders` table
 2. Starts streaming CDC changes from the PostgreSQL WAL
-3. Writes Parquet data files + Puffin deletion vectors to MinIO
-4. Commits to the Iceberg catalog every 30 seconds
+3. Writes Parquet data files to MinIO
+4. Commits to the Iceberg catalog every 10 seconds
 
-## Step 5: Monitor the pipeline
+## Step 5: Verify data is flowing
 
-### CLI
+Check the pipeline status:
 
 ```bash
-# Check status — shows state, rows/sec, lag, last commit
-datashuttle pipeline status orders_cdc
+docker exec datashuttle-datashuttle-1 datashuttle pipeline status orders_cdc
+```
 
+You should see the pipeline in `running` state with 5 rows ingested.
+
+Open the **Web UI** at [http://localhost:8080](http://localhost:8080) to see the pipeline dashboard.
+
+### Make a change and watch it replicate
+
+Insert a new row in the source:
+
+```bash
+docker exec -i quickstart-postgres psql -U postgres -d demo -c \
+  "INSERT INTO orders (customer, product, quantity, price) VALUES ('Eve', 'Widget D', 7, 19.99);"
+```
+
+Within 10 seconds (the commit interval), check the pipeline again — the row count increases by 1.
+
+## Step 6: Explore
+
+```bash
 # List all pipelines
-datashuttle pipeline list
+docker exec datashuttle-datashuttle-1 datashuttle pipeline list
 
-# View dead letters (rows that failed transform/write)
-datashuttle deadletter list orders_cdc
+# Pause the pipeline
+docker exec datashuttle-datashuttle-1 datashuttle sql -e "PAUSE PIPELINE orders_cdc"
+
+# Resume it
+docker exec datashuttle-datashuttle-1 datashuttle sql -e "RESUME PIPELINE orders_cdc"
+
+# View Prometheus metrics
+curl -s http://localhost:9090/metrics | grep orders_cdc
 ```
 
-### Web UI
-
-Open <http://localhost:8080>:
-
-- **Cluster Overview** — node health, aggregate throughput
-- **Pipeline List** — all pipelines with lag, rows/sec, error count
-- **Pipeline Detail** — per-table status, schema, pause/resume controls
-
-### Prometheus metrics
+## Clean up
 
 ```bash
-curl -s http://localhost:8080/metrics | grep orders_cdc
-```
-
-```
-datashuttle_pipeline_rows_total{pipeline="orders_cdc",table="orders"} 42000
-datashuttle_pipeline_commits_total{pipeline="orders_cdc"} 84
-datashuttle_pipeline_lag_seconds{pipeline="orders_cdc"} 2.1
-```
-
-## Step 6: Pipeline lifecycle operations
-
-```bash
-# Pause the pipeline (stops CDC, holds replication slot)
-datashuttle sql -e "PAUSE PIPELINE orders_cdc"
-
-# Resume from where it left off
-datashuttle sql -e "RESUME PIPELINE orders_cdc"
-
-# Re-snapshot (drops existing data, takes a fresh snapshot)
-datashuttle pipeline resnapshot orders_cdc
-
-# Drop the pipeline entirely
-datashuttle sql -e "DROP PIPELINE orders_cdc"
+docker rm -f quickstart-postgres
+docker compose down -v
 ```
 
 ## Next steps
 
 - **Add more connectors** — [MySQL](./connectors/mysql.md), [MongoDB](./connectors/mongodb.md), [S3 files](./connectors/files.md)
+- **Run the full demo** — [examples/](https://github.com/evgenyestepanov-star/datashuttle/tree/main/examples) with PostgreSQL, MySQL, MongoDB, and file ingestion
 - **Deploy to production** — [Deployment guide](./operations/deployment.md)
 - **Set up monitoring** — [Monitoring & alerting](./operations/monitoring.md)
 - **Manage pipelines as code** — [GitOps](./operations/gitops.md)

@@ -15,13 +15,15 @@ docker run -d \
 
 See [Docker installation](../installation/docker.md) for image details.
 
-### Docker Compose (development)
+### Docker Compose
 
 ```bash
-docker compose -f docker/docker-compose.yaml up -d
+docker compose up -d
 ```
 
-Starts DataShuttle with MinIO, Apache Polaris, PostgreSQL, and MySQL.
+The `docker-compose.yaml` at the project root starts DataShuttle with MinIO (object storage) and Apache Polaris (Iceberg catalog). Connect it to your existing source databases.
+
+See [Docker installation](../installation/docker.md) for details.
 
 ## Systemd (DEB / RPM)
 

@@ -1,6 +1,6 @@
 # Docker
 
-The official multi-arch Docker image is the fastest way to get started.
+The official multi-arch Docker image is the fastest way to run DataShuttle.
 
 ## Pull and run
 
@@ -20,9 +20,29 @@ docker run -p 8080:8080 ghcr.io/evgenyestepanov-star/datashuttle:latest
 | User | Non-root `datashuttle` user |
 | Ports | 8080 (API + UI), 9090 (metrics), 7946 (gossip) |
 
-## Production usage
+## Docker Compose
 
-Mount your configuration file and expose ports:
+The `docker-compose.yaml` at the project root starts DataShuttle with the minimum required infrastructure — MinIO (object storage) and Apache Polaris (Iceberg catalog):
+
+```bash
+git clone https://github.com/evgenyestepanov-star/datashuttle.git
+cd datashuttle
+docker compose up -d
+```
+
+| Service | Port | Purpose |
+|---------|------|---------|
+| DataShuttle | `:8080` | Ingestion engine (API + Web UI) |
+| Apache Polaris | `:8181` | Iceberg REST catalog |
+| MinIO | `:9000` / `:9001` | S3-compatible object storage |
+
+After starting, open [http://localhost:8080](http://localhost:8080) to access the Web UI.
+
+> Source databases are **not included** — connect DataShuttle to your existing PostgreSQL, MySQL, or MongoDB. See the [Quickstart](../quickstart.md) for a step-by-step walkthrough.
+
+## Running with your own config
+
+Mount a configuration file and expose the ports you need:
 
 ```bash
 docker run -d \
@@ -33,18 +53,30 @@ docker run -d \
   ghcr.io/evgenyestepanov-star/datashuttle:latest
 ```
 
-## Docker Compose (development)
-
-For local development with supporting infrastructure (MinIO, Polaris, PostgreSQL, MySQL):
+Or use environment variables instead of a config file:
 
 ```bash
-docker compose -f docker/docker-compose.yaml up -d
+docker run -d \
+  --name datashuttle \
+  -p 8080:8080 \
+  -p 9090:9090 \
+  -e DS_CATALOG_TYPE=rest \
+  -e DS_CATALOG_URI=http://polaris:8181/api/catalog \
+  -e DS_WAREHOUSE=s3://warehouse/ \
+  -e DS_S3_ENDPOINT=http://minio:9000 \
+  -e DS_S3_ACCESS_KEY=minioadmin \
+  -e DS_S3_SECRET_KEY=minioadmin \
+  ghcr.io/evgenyestepanov-star/datashuttle:latest
 ```
 
-See the [Quickstart](../quickstart.md) for a full walkthrough.
+See [Configuration](../concepts/configuration.md) for all available options.
 
 ## Verify
 
 ```bash
+# Check version
 docker run --rm ghcr.io/evgenyestepanov-star/datashuttle:latest --version
+
+# Health check
+curl http://localhost:8080/health
 ```

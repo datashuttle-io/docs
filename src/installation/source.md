@@ -1,12 +1,11 @@
 # Building from Source
 
-Build DataShuttle from the Git repository.
+Build DataShuttle from the Git repository. This is primarily for contributors or users who need custom builds. For most users, [Docker](./docker.md) or [binary downloads](./binary.md) are faster.
 
 ## Prerequisites
 
 - **Rust 1.82+** — install via [rustup](https://rustup.rs/)
 - **Node.js 20+** — only needed if modifying the Web UI
-- **Docker** — only needed for building container images
 
 ## Build the binary
 
@@ -30,13 +29,6 @@ cd ..
 cargo build --release   # picks up ui/dist/ automatically
 ```
 
-For UI development with hot reload:
-
-```bash
-cd ui
-npm run dev       # dev server with HMR on :5173
-```
-
 ## Build the Docker image
 
 ```bash
@@ -51,18 +43,12 @@ docker buildx build -f docker/Dockerfile \
 
 The multi-stage Dockerfile compiles the UI, builds the Rust binary, and produces a minimal Debian-slim image in one pass.
 
-## Run tests
-
-```bash
-cargo test --workspace
-cargo clippy -- -D warnings
-cargo fmt --check
-```
-
 ## Verify
 
 ```bash
 ./target/release/datashuttle --version
 ```
 
-For full development setup (testing, CI, project structure), see the [Contributing Guide](https://github.com/evgenyestepanov-star/datashuttle/blob/main/docs/CONTRIBUTING.md).
+## Contributing
+
+For the full development setup — running tests, CI, project structure, and code standards — see the [Contributing Guide](https://github.com/evgenyestepanov-star/datashuttle/blob/main/docs/CONTRIBUTING.md).
