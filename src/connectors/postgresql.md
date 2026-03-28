@@ -1,22 +1,37 @@
-# Connector Guides
+# PostgreSQL Connector
 
-## PostgreSQL
+Replicate PostgreSQL tables to Iceberg via logical replication (WAL).
 
-### Prerequisites
-- PostgreSQL 12+ with `wal_level = logical`
+## Prerequisites
+
+- **PostgreSQL 12+** with `wal_level = logical` in `postgresql.conf`
 - A dedicated replication user with `REPLICATION` privilege
 - A publication for the tables you want to replicate
 
-### Setup
+## Source setup
 
 ```sql
--- On the source PostgreSQL:
-CREATE USER datashuttle_cdc WITH REPLICATION PASSWORD 'secret';
+-- Create a dedicated CDC user
+CREATE USER datashuttle_cdc WITH REPLICATION PASSWORD 'your-password';
+
+-- Grant read access to the tables
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO datashuttle_cdc;
+
+-- Create a publication (all tables, or specific ones)
 CREATE PUBLICATION datashuttle_pub FOR ALL TABLES;
+
+-- Or for specific tables:
+-- CREATE PUBLICATION datashuttle_pub FOR TABLE orders, customers, payments;
 ```
 
-### Pipeline Configuration
+Verify logical replication is enabled:
+
+```sql
+SHOW wal_level;     -- must be "logical"
+SHOW max_replication_slots;  -- must be > 0
+```
+
+## CREATE CONNECTION
 
 ```sql
 CREATE CONNECTION pg_prod
@@ -30,94 +45,60 @@ CREATE CONNECTION pg_prod
     replication_slot = 'datashuttle_slot',
     publication = 'datashuttle_pub'
   );
+```
 
+## CREATE PIPELINE
+
+```sql
+-- Single table
 CREATE PIPELINE orders_sync
   SOURCE pg_prod TABLE orders
   TARGET warehouse.raw
   WITH (mode = 'SNAPSHOT_THEN_CDC');
+
+-- Multiple tables with options
+CREATE PIPELINE crm_sync
+  SOURCE pg_prod TABLE orders, customers, payments
+  TARGET warehouse.raw
+  WITH (
+    mode = 'CDC',
+    commit_interval = '30 seconds',
+    delete_mode = 'deletion_vectors',
+    schema_evolution = 'compatible'
+  );
 ```
 
-### Type Mapping
+## CDC behavior
+
+- **Mechanism**: PostgreSQL logical replication via `pgoutput` plugin
+- **Initial load**: Parallel chunked `SELECT` with consistent snapshot
+- **Change capture**: Reads from a replication slot (INSERT, UPDATE, DELETE)
+- **Deletes**: Written as Iceberg V3 deletion vectors (Puffin files), not position deletes
+- **Schema changes**: `ALTER TABLE ADD COLUMN` and compatible type widening are auto-applied (in `compatible` mode)
+- **Replication slot**: Created automatically on first pipeline start. Held during pause, released on drop.
+
+## Type mapping
 
 | PostgreSQL | Arrow | Iceberg V3 |
 |-----------|-------|-----------|
-| integer | Int32 | int |
-| bigint | Int64 | long |
-| text/varchar | Utf8 | string |
-| boolean | Boolean | boolean |
-| timestamp | Timestamp(μs) | timestamptz |
-| jsonb | Utf8 | string (or VARIANT in V3) |
-| uuid | Utf8 | string |
-| numeric | Decimal128 | decimal |
+| `integer` | Int32 | `int` |
+| `bigint` | Int64 | `long` |
+| `smallint` | Int16 | `int` |
+| `text` / `varchar` | Utf8 | `string` |
+| `boolean` | Boolean | `boolean` |
+| `timestamp` | Timestamp(μs) | `timestamptz` |
+| `timestamptz` | Timestamp(μs, UTC) | `timestamptz` |
+| `date` | Date32 | `date` |
+| `jsonb` | Utf8 | `string` |
+| `uuid` | Utf8 | `string` |
+| `numeric` / `decimal` | Decimal128 | `decimal(p, s)` |
+| `real` | Float32 | `float` |
+| `double precision` | Float64 | `double` |
+| `bytea` | Binary | `binary` |
 
----
+## Limitations
 
-## MySQL
-
-### Prerequisites
-- MySQL 8.0+ with `binlog_format = ROW` and GTID enabled
-- A user with `REPLICATION SLAVE` privilege
-
-### Setup
-
-```sql
-CREATE USER 'datashuttle'@'%' IDENTIFIED BY 'secret';
-GRANT SELECT, REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'datashuttle'@'%';
-```
-
-### Pipeline Configuration
-
-```sql
-CREATE CONNECTION mysql_prod
-  TYPE MYSQL
-  PROPERTIES (
-    host = 'mysql.internal',
-    port = 3306,
-    database = 'production',
-    username = 'datashuttle',
-    password = 'secret'
-  );
-```
-
----
-
-## MongoDB
-
-### Prerequisites
-- MongoDB 4.0+ replica set (change streams require replica set)
-
-### Pipeline Configuration
-
-```sql
-CREATE CONNECTION mongo_prod
-  TYPE MONGODB
-  PROPERTIES (
-    uri = 'mongodb://user:pass@mongo1:27017,mongo2:27017/mydb?replicaSet=rs0'
-  );
-```
-
----
-
-## S3 / File Sources
-
-### Pipeline Configuration
-
-```sql
-CREATE CONNECTION data_lake
-  TYPE S3
-  PROPERTIES (
-    endpoint = 'https://s3.amazonaws.com',
-    region = 'us-east-1',
-    access_key = SECRET 'vault://secrets/s3_key',
-    secret_key = SECRET 'vault://secrets/s3_secret'
-  );
-
-CREATE PIPELINE raw_events
-  SOURCE data_lake PATH 's3://bucket/events/'
-  TARGET warehouse.raw
-  WITH (
-    mode = 'APPEND',
-    file_pattern = '*.parquet',
-    commit_interval = '5 minutes'
-  );
-```
+- **TOAST columns**: Large values stored out-of-line require `REPLICA IDENTITY FULL` on the table for UPDATE events to include the full column value. Without it, unchanged TOAST columns appear as `NULL` in the CDC stream.
+- **DDL replication**: Only column additions and compatible type widening are supported. Renaming columns or dropping columns requires manual intervention.
+- **Partitioned tables**: Replicate individual partitions, not the parent table.
+- **Sequences / generated columns**: Values are captured as-is. Sequences are not replicated.

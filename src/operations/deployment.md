@@ -4,11 +4,7 @@ DataShuttle supports multiple deployment models — from a single Docker contain
 
 ## Docker
 
-The official Docker image is published to `ghcr.io` on every tagged release:
-
 ```bash
-docker pull ghcr.io/evgenyestepanov-star/datashuttle:latest
-
 docker run -d \
   --name datashuttle \
   -p 8080:8080 \
@@ -17,31 +13,22 @@ docker run -d \
   ghcr.io/evgenyestepanov-star/datashuttle:latest
 ```
 
-Image details:
-- **Base:** `debian:bookworm-slim`
-- **Platforms:** `linux/amd64`, `linux/arm64`
-- **PID 1:** `tini` (proper signal handling)
-- **User:** runs as non-root `datashuttle` user
-- **Ports:** 8080 (API + UI), 9090 (metrics), 7946 (gossip)
+See [Docker installation](../installation/docker.md) for image details.
 
 ### Docker Compose (development)
-
-For local development with supporting infrastructure:
 
 ```bash
 docker compose -f docker/docker-compose.yaml up -d
 ```
 
-Starts MinIO, Apache Polaris, PostgreSQL, and MySQL.
+Starts DataShuttle with MinIO, Apache Polaris, PostgreSQL, and MySQL.
 
 ## Systemd (DEB / RPM)
 
-The DEB package includes a systemd unit file:
-
 ```bash
 # Install
-sudo dpkg -i datashuttle_*.deb    # Debian/Ubuntu
-sudo rpm -i datashuttle-*.rpm      # RHEL/Fedora
+sudo dpkg -i datashuttle_*.deb       # Debian/Ubuntu
+sudo rpm -i datashuttle-*.rpm         # RHEL/Fedora
 
 # Configure
 sudo vim /etc/datashuttle/datashuttle.yaml
@@ -53,6 +40,8 @@ sudo systemctl enable --now datashuttle
 sudo systemctl status datashuttle
 journalctl -u datashuttle -f
 ```
+
+See [DEB / RPM installation](../installation/packages.md) for package contents.
 
 ## Kubernetes
 
@@ -91,6 +80,18 @@ spec:
             - start
             - --cluster-seeds
             - datashuttle-0.datashuttle:7946,datashuttle-1.datashuttle:7946
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: datashuttle
+spec:
+  clusterIP: None   # headless — required for gossip discovery
+  selector:
+    app: datashuttle
+  ports:
+    - port: 7946
+      name: gossip
 ```
 
 > **Helm chart:** A dedicated Helm chart is planned. For now, use raw manifests or Kustomize.
@@ -104,3 +105,11 @@ datashuttle start --config /etc/datashuttle/datashuttle.yaml
 ```
 
 Useful for bare-metal servers, edge deployments, or testing. Combine with your own systemd unit or process supervisor.
+
+## Port reference
+
+| Port | Protocol | Purpose |
+|------|----------|---------|
+| 8080 | HTTP | REST API + embedded Web UI |
+| 9090 | HTTP | Prometheus metrics |
+| 7946 | TCP/UDP | Gossip protocol (cluster membership) |

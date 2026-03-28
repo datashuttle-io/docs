@@ -1,33 +1,67 @@
-# Operations Guide
+# Monitoring & Alerting
 
-## Monitoring
+## Prometheus metrics
 
-### Prometheus Metrics
+DataShuttle exposes a `/metrics` endpoint on the metrics port (default `:9090`) in Prometheus exposition format.
 
-DataShuttle exposes a `/metrics` endpoint in Prometheus exposition format:
+### Key metrics
 
 ```
+# Cluster
 datashuttle_active_pipelines 42
 datashuttle_cluster_nodes 3
+
+# Per-pipeline
 datashuttle_pipeline_rows_total{pipeline="orders_sync",table="orders"} 1523456
 datashuttle_pipeline_commits_total{pipeline="orders_sync"} 4521
 datashuttle_pipeline_errors_total{pipeline="orders_sync"} 3
+datashuttle_pipeline_lag_seconds{pipeline="orders_sync"} 2.1
+datashuttle_pipeline_bytes_total{pipeline="orders_sync"} 8392847234
 ```
 
-Scrape config:
+### Prometheus scrape config
 
 ```yaml
 # prometheus.yml
 scrape_configs:
   - job_name: datashuttle
     static_configs:
-      - targets: ['datashuttle:8080']
+      - targets: ['datashuttle:9090']
     metrics_path: /metrics
 ```
 
-### Webhooks
+For Kubernetes with the Prometheus operator, the StatefulSet annotations handle discovery automatically:
 
-Configure webhooks in `datashuttle.yaml`:
+```yaml
+annotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9090"
+```
+
+### Recommended alerts
+
+```yaml
+# Alert on pipeline errors
+- alert: DataShuttlePipelineError
+  expr: increase(datashuttle_pipeline_errors_total[5m]) > 0
+  labels:
+    severity: warning
+  annotations:
+    summary: "Pipeline {{ $labels.pipeline }} has errors"
+
+# Alert on high CDC lag
+- alert: DataShuttleHighLag
+  expr: datashuttle_pipeline_lag_seconds > 300
+  for: 5m
+  labels:
+    severity: critical
+  annotations:
+    summary: "Pipeline {{ $labels.pipeline }} lag is {{ $value }}s"
+```
+
+## Webhooks
+
+Configure webhook notifications in `datashuttle.yaml`:
 
 ```yaml
 webhooks:
@@ -37,88 +71,24 @@ webhooks:
     events: [pipeline.error, pipeline.lag.critical]
 ```
 
-### Web UI
+### Event types
 
-Open `http://<node>:8080` in a browser. Any node in the cluster serves the full UI.
+| Event | Trigger |
+|-------|---------|
+| `pipeline.created` | New pipeline created |
+| `pipeline.paused` | Pipeline paused (user or circuit breaker) |
+| `pipeline.resumed` | Pipeline resumed |
+| `pipeline.dropped` | Pipeline dropped |
+| `pipeline.commit` | Successful Iceberg commit |
+| `pipeline.error` | Pipeline error (auto-paused) |
+| `pipeline.schema.changed` | Source schema change detected |
+| `pipeline.lag.critical` | CDC lag exceeds threshold |
 
-## GitOps
+## Web UI
 
-### Pipeline-as-Code
+Open `http://<any-node>:8080` in a browser. Every node serves the full UI — no need to hit a specific node.
 
-Store pipelines as SQL files in Git:
-
-```
-pipelines/
-├── crm/
-│   ├── orders.sql
-│   └── customers.sql
-└── events/
-    └── clickstream.sql
-```
-
-### Commands
-
-```bash
-# Validate without applying
-datashuttle validate -f pipelines/
-
-# Show what would change
-datashuttle diff -f pipelines/
-
-# Apply changes
-datashuttle apply -f pipelines/
-
-# Apply and remove orphaned pipelines
-datashuttle apply -f pipelines/ --prune
-```
-
-## Cluster Operations
-
-### Adding Nodes
-
-```bash
-datashuttle start --config datashuttle.yaml --seed-nodes node1:7946,node2:7946
-```
-
-New nodes join the gossip ring automatically. Pipelines rebalance within 30 seconds.
-
-### Rolling Upgrades
-
-1. Drain pipelines from the node: `datashuttle pipeline pause --owner node-3`
-2. Upgrade the binary
-3. Restart: `datashuttle start --config datashuttle.yaml`
-4. Pipelines automatically rebalance back
-
-### Backup & Recovery
-
-Pipeline definitions are stored in the Iceberg catalog. CDC checkpoints are in Iceberg table properties. To recover:
-
-1. Deploy new DataShuttle node(s)
-2. Point to the same catalog and storage
-3. Pipelines resume from last checkpoint automatically
-
-## Troubleshooting
-
-### Pipeline Stuck in ERROR State
-
-```bash
-datashuttle pipeline status <name>
-datashuttle pipeline logs <name>
-datashuttle deadletter list <name>
-```
-
-Common causes:
-- Source database unreachable → check network/credentials
-- Schema change with `schema_evolution = 'strict'` → approve the change
-- Dead letter threshold exceeded → review and replay dead letters
-
-### High CDC Lag
-
-```bash
-datashuttle pipeline status <name>  # check lag_seconds
-```
-
-Remediation:
-- Increase `parallelism` in pipeline options
-- Check source database load
-- Increase `commit_interval` to batch more rows per commit
+The dashboard shows:
+- **Cluster Overview** — node count, total rows/sec, active pipelines
+- **Pipeline List** — all pipelines with status, lag, rows/sec, error count
+- **Pipeline Detail** — per-table breakdown, schema, pause/resume controls

@@ -1,4 +1,4 @@
-# API Reference
+# REST API
 
 Base URL: `http://<host>:8080`
 
@@ -6,11 +6,11 @@ Base URL: `http://<host>:8080`
 
 Configure in `datashuttle.yaml` under `security.auth`:
 
-| Mode | Header |
-|------|--------|
-| `none` | No auth required (default) |
-| `basic` | `Authorization: Basic <base64(user:pass)>` |
-| `api_key` | `Authorization: Bearer <key>` or `X-API-Key: <key>` |
+| Mode | Header | Description |
+|------|--------|-------------|
+| `none` | — | No auth required (default) |
+| `basic` | `Authorization: Basic <base64(user:pass)>` | HTTP Basic |
+| `api_key` | `Authorization: Bearer <key>` or `X-API-Key: <key>` | API key |
 
 `/health` and `/metrics` always bypass authentication.
 
@@ -27,7 +27,8 @@ curl http://localhost:8080/api/v1/pipelines
 curl http://localhost:8080/api/v1/pipelines?status=running
 ```
 
-Response: `200 OK`
+**Response** `200 OK`:
+
 ```json
 [
   {
@@ -48,12 +49,10 @@ Response: `200 OK`
 ```bash
 curl -X POST http://localhost:8080/api/v1/pipelines \
   -H 'Content-Type: application/json' \
-  -d '{
-    "sql": "CREATE PIPELINE orders_sync SOURCE crm_prod TABLE orders TARGET warehouse.raw WITH (mode = '\''CDC'\'')"
-  }'
+  -d '{"sql": "CREATE PIPELINE orders_sync SOURCE crm_prod TABLE orders TARGET warehouse.raw WITH (mode = '\''CDC'\'')"}'
 ```
 
-Response: `201 Created`
+**Response** `201 Created`
 
 ### Get pipeline details
 
@@ -61,7 +60,7 @@ Response: `201 Created`
 curl http://localhost:8080/api/v1/pipelines/orders_sync
 ```
 
-Response: `200 OK` — full `PipelineRecord` with options, tables, definition_sql.
+**Response** `200 OK` — full pipeline record with options, tables, and definition SQL.
 
 ### Drop pipeline
 
@@ -69,7 +68,7 @@ Response: `200 OK` — full `PipelineRecord` with options, tables, definition_sq
 curl -X DELETE http://localhost:8080/api/v1/pipelines/orders_sync
 ```
 
-Response: `204 No Content`
+**Response** `204 No Content`
 
 ### Pause / Resume
 
@@ -78,11 +77,15 @@ curl -X POST http://localhost:8080/api/v1/pipelines/orders_sync/pause
 curl -X POST http://localhost:8080/api/v1/pipelines/orders_sync/resume
 ```
 
+**Response** `200 OK`
+
 ### Pipeline status
 
 ```bash
 curl http://localhost:8080/api/v1/pipelines/orders_sync/status
 ```
+
+**Response** `200 OK`:
 
 ```json
 {
@@ -119,15 +122,18 @@ curl http://localhost:8080/api/v1/connections
 ```bash
 curl -X POST http://localhost:8080/api/v1/connections \
   -H 'Content-Type: application/json' \
-  -d '{
-    "sql": "CREATE CONNECTION crm_prod TYPE POSTGRES PROPERTIES (host = '\''db.internal'\'', port = '\''5432'\'', database = '\''production'\'', username = '\''cdc_user'\'', password = '\''secret'\'')"
-  }'
+  -d '{"sql": "CREATE CONNECTION crm_prod TYPE POSTGRES PROPERTIES (host = '\''db.internal'\'', port = '\''5432'\'', database = '\''production'\'', username = '\''cdc_user'\'', password = '\''secret'\'')"}'
 ```
 
-### Get / Delete connection
+### Get connection
 
 ```bash
 curl http://localhost:8080/api/v1/connections/crm_prod
+```
+
+### Delete connection
+
+```bash
 curl -X DELETE http://localhost:8080/api/v1/connections/crm_prod
 ```
 
@@ -155,7 +161,7 @@ curl http://localhost:8080/api/v1/cluster/nodes
 
 ---
 
-## Dead Letters
+## Dead letters
 
 ### List dead letters
 
@@ -163,11 +169,15 @@ curl http://localhost:8080/api/v1/cluster/nodes
 curl http://localhost:8080/api/v1/deadletters/orders_sync
 ```
 
-### Replay / Resolve
+### Replay dead letters
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/deadletters/orders_sync/replay
+```
 
+### Resolve (acknowledge without replay)
+
+```bash
 curl -X POST http://localhost:8080/api/v1/deadletters/orders_sync/resolve \
   -H 'Content-Type: application/json' \
   -d '{"ids": ["dl-001", "dl-002"]}'
@@ -190,30 +200,4 @@ curl http://localhost:8080/health
 curl http://localhost:8080/metrics
 ```
 
-Returns Prometheus exposition format:
-
-```
-# TYPE datashuttle_active_pipelines gauge
-datashuttle_active_pipelines 42
-# TYPE datashuttle_pipeline_rows_total counter
-datashuttle_pipeline_rows_total{pipeline="orders_sync",table="orders"} 1523456
-```
-
-### WebSocket live events
-
-```
-ws://localhost:8080/ws/pipelines
-```
-
-Events are JSON:
-
-```json
-{
-  "event_type": "pipeline.commit",
-  "pipeline": "orders_sync",
-  "detail": {"rows": 1000, "snapshot_id": 12345},
-  "timestamp": "2026-03-27T18:00:00Z"
-}
-```
-
-Event types: `pipeline.created`, `pipeline.paused`, `pipeline.resumed`, `pipeline.dropped`, `pipeline.commit`, `pipeline.error`
+See [Monitoring](../operations/monitoring.md) for metric names and alerting.
