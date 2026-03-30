@@ -91,8 +91,8 @@ Replicate the orders and customers tables:
 CREATE PIPELINE ecommerce_cdc
   SOURCE demo_pg SCHEMA public TABLES (orders, customers, products)
   TARGET warehouse.raw
+  SCHEDULE continuous
   WITH (
-    mode = 'CDC',
     commit_interval = '10 seconds',
     delete_mode = 'deletion_vectors'
   );

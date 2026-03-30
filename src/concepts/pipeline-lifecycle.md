@@ -2,6 +2,31 @@
 
 A pipeline is the core unit of work in DataShuttle. It connects a source database to an Iceberg table and keeps them in sync.
 
+## Scheduling
+
+DataShuttle uses a **freshness-based sync model**. Users specify the desired schedule; the system automatically selects the optimal mechanism (WAL streaming, binlog, polling) based on connector capabilities.
+
+| Schedule | Behavior |
+|----------|----------|
+| `continuous` (default) | Keep data as fresh as the source allows |
+| `EVERY '<interval>'` | Sync at specified interval (e.g., `EVERY '15 minutes'`) |
+
+```sql
+-- Continuous (uses WAL/binlog when available)
+CREATE PIPELINE orders_sync
+  SOURCE pg_prod TABLE orders
+  TARGET warehouse.raw
+  SCHEDULE continuous;
+
+-- Periodic
+CREATE PIPELINE daily_load
+  SOURCE bq_prod TABLE reports
+  TARGET warehouse.analytics
+  SCHEDULE EVERY '24 hours';
+```
+
+The initial snapshot is always automatic on first pipeline start.
+
 ## States
 
 ```
@@ -69,7 +94,7 @@ DataShuttle guarantees exactly-once delivery through:
 
 ```bash
 # Create — pipeline is now in "Created" state
-datashuttle sql -e "CREATE PIPELINE p1 SOURCE pg TABLE t1 TARGET wh.raw WITH (mode='CDC')"
+datashuttle sql -e "CREATE PIPELINE p1 SOURCE pg TABLE t1 TARGET wh.raw"
 
 # Pipeline auto-transitions: Created → Snapshotting → Running
 

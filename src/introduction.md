@@ -9,7 +9,6 @@ CREATE PIPELINE orders_sync
   SOURCE crm_prod TABLE orders
   TARGET warehouse.raw
   WITH (
-    mode = 'CDC',
     delete_mode = 'deletion_vectors',
     schema_evolution = 'compatible',
     commit_interval = '30 seconds'

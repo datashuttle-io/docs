@@ -41,14 +41,13 @@ The URI follows the [MongoDB connection string](https://www.mongodb.com/docs/man
 CREATE PIPELINE events_sync
   SOURCE mongo_prod TABLE events
   TARGET warehouse.raw
-  WITH (mode = 'SNAPSHOT_THEN_CDC');
+  ; -- continuous schedule (default)
 
 -- Multiple collections
 CREATE PIPELINE app_sync
   SOURCE mongo_prod TABLE events, users, sessions
   TARGET warehouse.raw
   WITH (
-    mode = 'CDC',
     commit_interval = '30 seconds'
   );
 ```

@@ -42,7 +42,7 @@ CREATE PIPELINE raw_events
   SOURCE data_lake PATH 's3://bucket/events/'
   TARGET warehouse.raw
   WITH (
-    mode = 'APPEND',
+    -- periodic file ingestion
     file_pattern = '*.parquet',
     commit_interval = '5 minutes'
   );
@@ -52,7 +52,7 @@ CREATE PIPELINE csv_import
   SOURCE data_lake PATH 's3://bucket/csv-data/'
   TARGET warehouse.staging
   WITH (
-    mode = 'APPEND',
+    -- periodic file ingestion
     file_pattern = '*.csv',
     csv_header = 'true',
     csv_delimiter = ',',
@@ -64,7 +64,7 @@ CREATE PIPELINE json_events
   SOURCE data_lake PATH 's3://bucket/json-events/'
   TARGET warehouse.raw
   WITH (
-    mode = 'APPEND',
+    -- periodic file ingestion
     file_pattern = '*.json',
     commit_interval = '5 minutes'
   );

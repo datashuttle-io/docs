@@ -54,14 +54,13 @@ CREATE CONNECTION mysql_prod
 CREATE PIPELINE orders_sync
   SOURCE mysql_prod TABLE orders
   TARGET warehouse.raw
-  WITH (mode = 'SNAPSHOT_THEN_CDC');
+  ; -- continuous schedule (default)
 
 -- Multiple tables
 CREATE PIPELINE crm_sync
   SOURCE mysql_prod TABLE orders, customers
   TARGET warehouse.raw
   WITH (
-    mode = 'CDC',
     commit_interval = '30 seconds',
     delete_mode = 'deletion_vectors',
     schema_evolution = 'compatible'

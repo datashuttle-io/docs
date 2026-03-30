@@ -49,7 +49,6 @@ datashuttle pipeline status <name>   # check lag_seconds
     CREATE PIPELINE orders_sync
       SOURCE pg_prod TABLE orders
       TARGET warehouse.raw
-      WITH (mode = 'CDC', parallelism = 8);
     ```
 
 2. **Increase commit interval** — batch more rows per commit to reduce commit overhead:

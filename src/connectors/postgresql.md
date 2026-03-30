@@ -54,14 +54,13 @@ CREATE CONNECTION pg_prod
 CREATE PIPELINE orders_sync
   SOURCE pg_prod TABLE orders
   TARGET warehouse.raw
-  WITH (mode = 'SNAPSHOT_THEN_CDC');
+  ; -- continuous schedule (default)
 
 -- Multiple tables with options
 CREATE PIPELINE crm_sync
   SOURCE pg_prod TABLE orders, customers, payments
   TARGET warehouse.raw
   WITH (
-    mode = 'CDC',
     commit_interval = '30 seconds',
     delete_mode = 'deletion_vectors',
     schema_evolution = 'compatible'
