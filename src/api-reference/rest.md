@@ -37,7 +37,6 @@ curl http://localhost:8080/api/v1/pipelines?status=running
     "connection": "crm_prod",
     "target": "warehouse.raw",
     "schedule": "continuous",
-    "mode": "CDC",
     "state": "running",
     "owner": "node-1",
     "table_count": 3,
@@ -123,14 +122,13 @@ curl http://localhost:8080/api/v1/pipelines/orders_sync/lineage
 {
   "pipeline": "orders_sync",
   "connection": "crm_prod",
-  "mode": "CDC",
+  "schedule": "continuous",
   "state": "running",
   "source_tables": [
     {
       "schema": "public",
       "table": "orders",
-      "primary_key": ["id"],
-      "mode": "CDC"
+      "primary_key": ["id"]
     }
   ],
   "dest_tables": [
