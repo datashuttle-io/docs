@@ -1,13 +1,14 @@
 # DataShuttle
 
-**Iceberg V3-native ingestion engine.** Declarative CDC from any source to Apache Iceberg with sub-minute latency.
+**Iceberg V3-native ingestion engine.** Declarative data sync from any source to Apache Iceberg with sub-minute latency.
 
-DataShuttle replaces the Debezium → Kafka → Flink → Iceberg pipeline with a single SQL statement and a single binary.
+DataShuttle replaces multi-system streaming pipelines with a single SQL statement and a single binary.
 
 ```sql
 CREATE PIPELINE orders_sync
   SOURCE crm_prod TABLE orders
   TARGET warehouse.raw
+  SCHEDULE continuous
   WITH (
     delete_mode = 'deletion_vectors',
     schema_evolution = 'compatible',
@@ -17,7 +18,7 @@ CREATE PIPELINE orders_sync
 
 ## Who is this for?
 
-Data engineers and platform teams who need to get operational database changes into Apache Iceberg tables — without managing a multi-system streaming pipeline.
+Data engineers and platform teams who need to keep operational database changes synced into Apache Iceberg tables — without managing a multi-system streaming pipeline.
 
 ## What you'll find here
 

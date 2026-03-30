@@ -39,7 +39,7 @@ DataShuttle uses a **shared-nothing architecture** where every node is equal and
 |-------|---------|
 | `datashuttle-core` | SQL parser, pipeline registry, transforms, config, error types |
 | `datashuttle-iceberg` | Iceberg V3 writer, commit protocol, deletion vectors, compaction |
-| `datashuttle-cdc` | CDC connectors: PostgreSQL, MySQL, MongoDB, S3/file sources |
+| `datashuttle-cdc` | Source connectors: PostgreSQL, MySQL, MongoDB, S3/file sources |
 | `datashuttle-flight` | Arrow Flight hot buffer, flush worker, Raft replication |
 | `datashuttle-gossip` | Cluster membership via SWIM gossip (chitchat) |
 | `datashuttle-api` | REST API, WebSocket, Prometheus `/metrics`, auth middleware |
@@ -61,7 +61,7 @@ This means you can lose any node and the cluster self-heals. There is no "brain"
 
 1. **SQL Parser** receives `CREATE PIPELINE` and validates syntax
 2. **Pipeline Registry** stores the definition and assigns ownership
-3. **Source Connector** reads from PostgreSQL WAL, MySQL binlog, MongoDB change stream, or S3
+3. **Source Connector** reads changes from the source database or storage system
 4. **Transform Pipeline** maps source schema to Arrow, applies casts and metadata injection
 5. **Hot Buffer** (optional) holds recent rows in-memory for Arrow Flight queries (<100ms latency)
 6. **Iceberg Writer** batches Arrow RecordBatches into Parquet data files + Puffin deletion vector files

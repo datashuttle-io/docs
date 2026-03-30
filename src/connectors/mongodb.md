@@ -1,6 +1,6 @@
 # MongoDB Connector
 
-Replicate MongoDB collections to Iceberg via Change Streams.
+Continuously sync MongoDB collections to Iceberg.
 
 ## Prerequisites
 
@@ -37,29 +37,33 @@ The URI follows the [MongoDB connection string](https://www.mongodb.com/docs/man
 ## CREATE PIPELINE
 
 ```sql
--- Single collection
+-- Single collection, continuous schedule (default)
 CREATE PIPELINE events_sync
   SOURCE mongo_prod TABLE events
-  TARGET warehouse.raw
-  ; -- continuous schedule (default)
+  TARGET warehouse.raw;
 
--- Multiple collections
+-- Multiple collections with options
 CREATE PIPELINE app_sync
   SOURCE mongo_prod TABLE events, users, sessions
   TARGET warehouse.raw
   WITH (
     commit_interval = '30 seconds'
   );
+
+-- Periodic sync
+CREATE PIPELINE hourly_sync
+  SOURCE mongo_prod TABLE analytics
+  TARGET warehouse.raw
+  SCHEDULE EVERY '1 hour';
 ```
 
-## CDC behavior
+## Sync behavior
 
-- **Mechanism**: MongoDB Change Streams (`watch()`)
-- **Initial load**: Collection scan with a read concern of `majority` for consistency
-- **Change capture**: INSERT, UPDATE, DELETE, and REPLACE operations
-- **Deletes**: Written as Iceberg V3 deletion vectors
-- **Schema handling**: MongoDB is schemaless. DataShuttle infers the schema from the initial snapshot and evolves it as new fields appear.
-- **Resume token**: The change stream resume token is checkpointed with each Iceberg commit. On recovery, the stream resumes from the last token.
+- **Continuous schedule**: Uses native change tracking (Change Streams) — latency is typically sub-second.
+- **Periodic schedule**: Uses incremental reads at each interval.
+- **Initial load**: Collection scan with a read concern of `majority` for consistency.
+- **Deletes**: Written as Iceberg V3 deletion vectors.
+- **Schema handling**: MongoDB is schemaless. DataShuttle infers the schema from the initial load and evolves it as new fields appear.
 
 ## Type mapping
 
@@ -96,4 +100,4 @@ Becomes:
 - **Replica set required**: Standalone MongoDB instances do not support change streams.
 - **Pre-image / post-image**: MongoDB 6.0+ supports change stream pre-images. DataShuttle uses post-images by default. Pre-image support is planned.
 - **Schema inference**: Deeply nested or polymorphic documents may require manual schema hints in future versions.
-- **Capped collections**: Not supported for CDC (change streams don't work on capped collections).
+- **Capped collections**: Not supported for continuous sync (change streams don't work on capped collections).

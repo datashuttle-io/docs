@@ -1,6 +1,6 @@
 # MySQL Connector
 
-Replicate MySQL tables to Iceberg via binary log (binlog) with GTID tracking.
+Continuously sync MySQL tables to Iceberg.
 
 ## Prerequisites
 
@@ -10,16 +10,16 @@ Replicate MySQL tables to Iceberg via binary log (binlog) with GTID tracking.
 ## Source setup
 
 ```sql
--- Create a dedicated CDC user
+-- Create a dedicated user for DataShuttle
 CREATE USER 'datashuttle'@'%' IDENTIFIED BY 'your-password';
 GRANT SELECT, REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'datashuttle'@'%';
 ```
 
-Verify binlog settings:
+Verify the required MySQL settings:
 
 ```sql
-SHOW VARIABLES LIKE 'binlog_format';        -- must be ROW
-SHOW VARIABLES LIKE 'gtid_mode';            -- must be ON
+SHOW VARIABLES LIKE 'binlog_format';             -- must be ROW
+SHOW VARIABLES LIKE 'gtid_mode';                 -- must be ON
 SHOW VARIABLES LIKE 'enforce_gtid_consistency';  -- must be ON
 ```
 
@@ -50,13 +50,12 @@ CREATE CONNECTION mysql_prod
 ## CREATE PIPELINE
 
 ```sql
--- Single table
+-- Single table, continuous schedule (default)
 CREATE PIPELINE orders_sync
   SOURCE mysql_prod TABLE orders
-  TARGET warehouse.raw
-  ; -- continuous schedule (default)
+  TARGET warehouse.raw;
 
--- Multiple tables
+-- Multiple tables with options
 CREATE PIPELINE crm_sync
   SOURCE mysql_prod TABLE orders, customers
   TARGET warehouse.raw
@@ -65,16 +64,21 @@ CREATE PIPELINE crm_sync
     delete_mode = 'deletion_vectors',
     schema_evolution = 'compatible'
   );
+
+-- Periodic sync
+CREATE PIPELINE nightly_load
+  SOURCE mysql_prod TABLE reports
+  TARGET warehouse.analytics
+  SCHEDULE EVERY '1 hour';
 ```
 
-## CDC behavior
+## Sync behavior
 
-- **Mechanism**: MySQL binary log with GTID-based position tracking
-- **Initial load**: Parallel chunked `SELECT` with consistent snapshot (`START TRANSACTION WITH CONSISTENT SNAPSHOT`)
-- **Change capture**: Reads binlog events (INSERT, UPDATE, DELETE) via the replication protocol
-- **Deletes**: Written as Iceberg V3 deletion vectors
-- **Schema changes**: `ALTER TABLE ADD COLUMN` and compatible type widening are auto-applied (in `compatible` mode)
-- **Position tracking**: GTID set is checkpointed with each Iceberg commit. On recovery, resumes from the last GTID.
+- **Continuous schedule**: Uses native change tracking — latency is typically sub-second.
+- **Periodic schedule**: Uses incremental reads at each interval.
+- **Initial load**: Parallel chunked reads with a consistent view of the source.
+- **Deletes**: Written as Iceberg V3 deletion vectors.
+- **Schema changes**: `ALTER TABLE ADD COLUMN` and compatible type widening are auto-applied (in `compatible` mode).
 
 ## Type mapping
 

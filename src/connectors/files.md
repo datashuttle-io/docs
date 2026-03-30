@@ -37,44 +37,36 @@ CREATE CONNECTION minio_local
 ## CREATE PIPELINE
 
 ```sql
--- Parquet files
+-- Parquet files, periodic scan every 5 minutes
 CREATE PIPELINE raw_events
   SOURCE data_lake PATH 's3://bucket/events/'
   TARGET warehouse.raw
-  WITH (
-    -- periodic file ingestion
-    file_pattern = '*.parquet',
-    commit_interval = '5 minutes'
-  );
+  SCHEDULE EVERY '5 minutes'
+  WITH (file_pattern = '*.parquet');
 
 -- CSV files with options
 CREATE PIPELINE csv_import
   SOURCE data_lake PATH 's3://bucket/csv-data/'
   TARGET warehouse.staging
+  SCHEDULE EVERY '10 minutes'
   WITH (
-    -- periodic file ingestion
     file_pattern = '*.csv',
     csv_header = 'true',
-    csv_delimiter = ',',
-    commit_interval = '10 minutes'
+    csv_delimiter = ','
   );
 
 -- JSON files (newline-delimited)
 CREATE PIPELINE json_events
   SOURCE data_lake PATH 's3://bucket/json-events/'
   TARGET warehouse.raw
-  WITH (
-    -- periodic file ingestion
-    file_pattern = '*.json',
-    commit_interval = '5 minutes'
-  );
+  SCHEDULE EVERY '5 minutes'
+  WITH (file_pattern = '*.json');
 ```
 
-## Ingestion behavior
+## Sync behavior
 
-- **Mechanism**: Periodic scan of the source path for new files
-- **Mode**: `APPEND` only — file sources don't support CDC
-- **File tracking**: Each ingested file is recorded by path + ETag. Files are never re-ingested unless you explicitly re-snapshot.
+- **Schedule**: Periodic scan of the source path for new files at the configured interval.
+- **File tracking**: Each ingested file is recorded by path + ETag. Files are never re-ingested unless you explicitly reload.
 - **Schema inference**: Schema is inferred from the first file. Subsequent files with additional columns trigger schema evolution (in `compatible` mode).
 - **Ordering**: Files are processed in lexicographic order by key. Use date-partitioned prefixes (e.g., `s3://bucket/events/2026/03/28/`) for natural ordering.
 
@@ -102,7 +94,7 @@ Parquet files retain their native schema — no inference needed.
 
 ## Limitations
 
-- **No CDC**: File sources are append-only. Changes to existing files are not detected.
+- **Append-only**: File sources ingest new files only. Changes to existing files are not detected.
 - **No delete support**: Deletion vectors are not generated for file ingestion.
 - **Large files**: Files larger than 1 GB are ingested as a single unit. Consider pre-splitting very large files.
 - **Glob patterns**: Only simple wildcards (`*`) are supported. Complex glob patterns (e.g., `{2025,2026}/**`) are not.

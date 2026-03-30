@@ -8,7 +8,7 @@ SQL statements for managing running pipelines.
 PAUSE PIPELINE <name>;
 ```
 
-Pauses a running pipeline. The replication slot (PostgreSQL) or binlog position (MySQL) is held — no data is lost. The pipeline moves to `Paused` state.
+Pauses a running pipeline. The sync position is held — no data is lost. The pipeline moves to `Paused` state.
 
 **Example:**
 
@@ -22,7 +22,7 @@ datashuttle sql -e "PAUSE PIPELINE orders_sync"
 RESUME PIPELINE <name>;
 ```
 
-Resumes a paused pipeline from the last checkpointed position. The pipeline moves from `Paused` back to `Running`.
+Resumes a paused pipeline from the last checkpointed position. The pipeline transitions back to `Running`.
 
 **Example:**
 
@@ -67,7 +67,7 @@ curl -X POST http://localhost:8080/api/v1/pipelines/orders_sync/pause
 curl -X POST http://localhost:8080/api/v1/pipelines/orders_sync/resume
 ```
 
-## Re-snapshot
+## Reload from source
 
 Not a SQL statement — available via CLI and REST API:
 
@@ -79,4 +79,4 @@ datashuttle pipeline resnapshot orders_sync
 curl -X POST http://localhost:8080/api/v1/pipelines/orders_sync/resnapshot
 ```
 
-This drops existing Iceberg data, takes a fresh snapshot from the source, and resumes CDC.
+This re-loads all data from the source, then resumes continuous sync.

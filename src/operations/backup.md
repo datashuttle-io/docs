@@ -7,7 +7,7 @@ DataShuttle stores all persistent state in the Iceberg catalog and object storag
 | Data | Location | Backed up by |
 |------|----------|--------------|
 | Pipeline definitions | Iceberg catalog (table properties) | Your catalog backup strategy |
-| CDC checkpoints | Iceberg table properties | Your catalog backup strategy |
+| Sync checkpoints | Iceberg table properties | Your catalog backup strategy |
 | Ingested data | Parquet files in object storage | Your storage backup strategy |
 | Deletion vectors | Puffin files in object storage | Your storage backup strategy |
 
@@ -31,7 +31,7 @@ If the Iceberg catalog is lost, DataShuttle cannot resume pipelines (the checkpo
 Or, if no catalog backup exists:
 
 1. Re-create connections and pipelines
-2. Pipelines will re-snapshot from the source
+2. Pipelines will re-load from the source
 
 ## Recovery after storage loss
 
@@ -42,4 +42,4 @@ If object storage data is lost:
 
 ## Recommendation
 
-Back up your Iceberg catalog regularly. The catalog is the single source of truth for pipeline state. Object storage data can always be re-created from source systems via re-snapshot.
+Back up your Iceberg catalog regularly. The catalog is the single source of truth for pipeline state. Object storage data can always be re-created from source systems via re-load.

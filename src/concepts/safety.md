@@ -43,7 +43,7 @@ Four TLA+ specifications are model-checked with TLC before implementation:
 If DataShuttle crashes at any point during a commit cycle:
 
 1. The next startup reads the checkpoint from the Iceberg catalog
-2. Resumes CDC from the checkpointed position
+2. Resumes sync from the checkpointed position
 3. Detects and skips any duplicate batch (by `batch_id`)
 4. Cleans up orphan files from the incomplete commit
 5. Continues normal operation

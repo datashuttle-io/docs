@@ -26,7 +26,7 @@ datashuttle pipeline list                    # List all pipelines
 datashuttle pipeline status <name>           # Detailed status (state, lag, rows/sec)
 datashuttle pipeline pause <name>            # Pause a pipeline
 datashuttle pipeline resume <name>           # Resume a paused pipeline
-datashuttle pipeline resnapshot <name>       # Drop data and re-snapshot from source
+datashuttle pipeline resnapshot <name>       # Re-load all data from source
 datashuttle pipeline logs <name>             # Recent pipeline log entries
 ```
 

@@ -40,16 +40,16 @@ CREATE PIPELINE <name>
 
 ### Schedule
 
-DataShuttle uses a freshness-based sync model. Users specify how often they want data synchronized; the system automatically selects the optimal mechanism (CDC, polling, file scanning) based on connector capabilities.
+DataShuttle uses a freshness-based sync model. Users specify how often they want data synchronized; the system automatically selects the optimal sync mechanism based on connector capabilities.
 
 | Schedule | Behavior |
 |----------|----------|
-| `continuous` (default) | Keep data as fresh as the source allows. Uses native change tracking (WAL/binlog) when available. |
+| `continuous` (default) | Keep data as fresh as the source allows. Achievable latency depends on the source type. |
 | `EVERY '<interval>'` | Sync at specified interval (e.g., `EVERY '15 minutes'`, `EVERY '24 hours'`). |
 
-The initial snapshot is always automatic on first pipeline start — it is not a user-selectable mode.
+The initial load is always automatic on first pipeline start — it is not a user-selectable mode.
 
-Legacy `mode` values (`CDC`, `SNAPSHOT_THEN_CDC`, `SNAPSHOT_ONLY`, `APPEND`) are still accepted for backward compatibility and mapped to the equivalent schedule internally.
+Legacy `mode` values are still accepted for backward compatibility and mapped to the equivalent schedule internally.
 
 ### Pipeline options
 
@@ -61,7 +61,7 @@ Legacy `mode` values (`CDC`, `SNAPSHOT_THEN_CDC`, `SNAPSHOT_ONLY`, `APPEND`) are
 | `schema_evolution` | `compatible` | `compatible`, `strict` | Auto-apply schema changes or pause |
 | `iceberg_format_version` | `3` | `2`, `3` | Iceberg table format version |
 | `batch_size` | `10000` | Integer | Rows per micro-batch |
-| `parallelism` | `4` | Integer | Parallel snapshot workers |
+| `parallelism` | `4` | Integer | Parallel workers for initial load |
 | `file_pattern` | `*` | Glob | File pattern for S3 sources |
 | `csv_header` | `true` | Boolean | CSV files have a header row |
 | `csv_delimiter` | `,` | Character | CSV field delimiter |
@@ -69,7 +69,7 @@ Legacy `mode` values (`CDC`, `SNAPSHOT_THEN_CDC`, `SNAPSHOT_ONLY`, `APPEND`) are
 ## Examples
 
 ```sql
--- Continuous CDC pipeline (default schedule)
+-- Continuous sync (default schedule)
 CREATE PIPELINE orders_sync
   SOURCE pg_prod TABLE orders
   TARGET warehouse.raw;
@@ -116,4 +116,4 @@ CREATE PIPELINE event_files
 DROP PIPELINE <name>;
 ```
 
-Drops the pipeline, releases the replication slot (for database sources), and removes the pipeline definition from the catalog. Does **not** delete the Iceberg table or its data.
+Drops the pipeline and removes the pipeline definition from the catalog. Does **not** delete the Iceberg table or its data.

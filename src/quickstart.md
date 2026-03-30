@@ -83,12 +83,12 @@ docker exec datashuttle-datashuttle-1 datashuttle sql -e "
 
 > **Note:** The hostname `postgres` matches the Docker Compose service name. The publication `datashuttle_pub` is created automatically by the init script.
 
-## Step 3: Create a CDC pipeline
+## Step 3: Create a pipeline
 
-Replicate the orders and customers tables:
+Replicate the orders, customers, and products tables:
 
 ```sql
-CREATE PIPELINE ecommerce_cdc
+CREATE PIPELINE ecommerce_sync
   SOURCE demo_pg SCHEMA public TABLES (orders, customers, products)
   TARGET warehouse.raw
   SCHEDULE continuous
@@ -99,8 +99,8 @@ CREATE PIPELINE ecommerce_cdc
 ```
 
 This single statement:
-1. Takes an initial snapshot of the `orders`, `customers`, and `products` tables
-2. Starts streaming CDC changes from the PostgreSQL WAL
+1. Loads all existing data from the `orders`, `customers`, and `products` tables
+2. Starts continuous sync — changes in PostgreSQL appear in Iceberg within seconds
 3. Writes Parquet data files to MinIO
 4. Commits to the Iceberg catalog every 10 seconds
 
@@ -118,7 +118,7 @@ Or via the CLI:
 docker exec datashuttle-datashuttle-1 datashuttle pipeline status ecommerce_cdc
 ```
 
-You should see the pipeline in `running` or `snapshotting` state. The initial snapshot will process:
+You should see the pipeline in `running` or `syncing` state. The initial load will process:
 - 500 customer rows
 - 100 product rows
 - 2,000 order rows

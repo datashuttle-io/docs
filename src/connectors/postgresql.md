@@ -1,6 +1,6 @@
 # PostgreSQL Connector
 
-Replicate PostgreSQL tables to Iceberg via logical replication (WAL).
+Continuously sync PostgreSQL tables to Iceberg.
 
 ## Prerequisites
 
@@ -11,11 +11,11 @@ Replicate PostgreSQL tables to Iceberg via logical replication (WAL).
 ## Source setup
 
 ```sql
--- Create a dedicated CDC user
-CREATE USER datashuttle_cdc WITH REPLICATION PASSWORD 'your-password';
+-- Create a dedicated user for DataShuttle
+CREATE USER datashuttle WITH REPLICATION PASSWORD 'your-password';
 
 -- Grant read access to the tables
-GRANT SELECT ON ALL TABLES IN SCHEMA public TO datashuttle_cdc;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO datashuttle;
 
 -- Create a publication (all tables, or specific ones)
 CREATE PUBLICATION datashuttle_pub FOR ALL TABLES;
@@ -24,10 +24,10 @@ CREATE PUBLICATION datashuttle_pub FOR ALL TABLES;
 -- CREATE PUBLICATION datashuttle_pub FOR TABLE orders, customers, payments;
 ```
 
-Verify logical replication is enabled:
+Verify the required PostgreSQL settings:
 
 ```sql
-SHOW wal_level;     -- must be "logical"
+SHOW wal_level;              -- must be "logical"
 SHOW max_replication_slots;  -- must be > 0
 ```
 
@@ -40,9 +40,8 @@ CREATE CONNECTION pg_prod
     host = 'db.internal',
     port = 5432,
     database = 'production',
-    username = 'datashuttle_cdc',
+    username = 'datashuttle',
     password = SECRET 'vault://secrets/pg_pass',
-    replication_slot = 'datashuttle_slot',
     publication = 'datashuttle_pub'
   );
 ```
@@ -50,11 +49,10 @@ CREATE CONNECTION pg_prod
 ## CREATE PIPELINE
 
 ```sql
--- Single table
+-- Single table, continuous schedule (default)
 CREATE PIPELINE orders_sync
   SOURCE pg_prod TABLE orders
-  TARGET warehouse.raw
-  ; -- continuous schedule (default)
+  TARGET warehouse.raw;
 
 -- Multiple tables with options
 CREATE PIPELINE crm_sync
@@ -65,16 +63,21 @@ CREATE PIPELINE crm_sync
     delete_mode = 'deletion_vectors',
     schema_evolution = 'compatible'
   );
+
+-- Periodic sync
+CREATE PIPELINE nightly_load
+  SOURCE pg_prod TABLE analytics_events
+  TARGET warehouse.raw
+  SCHEDULE EVERY '1 hour';
 ```
 
-## CDC behavior
+## Sync behavior
 
-- **Mechanism**: PostgreSQL logical replication via `pgoutput` plugin
-- **Initial load**: Parallel chunked `SELECT` with consistent snapshot
-- **Change capture**: Reads from a replication slot (INSERT, UPDATE, DELETE)
-- **Deletes**: Written as Iceberg V3 deletion vectors (Puffin files), not position deletes
-- **Schema changes**: `ALTER TABLE ADD COLUMN` and compatible type widening are auto-applied (in `compatible` mode)
-- **Replication slot**: Created automatically on first pipeline start. Held during pause, released on drop.
+- **Continuous schedule**: Uses native change tracking — latency is typically sub-second.
+- **Periodic schedule**: Uses incremental reads at each interval.
+- **Initial load**: Parallel chunked reads with a consistent view of the source.
+- **Deletes**: Written as Iceberg V3 deletion vectors (Puffin files).
+- **Schema changes**: `ALTER TABLE ADD COLUMN` and compatible type widening are auto-applied (in `compatible` mode).
 
 ## Type mapping
 
@@ -97,7 +100,7 @@ CREATE PIPELINE crm_sync
 
 ## Limitations
 
-- **TOAST columns**: Large values stored out-of-line require `REPLICA IDENTITY FULL` on the table for UPDATE events to include the full column value. Without it, unchanged TOAST columns appear as `NULL` in the CDC stream.
+- **TOAST columns**: Large values stored out-of-line require `REPLICA IDENTITY FULL` on the table for UPDATE events to include the full column value.
 - **DDL replication**: Only column additions and compatible type widening are supported. Renaming columns or dropping columns requires manual intervention.
 - **Partitioned tables**: Replicate individual partitions, not the parent table.
 - **Sequences / generated columns**: Values are captured as-is. Sequences are not replicated.

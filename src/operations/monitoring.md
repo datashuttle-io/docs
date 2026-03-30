@@ -49,7 +49,7 @@ annotations:
   annotations:
     summary: "Pipeline {{ $labels.pipeline }} has errors"
 
-# Alert on high CDC lag
+# Alert on high sync latency
 - alert: DataShuttleHighLag
   expr: datashuttle_pipeline_lag_seconds > 300
   for: 5m
@@ -82,7 +82,7 @@ webhooks:
 | `pipeline.commit` | Successful Iceberg commit |
 | `pipeline.error` | Pipeline error (auto-paused) |
 | `pipeline.schema.changed` | Source schema change detected |
-| `pipeline.lag.critical` | CDC lag exceeds threshold |
+| `pipeline.lag.critical` | Sync latency exceeds threshold |
 
 ## Web UI
 
