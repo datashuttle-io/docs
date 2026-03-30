@@ -373,8 +373,102 @@ curl http://localhost:8080/api/v1/monitoring/stats
     }
   ],
   "total_tables": 47,
-  "node_count": 3
+  "node_count": 3,
+  "resource_pools": [
+    {
+      "name": "default",
+      "mode": "shared",
+      "priority": "medium",
+      "active_pipelines": 8,
+      "max_pipelines": 0,
+      "active_snapshots": 1,
+      "max_snapshots": 0,
+      "node_count": 0
+    },
+    {
+      "name": "critical",
+      "mode": "dedicated",
+      "priority": "high",
+      "active_pipelines": 4,
+      "max_pipelines": 10,
+      "active_snapshots": 0,
+      "max_snapshots": 3,
+      "node_count": 2
+    }
+  ]
 }
+```
+
+---
+
+## Resource Pools
+
+### List pools
+
+```bash
+curl http://localhost:8080/api/v1/resource-pools
+```
+
+**Response** `200 OK`:
+
+```json
+[
+  {
+    "name": "default",
+    "mode": "shared",
+    "nodes": [],
+    "priority": "medium",
+    "limits": { "max_pipelines": 0, "max_concurrent_snapshots": 0, "max_memory_per_pipeline_mb": 0, "max_cpu_percent_per_pipeline": 0, "io_bandwidth_mbps": 0 },
+    "pipeline_count": 5,
+    "active_pipelines": ["orders_sync", "users_sync"]
+  }
+]
+```
+
+### Create pool
+
+```bash
+curl -X POST http://localhost:8080/api/v1/resource-pools \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "critical",
+    "mode": "dedicated",
+    "priority": "high",
+    "nodes": ["node-1", "node-2"],
+    "limits": { "max_pipelines": 10, "max_concurrent_snapshots": 3 }
+  }'
+```
+
+**Response** `201 Created`
+
+### Update pool
+
+```bash
+curl -X PUT http://localhost:8080/api/v1/resource-pools/critical \
+  -H 'Content-Type: application/json' \
+  -d '{"name": "critical", "limits": {"max_pipelines": 20}}'
+```
+
+### Delete pool
+
+```bash
+curl -X DELETE http://localhost:8080/api/v1/resource-pools/critical
+```
+
+**Response** `204 No Content`. Fails with `409 Conflict` if pipelines are assigned.
+
+### Pool nodes
+
+```bash
+curl http://localhost:8080/api/v1/resource-pools/critical/nodes
+```
+
+### Reassign pipeline to pool
+
+```bash
+curl -X PUT http://localhost:8080/api/v1/pipelines/orders_sync/pool \
+  -H 'Content-Type: application/json' \
+  -d '{"pool": "critical"}'
 ```
 
 ---

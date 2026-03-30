@@ -62,6 +62,7 @@ Legacy `mode` values are still accepted for backward compatibility and mapped to
 | `iceberg_format_version` | `3` | `2`, `3` | Iceberg table format version |
 | `batch_size` | `10000` | Integer | Rows per micro-batch |
 | `parallelism` | `4` | Integer | Parallel workers for initial load |
+| `resource_pool` | `default` | Pool name string | Resource pool for workload isolation |
 | `file_pattern` | `*` | Glob | File pattern for S3 sources |
 | `csv_header` | `true` | Boolean | CSV files have a header row |
 | `csv_delimiter` | `,` | Character | CSV field delimiter |
@@ -101,6 +102,12 @@ CREATE PIPELINE historical_load
   SOURCE pg_prod TABLE legacy_orders
   TARGET warehouse.archive
   SCHEDULE EVERY '24 hours';
+
+-- Pipeline in a dedicated resource pool
+CREATE PIPELINE critical_orders
+  SOURCE pg_prod TABLE orders
+  TARGET warehouse.raw
+  WITH (resource_pool = 'critical');
 
 -- S3 file ingestion
 CREATE PIPELINE event_files

@@ -42,7 +42,7 @@ DataShuttle uses a **shared-nothing architecture** where every node is equal and
 | `datashuttle-cdc` | Source connectors: PostgreSQL, MySQL, MongoDB, S3/file sources |
 | `datashuttle-flight` | Arrow Flight hot buffer, flush worker, Raft replication |
 | `datashuttle-gossip` | Cluster membership via SWIM gossip (chitchat) |
-| `datashuttle-api` | REST API, WebSocket, Prometheus `/metrics`, auth middleware |
+| `datashuttle-api` | REST API, WebSocket, Prometheus `/metrics`, auth, pool scheduler, cgroups limits |
 | `datashuttle-cli` | CLI binary: pipeline/connection management, SQL console, GitOps |
 | `datashuttle-ui` | Embedded React Web UI (rust-embed, served from any node) |
 

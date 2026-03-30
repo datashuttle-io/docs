@@ -30,6 +30,14 @@ datashuttle pipeline resnapshot <name>       # Re-load all data from source
 datashuttle pipeline logs <name>             # Recent pipeline log entries
 ```
 
+## Resource pools
+
+```bash
+datashuttle sql -e "CREATE PIPELINE p1 SOURCE conn TABLE t TARGET w.ns WITH (resource_pool = 'critical')"
+```
+
+Pool management is via the REST API or Settings UI (`/api/v1/resource-pools`).
+
 ## Dead letters
 
 ```bash

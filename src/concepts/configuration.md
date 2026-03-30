@@ -60,6 +60,25 @@ webhooks: []
 logging:
   level: info                  # trace | debug | info | warn | error
   format: json                # json | pretty
+
+# Resource pools (workload isolation)
+resource_pools:
+  - name: critical
+    mode: dedicated            # shared | dedicated | elastic
+    nodes: [node-0, node-1]
+    priority: high             # high | medium | low
+    limits:
+      max_pipelines: 10
+      max_concurrent_snapshots: 3
+      max_memory_per_pipeline_mb: 2048
+      max_cpu_percent_per_pipeline: 50
+      io_bandwidth_mbps: 500
+  - name: batch
+    mode: elastic
+    nodes: [node-2, node-3]
+    priority: low
+    limits:
+      max_pipelines: 50
 ```
 
 ## Environment variables
