@@ -29,6 +29,7 @@
 - [MySQL](./connectors/mysql.md)
 - [MongoDB](./connectors/mongodb.md)
 - [S3 / File Sources](./connectors/files.md)
+- [REST API](./connectors/rest-api.md)
 
 # SQL Reference
 
