@@ -7,5 +7,6 @@ src = "src"
 [output.html]
 default-theme = "navy"
 preferred-dark-theme = "navy"
+site-url = "/docs/"
 git-repository-url = "https://github.com/evgenyestepanov-star/datashuttle"
 edit-url-template = "https://github.com/evgenyestepanov-star/datashuttle/edit/main/docs/book/src/{path}"
