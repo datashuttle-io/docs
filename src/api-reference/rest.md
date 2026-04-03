@@ -219,6 +219,63 @@ curl http://localhost:8080/api/v1/connections/crm_prod/tables
 ]
 ```
 
+### Discover table schema
+
+Returns column metadata for a specific table. Used by the pipeline creation wizard.
+
+```bash
+curl http://localhost:8080/api/v1/connections/crm_prod/tables/public/orders/schema
+```
+
+**Response** `200 OK`:
+
+```json
+[
+  {
+    "name": "id",
+    "source_type": "int4",
+    "iceberg_type": "Int",
+    "nullable": false,
+    "is_primary_key": true
+  },
+  {
+    "name": "status",
+    "source_type": "varchar",
+    "iceberg_type": "String",
+    "nullable": false,
+    "is_primary_key": false
+  }
+]
+```
+
+### Connection type mapping
+
+Returns the default source-to-Iceberg type mapping for the connector behind a connection.
+
+```bash
+curl http://localhost:8080/api/v1/connections/crm_prod/type-mapping
+```
+
+**Response** `200 OK`:
+
+```json
+{
+  "connector_type": "POSTGRES",
+  "mappings": [
+    {
+      "source_type": "integer / int4",
+      "iceberg_type": "Int",
+      "alternatives": ["Long", "String"]
+    },
+    {
+      "source_type": "text / varchar / char",
+      "iceberg_type": "String",
+      "alternatives": []
+    }
+  ]
+}
+```
+
 ---
 
 ## Catalog
