@@ -108,6 +108,89 @@ curl http://localhost:8080/api/v1/pipelines/orders_sync/status
 curl http://localhost:8080/api/v1/pipelines/orders_sync/history?limit=10
 ```
 
+### Pipeline clustering
+
+Read or modify the partition layout and sort order for an existing
+pipeline. See the
+[Partitioning & Clustering chapter](../concepts/partitioning-clustering.md)
+for the conceptual background.
+
+#### Get clustering
+
+```bash
+curl http://localhost:8080/api/v1/pipelines/events/clustering
+```
+
+**Response** `200 OK`:
+
+```json
+{
+  "partition_spec": {
+    "fields": [
+      { "column": "event_ts", "transform": "Day", "name": null },
+      { "column": "user_id", "transform": { "Bucket": 16 }, "name": "user_bucket" }
+    ]
+  },
+  "sort_order": {
+    "fields": [
+      {
+        "column": "event_ts",
+        "transform": "Identity",
+        "direction": "Desc",
+        "null_order": "NullsFirst"
+      }
+    ]
+  }
+}
+```
+
+Either field is `null` if not configured. Transforms serialise as the
+Rust enum format: `"Identity"`, `"Year"`, `"Month"`, `"Day"`, `"Hour"`,
+`{ "Bucket": 16 }`, or `{ "Truncate": 8 }`.
+
+#### Update clustering
+
+```bash
+curl -X PUT http://localhost:8080/api/v1/pipelines/events/clustering \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "sort_order": {
+      "fields": [
+        {
+          "column": "event_ts",
+          "transform": "Identity",
+          "direction": "Desc",
+          "null_order": "NullsFirst"
+        }
+      ]
+    },
+    "apply_to_existing_tables": true
+  }'
+```
+
+**Body fields** (all optional — omit to leave unchanged):
+
+| Field | Type | Description |
+|---|---|---|
+| `partition_spec` | `PartitionSpecAst` | New partition layout. Pass `{"fields": []}` to clear. New tables only. |
+| `sort_order` | `SortOrderAst` | New sort order. Pass `{"fields": []}` to clear. |
+| `apply_to_existing_tables` | bool, default `false` | If true, push the sort order onto every existing Iceberg table the pipeline writes to via Iceberg `UpdateTable`. Existing data files are *not* rewritten — only future writes use the new order. Partition spec changes never affect existing tables. |
+
+**Response** on success: same shape as `GET`, reflecting the persisted
+state after the update.
+
+**Response** `207 Multi-Status` if `apply_to_existing_tables` was true
+and at least one per-table `UpdateTable` failed:
+
+```json
+{
+  "error": "registry updated; 1 of 3 live ALTER calls failed: orders: ..."
+}
+```
+
+The registry is always updated first, so the `GET` endpoint reflects
+the new layout even when some live ALTERs failed.
+
 ### Pipeline lineage
 
 Returns source tables, destination Iceberg tables, and per-table edges for a pipeline.

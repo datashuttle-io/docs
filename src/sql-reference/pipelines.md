@@ -8,6 +8,8 @@ Pipelines are the core unit of work. A pipeline connects a source to an Iceberg 
 CREATE PIPELINE <name>
   SOURCE <connection> TABLE <table> [, <table>, ...]
   TARGET <namespace>
+  [PARTITION BY (<partition-field>, ...)]
+  [CLUSTER BY (<sort-field>, ...)]
   [SCHEDULE <schedule>]
   [WITH (
     <option> = '<value>',
@@ -37,6 +39,50 @@ CREATE PIPELINE <name>
 | `TARGET` | Yes | Iceberg namespace (e.g., `warehouse.raw`) |
 | `SCHEDULE` | No | Sync schedule (see below) |
 | `WITH` | No | Pipeline options (see below) |
+
+### `PARTITION BY (...)` and `CLUSTER BY (...)`
+
+Two top-level clauses control the physical layout of the destination
+Iceberg table. See the [Partitioning & Clustering chapter](../concepts/partitioning-clustering.md)
+for the full reference and performance guidance.
+
+Both clauses accept a comma-separated list of field expressions:
+
+```text
+field          := <transform>(<args>)        — explicit transform
+                | <column>                    — identity (default)
+                | <expr> AS <name>            — partition only, alias
+                | <expr> ASC|DESC             — cluster only, direction
+                | <expr> ASC|DESC NULLS FIRST|LAST   — cluster only, with null ordering
+
+transform      := identity | bucket | truncate | year | month | day | hour
+args           := <column>                    — year/month/day/hour
+                | <N>, <column>               — bucket
+                | <W>, <column>               — truncate
+```
+
+Examples:
+
+```sql
+PARTITION BY (
+  day(event_ts),
+  bucket(16, user_id) AS user_bucket
+)
+CLUSTER BY (
+  event_ts DESC NULLS FIRST,
+  user_id ASC
+)
+```
+
+Each transform validates that its source column exists in the table
+schema and has a compatible type. `year/month/day/hour` require a date
+or timestamp column; `truncate` requires int or string; `bucket` accepts
+int, string, date, or timestamp.
+
+Sort orders can be **modified on a live pipeline** without rewriting
+data — DataShuttle uses Iceberg's sort-order evolution to push the new
+order onto existing tables. Partition specs can only be set on new
+tables; see the partitioning chapter for details.
 
 ### Schedule
 
@@ -104,6 +150,14 @@ CREATE PIPELINE crm_full
     schema_evolution = 'compatible',
     parallelism = 8
   );
+
+-- Partitioned + clustered events table
+CREATE PIPELINE clickstream
+  SOURCE pg_prod TABLE events
+  TARGET warehouse.analytics
+  PARTITION BY (day(event_ts), bucket(32, user_id))
+  CLUSTER BY (event_ts DESC NULLS FIRST, user_id ASC)
+  SCHEDULE continuous;
 
 -- Periodic sync (every 24 hours)
 CREATE PIPELINE historical_load

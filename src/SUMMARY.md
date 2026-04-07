@@ -19,6 +19,7 @@
 
 - [Architecture](./concepts/architecture.md)
 - [Pipeline Lifecycle](./concepts/pipeline-lifecycle.md)
+- [Partitioning & Clustering](./concepts/partitioning-clustering.md)
 - [Safety & Correctness](./concepts/safety.md)
 - [Configuration](./concepts/configuration.md)
 
