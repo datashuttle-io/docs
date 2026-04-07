@@ -30,7 +30,7 @@ Resumes a paused pipeline from the last checkpointed position. The pipeline tran
 datashuttle sql -e "RESUME PIPELINE orders_sync"
 ```
 
-## ALTER PIPELINE (planned)
+## ALTER PIPELINE
 
 ```sql
 ALTER PIPELINE <name>
@@ -40,7 +40,21 @@ ALTER PIPELINE <name>
   );
 ```
 
-> **Note:** `ALTER PIPELINE` is planned for a future release. Currently, to change pipeline options, drop and recreate the pipeline.
+Supported properties for `SET`: `commit_interval`, `schedule`, `batch_size`, `parallelism`, `resource_pool`, `error_strategy`.
+
+Example:
+
+```bash
+datashuttle sql -e "ALTER PIPELINE orders_sync SET (commit_interval = '10 seconds')"
+```
+
+Alternatively, use the REST API:
+
+```bash
+curl -X PUT http://localhost:8080/api/v1/pipelines/orders_sync \
+  -H 'Content-Type: application/json' \
+  -d '{"sql": "ALTER PIPELINE orders_sync SET (commit_interval = '\''10 seconds'\'')"}'
+```
 
 ## Using the CLI
 

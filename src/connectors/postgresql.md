@@ -91,12 +91,19 @@ CREATE PIPELINE nightly_load
 | `timestamp` | Timestamp(μs) | `timestamptz` |
 | `timestamptz` | Timestamp(μs, UTC) | `timestamptz` |
 | `date` | Date32 | `date` |
-| `jsonb` | Utf8 | `string` |
-| `uuid` | Utf8 | `string` |
+| `json` / `jsonb` | Utf8 | `variant` (V3) |
+| `uuid` | Utf8 | `uuid` |
 | `numeric` / `decimal` | Decimal128 | `decimal(p, s)` |
 | `real` | Float32 | `float` |
 | `double precision` | Float64 | `double` |
 | `bytea` | Binary | `binary` |
+| `time` | Time64(μs) | `time` |
+| `timetz` | Utf8 | `string` (timezone info preserved as text) |
+| `inet` / `cidr` / `macaddr` | Utf8 | `string` |
+| `interval` | Utf8 | `string` (ISO 8601) |
+| `int[]` / `text[]` / `int4[]` | Utf8 | `string` (serialized) |
+| `geometry` (PostGIS) | Binary | `geometry` (V3) |
+| `geography` (PostGIS) | Binary | `geography` (V3) |
 
 ## Limitations
 

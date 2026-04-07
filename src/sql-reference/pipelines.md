@@ -58,12 +58,20 @@ Legacy `mode` values are still accepted for backward compatibility and mapped to
 | `schedule` | `continuous` | `continuous`, `EVERY '<duration>'` | Sync schedule (alternative to `SCHEDULE` clause) |
 | `commit_interval` | `30 seconds` | Duration string | How often to commit to Iceberg |
 | `delete_mode` | `deletion_vectors` | `deletion_vectors`, `copy_on_write` | How deletes are handled |
-| `schema_evolution` | `compatible` | `compatible`, `strict` | Auto-apply schema changes or pause |
+| `schema_evolution` | `compatible` | `compatible`, `strict`, `none` | Auto-apply schema changes or pause |
 | `iceberg_format_version` | `3` | `2`, `3` | Iceberg table format version |
 | `batch_size` | `10000` | Integer | Rows per micro-batch |
 | `parallelism` | `4` | Integer | Parallel workers for initial load |
 | `resource_pool` | `default` | Pool name string | Resource pool for workload isolation |
-| `file_pattern` | `*` | Glob | File pattern for S3 sources |
+| `watermark_column` | — | Column name | Incremental read cursor (ClickHouse, BigQuery, Vertica, etc.) |
+| `error_strategy` | `dead_letter` | `dead_letter`, `skip`, `fail` | What to do with malformed / errored rows |
+| `max_retries` | `5` | Integer | Max connector error retries before circuit-break |
+| `retry_backoff` | `exponential` | `exponential`, `fixed` | Retry backoff strategy |
+| `max_backoff` | `5 minutes` | Duration string | Cap for exponential backoff |
+| `circuit_breaker_threshold` | `10` | Integer | Consecutive failures to trip circuit breaker (`0` = disabled) |
+| `skip_initial_snapshot` | `false` | Boolean | Skip bulk load and start CDC from current position |
+| `add_metadata_columns` | `true` | Boolean | Inject `_ds_ingested_at`, `_ds_source_table`, `_ds_operation` columns |
+| `file_pattern` | `*` | Glob | File pattern for S3 / file sources |
 | `csv_header` | `true` | Boolean | CSV files have a header row |
 | `csv_delimiter` | `,` | Character | CSV field delimiter |
 
