@@ -115,6 +115,12 @@ pipeline. See the
 [Partitioning & Clustering chapter](../concepts/partitioning-clustering.md)
 for the conceptual background.
 
+Clustering is stored **per destination table**: every entry in the
+`tables` map is keyed on a fully qualified source table name (e.g.
+`"analytics.events"`) and carries its own partition layout and sort
+order. The special empty-string key `""` is the pipeline-wide default
+applied to any table without a specific entry.
+
 #### Get clustering
 
 ```bash
@@ -125,56 +131,82 @@ curl http://localhost:8080/api/v1/pipelines/events/clustering
 
 ```json
 {
-  "partition_spec": {
-    "fields": [
-      { "column": "event_ts", "transform": "Day", "name": null },
-      { "column": "user_id", "transform": { "Bucket": 16 }, "name": "user_bucket" }
-    ]
-  },
-  "sort_order": {
-    "fields": [
-      {
-        "column": "event_ts",
-        "transform": "Identity",
-        "direction": "Desc",
-        "null_order": "NullsFirst"
+  "tables": {
+    "": {
+      "partition_spec": {
+        "fields": [
+          { "column": "event_ts", "transform": "Day", "name": null }
+        ]
+      },
+      "sort_order": null
+    },
+    "analytics.events": {
+      "partition_spec": {
+        "fields": [
+          { "column": "event_ts", "transform": "Day", "name": null },
+          { "column": "user_id", "transform": { "Bucket": 16 }, "name": "user_bucket" }
+        ]
+      },
+      "sort_order": {
+        "fields": [
+          {
+            "column": "event_ts",
+            "transform": "Identity",
+            "direction": "Desc",
+            "null_order": "NullsFirst"
+          }
+        ]
       }
-    ]
+    }
   }
 }
 ```
 
-Either field is `null` if not configured. Transforms serialise as the
-Rust enum format: `"Identity"`, `"Year"`, `"Month"`, `"Day"`, `"Hour"`,
+Either `partition_spec` or `sort_order` is `null` when not configured
+for a given entry. Transforms serialise as the Rust enum format:
+`"Identity"`, `"Year"`, `"Month"`, `"Day"`, `"Hour"`,
 `{ "Bucket": 16 }`, or `{ "Truncate": 8 }`.
 
 #### Update clustering
+
+`PUT` is a **wholesale replace** — any previously configured per-table
+or default entries not present in the request body are cleared.
 
 ```bash
 curl -X PUT http://localhost:8080/api/v1/pipelines/events/clustering \
   -H 'Content-Type: application/json' \
   -d '{
-    "sort_order": {
-      "fields": [
-        {
-          "column": "event_ts",
-          "transform": "Identity",
-          "direction": "Desc",
-          "null_order": "NullsFirst"
+    "tables": {
+      "": {
+        "partition_spec": {
+          "fields": [
+            { "column": "event_ts", "transform": "Day", "name": null }
+          ]
         }
-      ]
+      },
+      "analytics.events": {
+        "sort_order": {
+          "fields": [
+            {
+              "column": "event_ts",
+              "transform": "Identity",
+              "direction": "Desc",
+              "null_order": "NullsFirst"
+            }
+          ]
+        }
+      }
     },
     "apply_to_existing_tables": true
   }'
 ```
 
-**Body fields** (all optional — omit to leave unchanged):
+**Body fields**:
 
 | Field | Type | Description |
 |---|---|---|
-| `partition_spec` | `PartitionSpecAst` | New partition layout. Pass `{"fields": []}` to clear. New tables only. |
-| `sort_order` | `SortOrderAst` | New sort order. Pass `{"fields": []}` to clear. |
-| `apply_to_existing_tables` | bool, default `false` | If true, push the sort order onto every existing Iceberg table the pipeline writes to via Iceberg `UpdateTable`. Existing data files are *not* rewritten — only future writes use the new order. Partition spec changes never affect existing tables. |
+| `tables` | object | Required. Map keyed on fully qualified source table name. The empty string `""` is the pipeline-wide default. Each value is `{ partition_spec, sort_order }`; either sub-field may be `null`. |
+| `apply_to_existing_tables` | bool, default `false` | If true, push the **effective** sort order onto every existing Iceberg table the pipeline writes to via Iceberg `UpdateTable`. Effective order = per-table entry if present, otherwise the default. Existing data files are *not* rewritten — only future writes use the new order. Partition spec changes never affect existing tables. |
 
 **Response** on success: same shape as `GET`, reflecting the persisted
 state after the update.

@@ -99,6 +99,60 @@ Within a Parquet file, DataShuttle sorts rows lexicographically by the
 fields in the order you specify them. The first field is the primary
 sort key.
 
+## Multi-table pipelines
+
+A single pipeline can cover many destination tables with different
+schemas. Clustering is stored **per destination table** so each table
+can have its own layout:
+
+- The **default** entry (empty-string key `""` in the REST API) is the
+  pipeline-wide setting applied to any table that does not have a
+  specific entry.
+- A **per-table** entry overrides the default for that one table.
+
+The SQL DSL only expresses the default:
+
+```sql
+CREATE PIPELINE multi
+  SOURCE pg
+  TARGET warehouse.raw
+  CONNECTION prod
+  TABLES (events, sessions, users)
+  PARTITION BY (day(created_at))
+  CLUSTER BY (created_at ASC);
+```
+
+This works as long as every listed table has a `created_at` column. If
+one table is missing that column the default is silently ignored for
+that table at snapshot time — no pipeline-wide failure.
+
+For the common case where one table needs its own layout (e.g. an
+events table should be partitioned by `event_ts` while everything else
+uses `created_at`), use the Web UI (which exposes the per-table editor)
+or the REST API directly:
+
+```bash
+PUT /api/v1/pipelines/multi/clustering
+{
+  "tables": {
+    "": {
+      "partition_spec": { "fields": [{ "column": "created_at", "transform": "Day" }] }
+    },
+    "analytics.events": {
+      "partition_spec": { "fields": [{ "column": "event_ts", "transform": "Day" }] },
+      "sort_order": {
+        "fields": [
+          { "column": "event_ts", "transform": "Identity", "direction": "Desc", "null_order": "NullsFirst" }
+        ]
+      }
+    }
+  }
+}
+```
+
+The pipeline runner resolves the effective layout for each table by
+looking up the per-table entry first, then falling back to the default.
+
 ## Live evolution
 
 Both partitioning and sort order can be changed on a running pipeline
