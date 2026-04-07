@@ -20,6 +20,7 @@
 - [Architecture](./concepts/architecture.md)
 - [Pipeline Lifecycle](./concepts/pipeline-lifecycle.md)
 - [Partitioning & Clustering](./concepts/partitioning-clustering.md)
+- [Iceberg Commit Batching](./concepts/iceberg-commit-batching.md)
 - [Safety & Correctness](./concepts/safety.md)
 - [Configuration](./concepts/configuration.md)
 

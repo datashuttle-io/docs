@@ -120,6 +120,12 @@ Legacy `mode` values are still accepted for backward compatibility and mapped to
 | `file_pattern` | `*` | Glob | File pattern for S3 / file sources |
 | `csv_header` | `true` | Boolean | CSV files have a header row |
 | `csv_delimiter` | `,` | Character | CSV field delimiter |
+| `commit_batch_files` | `1000` | Integer | Snapshot phase: max staged parquet files before an Iceberg commit ([details](../concepts/iceberg-commit-batching.md)) |
+| `commit_batch_bytes` | `256 MB` | Byte size | Snapshot phase: max staged bytes before an Iceberg commit |
+| `commit_batch_interval` | `30 seconds` | Duration | Snapshot phase: max age of the oldest staged file before an Iceberg commit |
+| `cdc_commit_batch_files` | `100` | Integer | CDC phase: same as `commit_batch_files` but tighter for streaming |
+| `cdc_commit_batch_bytes` | `64 MB` | Byte size | CDC phase: same as `commit_batch_bytes` |
+| `cdc_commit_batch_interval` | `5 seconds` | Duration | CDC phase: same as `commit_batch_interval` |
 
 ## Examples
 
