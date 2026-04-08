@@ -8,18 +8,16 @@ data is physically laid out in your tables:
 | **Partitioning** | `partition-spec` | `PARTITION BY (...)` | Physically split data files by partition value so scans open only the files they need. |
 | **Clustering / sort order** | `sort-orders[]` | `CLUSTER BY (...)` | Sort rows inside each Parquet file for locality and predicate pushdown. |
 
-> **Status as of this release (#459):** partition layout is applied at
-> write time. Every staged batch is split into one Parquet file per
-> partition tuple and uploaded to a Hive-style path
-> `<namespace>/<table>/data/<k1>=<v1>/<k2>=<v2>/<uuid>.parquet`.
-> The partition spec is also registered in the Iceberg catalog
-> `metadata.json` so readers know the layout. Full manifest-level
-> partition pruning — where the Iceberg reader looks at a file's
-> partition tuple in the manifest entry without opening the file —
-> is tracked as follow-up work; readers that key off file paths
-> already benefit from the Hive split, and readers that key off
-> the manifest still read every file but correctly return only
-> matching rows.
+> **Status as of this release (#459):** partition layout is fully
+> plumbed end-to-end. The writer splits every staged batch by
+> partition tuple, uploads each group to a Hive-style path
+> `<namespace>/<table>/data/<k1>=<v1>/<k2>=<v2>/<uuid>.parquet`, and
+> stamps the tuple onto the manifest entry as a dynamic Avro record.
+> Each commit publishes a per-partition-field summary (min / max
+> bounds + `contains_null` flag) in the manifest-list entry and the
+> real `partition-spec-id` from `metadata.json` — the same shape
+> Iceberg readers like Dremio, Spark, and Trino use to prune files
+> without opening them.
 
 Both are declared inline in `CREATE PIPELINE`, persisted in the catalog,
 and applied automatically by the writer to every snapshot the pipeline
