@@ -5,6 +5,28 @@ snapshot commit instead of committing on every batch. This is the
 mechanism that keeps large-table snapshots running at constant
 throughput regardless of how many rows have already been written.
 
+> **Two layers, not one.** As of #460 there are **two** independent
+> batching layers on the write path. They sit on top of each other
+> and both must be configured for a healthy bulk snapshot:
+>
+>   1. **File-size targeting** — accumulates incoming Arrow batches
+>      in a row buffer and only cuts a parquet file once the buffer
+>      reaches the target row count, byte size, or age. Controls
+>      *how big each parquet file is*. See the dedicated section
+>      below.
+>   2. **Commit batching** — accumulates already-cut parquets in a
+>      staging slot and only fires an Iceberg snapshot commit once
+>      the slot reaches `commit_batch_*`. Controls *how often
+>      DataShuttle commits*. This is the original #457 layer
+>      documented in the rest of this page.
+>
+> Without (1) the writer used to emit one parquet per source block
+> (~7 K rows / ~80 KB on ClickHouse) and bulk snapshot throughput
+> collapsed under per-file overhead. Without (2) every commit would
+> rewrite Iceberg metadata.json from scratch and `O(N²)` would still
+> bite. The two layers are orthogonal: a single commit holds many
+> properly-sized files.
+
 ## Why batching exists
 
 Every Iceberg snapshot is a tiny ACID transaction. The commit path
@@ -202,3 +224,118 @@ sum by (pipeline, table) (datashuttle_iceberg_pending_files)
   - `resolve_batching_thresholds()` layers writer defaults → server
     defaults → pipeline overrides.
 - Tracking issue: [#457](https://github.com/evgenyestepanov-star/datashuttle/issues/457).
+- File-size targeting layer: [#460](https://github.com/evgenyestepanov-star/datashuttle/issues/460).
+
+## File size targeting (#460)
+
+The commit batching layer above answers *"how often do we commit?"*
+It does **not** answer *"how big is each parquet file?"* Until #460
+the writer cut a new parquet on every `stage_batch()` call, and
+since the snapshot loop calls `stage_batch()` once per source block
+(typically a few thousand rows on ClickHouse, a few hundred kB on
+disk), commits ended up holding hundreds or thousands of tiny
+files. The per-file overhead — sort, parquet writer init, S3 PUT,
+WAL append — does not amortize over rows, and bulk snapshots
+collapsed to a few hundred rows/second after the source-side
+queue drained.
+
+The fix is a **row buffer** inside the writer that accumulates
+incoming `RecordBatch`es and only serialises a parquet when one of
+three thresholds trips:
+
+| Threshold | Default | Meaning |
+|---|---|---|
+| `target_file_rows` | `5_000_000` | Loose memory-safety cap, not the binding axis. The compression-aware `target_file_bytes` is the primary file-size knob; `target_file_rows` only fires on pathologically wide rows where 5M of them would exceed `target_file_bytes` even after compression. |
+| `target_file_bytes` | `64 MB` | Cut once the buffer would compress to roughly this many on-disk parquet bytes. The writer keeps a per-slot exponentially-smoothed estimate of `arrow_bytes / parquet_bytes` from previous cuts, so the *user-facing* target maps to actual parquet file size rather than raw Arrow size. The very first cut for a slot has no observation yet and falls back to comparing `target_file_bytes` directly against the Arrow buffer (matches the pre-correction behaviour). The EMA is clamped into `[1.0, 200.0]` so a degenerate first sample cannot grow the buffer into multi-gigabyte territory. |
+| `target_file_interval` | `60 seconds` | Force-cut if the oldest row in the buffer has been waiting this long, so a slow trickle still produces files. The commit-batching `commit_batch_interval` (default 30s) still drains the buffer on every commit, so the user-visible latency floor is `commit_batch_interval`, not this. Pre-#460 follow-up runs with this set to 10s saw the time axis fire on every read pause and starve the bytes axis. |
+| `parquet_row_group_size` | `128 MB` | Intra-file knob: max bytes per parquet row group. Newly exposed (was hard-coded). |
+
+CDC pipelines use tighter built-in defaults (`32_000` rows / `8 MB`
+/ `2 seconds`) because freshness matters more than file size on
+the streaming path.
+
+Setting any axis to `0` disables that trigger; at least one of
+`target_file_rows` / `target_file_bytes` should remain non-zero or
+the buffer would only flush on the time trigger. The `flush()`
+path always drains the row buffer first so a graceful shutdown
+never strands buffered rows.
+
+### How it interacts with the commit-batching layer
+
+```text
+incoming RecordBatch
+       │
+       ▼
+┌──────────────────┐
+│   row buffer     │  ← target_file_rows / target_file_bytes / target_file_interval
+└────────┬─────────┘
+         │ cut parquet (one PUT, one WAL append)
+         ▼
+┌──────────────────┐
+│  staging slot    │  ← commit_batch_files / commit_batch_bytes / commit_batch_interval
+└────────┬─────────┘
+         │ commit
+         ▼
+   Iceberg snapshot
+```
+
+A single `stage_batch()` call may produce zero, one, or many
+parquets — it depends purely on whether the cumulative buffer has
+crossed a threshold. Whether the slot then fires a commit depends
+on the original `commit_batch_*` thresholds.
+
+### Configuring file-size targeting
+
+#### Server-wide defaults
+
+Add to `pipeline_defaults` in `datashuttle.yaml`:
+
+```yaml
+pipeline_defaults:
+  target_file_rows:        256000
+  target_file_bytes:       "64 MB"
+  target_file_interval:    "10 seconds"
+  parquet_row_group_size:  "128 MB"
+```
+
+Same panel in the Web UI: **Settings → Pipeline Defaults → File
+Size Targeting** (above the existing Commit Batching panel).
+Writable via `PUT /api/v1/settings/pipeline_defaults`.
+
+#### Per-pipeline overrides
+
+```sql
+CREATE PIPELINE big_load
+SOURCE clickhouse TARGET warehouse.events
+CONNECTION ch_main TABLES (events)
+WITH (
+    target_file_rows       = '500000',
+    target_file_bytes      = '128 MB',
+    target_file_interval   = '15 seconds',
+    parquet_row_group_size = '128 MB'
+);
+```
+
+Pipeline-level options always win over server defaults, which in
+turn win over the writer's built-in `BatchingThresholds::default()`.
+Invalid values fall through to the next layer with a warning;
+`target_file_rows = 0` is rejected by the SQL parser at create
+time, all other invalid forms (unparseable byte sizes / durations)
+are accepted by the parser and rejected by the writer-side
+resolver (which falls back to the next layer).
+
+### Append-only WAL
+
+The commit-batching WAL above used to rewrite the entire pending
+files list as one JSON document on every staged file. With the
+old "one file per source block" pattern that was `O(N²)` per flush
+window — the 1000th staged file in a window paid the cost of
+re-serializing all 1000. Even after #460 reduces the file count
+30–100×, the rewrite was still wasted work.
+
+The WAL is now **append-only ndjson**: every staged file is one
+newline-delimited JSON line, written with `O_APPEND`. On flush
+success the file is removed in one syscall. `recover_wal()`
+accepts both formats — the legacy whole-array form is still
+parsed for one release so an upgrade across the boundary does not
+strand pre-#460 WAL state.

@@ -50,4 +50,51 @@ If DataShuttle crashes at any point during a commit cycle:
 
 No data loss. No duplicates. No manual intervention.
 
+## Snapshot resume (#461)
+
+Initial-load (snapshot) crashes are handled by the same per-flush
+checkpoint contract as continuous sync, with one extra invariant:
+**the resume cursor is written into the Iceberg snapshot summary
+on every commit**, so the catalog itself is the authoritative
+source of "what is durably written". The local checkpoint file is
+a cache; if it falls behind reality (e.g. crash between catalog
+commit and local fsync), startup re-reads
+`datashuttle.snapshot_position.column` /
+`datashuttle.snapshot_position.value` from the latest snapshot
+summary and seeds the in-memory checkpoint from there before
+deciding whether to enter the snapshot loop.
+
+The contract pieces:
+
+1. **Per-flush write.** Every successful `IcebergWriter::flush()`
+   advances the local checkpoint atomically — no longer waits for
+   the entire snapshot phase to finish. A snapshot interrupted at
+   the 60% mark resumes from ~60%, not from row 0.
+2. **Generic resume cursor.** `CDCPosition::PrimaryKey { column,
+   value }` is the canonical resume cursor. It propagates through
+   `SnapshotConfig.resume_after_pk` and is honored by every
+   snapshot connector that takes a PK lower bound, regardless of
+   whether the user declared a watermark column.
+3. **Catalog as source of truth.** The same `(column, value)`
+   pair is written into the snapshot summary properties on every
+   commit (`datashuttle.snapshot_position.*`). On startup, the
+   pipeline manager reads the latest snapshot of every target
+   table; if the catalog value is ahead of the local checkpoint,
+   the local checkpoint is overwritten.
+4. **WAL-recovery coordination.** When `recover_wal` commits
+   parquet files left behind by a crash, the resulting
+   `FlushStats.source_position_hi` advances the local checkpoint
+   *before* the snapshot loop evaluates `should_snapshot`. The
+   common "WAL recovery commits 18 M rows, then snapshot
+   re-reads the same 18 M from row 0" double-write is closed.
+
+The remaining piece of the original #461 plan — per-shard cursors
+for parallel snapshots across multiple physical shards — is
+tracked as a follow-up. Single-shard / single-worker pipelines
+(the dominant case) get exactly-once guarantees today; multi-
+shard parallel snapshots get the per-table guarantees but the
+collapsed cross-shard cursor uses the conservative `min` of all
+shards, which can cause a small re-read from the slowest shard's
+tail on crash.
+
 For the full specification, see [SAFETY.md](https://github.com/evgenyestepanov-star/datashuttle/blob/main/docs/SAFETY.md).

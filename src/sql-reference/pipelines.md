@@ -126,6 +126,11 @@ Legacy `mode` values are still accepted for backward compatibility and mapped to
 | `cdc_commit_batch_files` | `100` | Integer | CDC phase: same as `commit_batch_files` but tighter for streaming |
 | `cdc_commit_batch_bytes` | `64 MB` | Byte size | CDC phase: same as `commit_batch_bytes` |
 | `cdc_commit_batch_interval` | `5 seconds` | Duration | CDC phase: same as `commit_batch_interval` |
+| `write_distribution_mode` | `none` | `none` \| `hash` | Iceberg `write.distribution-mode` for partitioned tables ([details](../concepts/partitioning-clustering.md#distribution-mode)) |
+| `target_file_rows` | `5000000` | Integer | File-size targeting: loose row cap on the row buffer (memory-safety guard, not the primary file-size knob — see `target_file_bytes`) ([details](../concepts/iceberg-commit-batching.md#file-size-targeting-460)) |
+| `target_file_bytes` | `64 MB` | Byte size | File-size targeting: in-memory buffer size before a cut |
+| `target_file_interval` | `60 seconds` | Duration | File-size targeting: max age of oldest buffered row before a force-cut |
+| `parquet_row_group_size` | `128 MB` | Byte size | Intra-file parquet row-group size target |
 
 ## Examples
 

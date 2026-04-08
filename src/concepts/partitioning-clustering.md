@@ -268,6 +268,51 @@ When in doubt, partition by `day(event_ts)` (or hour for very high
 volume) and cluster by your most common filter column. Tune from there
 based on actual query patterns.
 
+## Distribution mode
+
+Iceberg's `write.distribution-mode` table property tells the writer
+how to lay rows out across files within a single write call.
+DataShuttle supports two values:
+
+| Mode | Behaviour |
+|---|---|
+| `none` (default) | Each input record batch is split into one parquet file per partition tuple inside *that batch*. Consecutive batches can each emit files in the same partition folder. Cheapest path; chosen when the source is already clustered by the partition key (e.g. a Postgres snapshot streamed `ORDER BY day(event_ts)`). |
+| `hash` | All input batches inside a single `stage_batch` call are concatenated, then hashed by the resolved partition tuple. The call emits **exactly one parquet file per partition group**. Use when the upstream rows are interleaved across partitions and you want fewer, larger files per commit. |
+
+`range` is intentionally not supported: it requires a sampling
+pre-pass over the data and does not compose with the streaming
+writer.
+
+The mode is set per pipeline via the SQL option:
+
+```sql
+CREATE PIPELINE p AS
+SELECT * FROM source.public.events
+WITH (
+    partition_by = 'day(event_ts)',
+    write_distribution_mode = 'hash'
+);
+```
+
+A server-wide default lives in `datashuttle.yaml` under
+`pipeline_defaults.write_distribution_mode` and is also editable from
+the **Settings → Pipeline Defaults** page in the Web UI. The
+pipeline-level option always wins over the server default.
+
+The chosen mode is also persisted on the table itself as the standard
+Iceberg `write.distribution-mode` property, so external readers and
+maintenance tools see what the writer is doing.
+
+> **Note on streaming semantics.** Because DataShuttle's writer is a
+> streaming sink, "hash" only coordinates rows *within* a single
+> `stage_batch` call — it does not buffer across calls waiting for a
+> hypothetical global shuffle. In practice the snapshot path and the
+> CDC pump both invoke `stage_batch` with one batch at a time, so the
+> visible difference between `none` and `hash` is mostly about how
+> larger commit batches (`commit_batch_files` /
+> `commit_batch_bytes`) compact partitions before flushing. Compaction
+> can later coalesce small files regardless of the chosen mode.
+
 ## Migration from earlier versions
 
 Pipelines created before the partitioning-and-clustering feature
