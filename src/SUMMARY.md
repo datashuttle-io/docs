@@ -60,6 +60,8 @@
 - [GitOps](./operations/gitops.md)
 - [Cluster Management](./operations/cluster.md)
 - [Backup & Recovery](./operations/backup.md)
+- [Licensing](./operations/licensing.md)
+- [Billing](./operations/billing.md)
 - [Troubleshooting](./operations/troubleshooting.md)
 
 # API Reference
