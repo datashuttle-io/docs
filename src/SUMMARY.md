@@ -22,6 +22,7 @@
 - [Partitioning & Clustering](./concepts/partitioning-clustering.md)
 - [Iceberg Commit Batching](./concepts/iceberg-commit-batching.md)
 - [Safety & Correctness](./concepts/safety.md)
+- [Sinks & Hooks](./concepts/sinks-and-hooks.md)
 - [Configuration](./concepts/configuration.md)
 
 # Connectors
@@ -49,6 +50,7 @@
 
 - [Connections](./sql-reference/connections.md)
 - [Pipelines](./sql-reference/pipelines.md)
+- [Transforms & UDFs](./sql-reference/transforms.md)
 - [Pipeline Control](./sql-reference/pipeline-control.md)
 
 # Operations
