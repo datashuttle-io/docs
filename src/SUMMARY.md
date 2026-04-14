@@ -72,6 +72,7 @@
 # Cloud / SaaS
 
 - [Tenant Provisioning](./cloud/provisioning.md)
+- [Billing & Dunning](./cloud/billing.md)
 
 # API Reference
 
