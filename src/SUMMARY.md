@@ -60,6 +60,7 @@
 - [Monitoring & Alerting](./operations/monitoring.md)
 - [GitOps](./operations/gitops.md)
 - [Cluster Management](./operations/cluster.md)
+- [Local Auth Mode](./operations/auth-local.md)
 - [Backup & Recovery](./operations/backup.md)
 - [Licensing](./operations/licensing.md)
 - [Billing](./operations/billing.md)
