@@ -57,6 +57,7 @@
 # Operations
 
 - [Deployment](./operations/deployment.md)
+- [First-Run Setup Wizard](./operations/setup-wizard.md)
 - [Monitoring & Alerting](./operations/monitoring.md)
 - [Grafana Dashboards](./operations/dashboards.md)
 - [Health Checks](./operations/health-checks.md)
