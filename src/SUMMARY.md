@@ -68,6 +68,10 @@
 - [Billing](./operations/billing.md)
 - [Troubleshooting](./operations/troubleshooting.md)
 
+# Cloud / SaaS
+
+- [Tenant Provisioning](./cloud/provisioning.md)
+
 # API Reference
 
 - [REST API](./api-reference/rest.md)
