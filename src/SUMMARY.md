@@ -59,6 +59,7 @@
 - [Deployment](./operations/deployment.md)
 - [Monitoring & Alerting](./operations/monitoring.md)
 - [Grafana Dashboards](./operations/dashboards.md)
+- [Health Checks](./operations/health-checks.md)
 - [GitOps](./operations/gitops.md)
 - [Cluster Management](./operations/cluster.md)
 - [Registry Backends](./operations/registry-backends.md)
