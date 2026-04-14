@@ -74,6 +74,7 @@
 - [Licensing](./operations/licensing.md)
 - [Billing](./operations/billing.md)
 - [Audit & Compliance](./operations/audit-compliance.md)
+- [GDPR Compliance](./operations/gdpr-compliance.md)
 - [Cryptographic Integrity](./operations/cryptographic-integrity.md)
 - [Client SDKs (Python + TypeScript)](./operations/sdks.md)
 - [Troubleshooting](./operations/troubleshooting.md)
