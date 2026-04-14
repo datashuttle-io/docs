@@ -75,8 +75,91 @@ DS_POLARIS_TOKEN=... \
 ./target/release/datashuttle
 ```
 
-Task 2.3 (see `#554`) wires `POST /api/v1/orgs` to return `202 Accepted`
-and run `state.provisioner.provision(ctx).await` asynchronously.
+## Async provisioning workflow (task 2.3)
+
+When `provisioning.enabled: true`, `POST /api/v1/orgs` returns **`202
+Accepted`** immediately and spawns the saga on a background tokio task:
+
+```
+POST /api/v1/orgs         ──► 202 Accepted
+                              { tenant_id, provisioning_id,
+                                status: "provisioning", … }
+
+(background saga)
+  CreateTenantPrefix  (S3)
+  CreateTenantPolicy  (IAM)
+  CreateCatalogNamespace (Polaris)
+
+(success)                  ──► tenant.status = Active
+                              WebSocket: "tenant.provisioned"
+
+(failure)                  ──► tenant.provisioning_step = Failed
+                              tenant.error_message = "<saga error>"
+                              WebSocket: "tenant.provisioning_failed"
+```
+
+Clients have two ways to observe completion:
+
+- **Polling**: `GET /api/v1/tenants/{id}/provisioning` returns
+  `{ tenant_id, status, step, progress, error, started_at, completed_at }`.
+  The `progress` field is a string like `"3/5"`; the `step` field is
+  one of `create_namespace`, `create_tenant_prefix`,
+  `create_tenant_policy`, `create_catalog_namespace`, `activate`,
+  `failed`.
+- **WebSocket subscription**: subscribers on the existing `/ws/*`
+  channel receive `PipelineEvent` records with `event_type ==
+  "tenant.provisioned"` or `"tenant.provisioning_failed"`. Payload:
+  `{ tenant_id, provisioning_id, status }` or `{ tenant_id,
+  provisioning_id, error }`.
+
+### Idempotency
+
+`POST /api/v1/orgs` is idempotent *per `org_id`*. Re-posting the same
+name returns the existing tenant's current provisioning state
+(whichever of sync/async it's in) without re-spawning the saga.
+
+### Restart semantics
+
+On startup `AppState` runs a sweep
+(`resume_pending_provisioning`) that marks any tenant still in
+`Provisioning` for more than 5 minutes as `Failed`. Operators can
+`DELETE` the row and retry. A richer saga-resume strategy (checkpoint
+the ProvisioningContext to Postgres) is tracked for a future phase.
+
+## Suspension and hard-delete (task 2.4)
+
+`POST /api/v1/tenants/{id}/suspend` pauses every pipeline in the
+tenant namespace and — when provisioning is enabled — flips the
+Polaris namespace to `readonly = "true"` by PUTting
+`/api/catalog/v1/namespaces/{id}/properties`. A suspended tenant can
+still read data; all new writes are rejected by Polaris until the
+tenant is resumed.
+
+`DELETE /api/v1/tenants/{id}` soft-deletes (30-day grace). The
+hard-delete sweep (`hard_delete_tenant`) drops pipelines, removes the
+tenant row, and calls
+`TenantProvisioner::purge_tenant_resources(tenant_id, force_purge_data)`.
+By default, only the IAM policy, Polaris namespace, and
+`.keep` marker are removed — Iceberg data under the tenant S3 prefix
+is **retained** for operator review. Pass `force_purge_data = true`
+to recursively delete objects under the prefix.
+
+`GET /api/v1/tenants/{id}/export` returns the tenant JSON dump. When
+provisioning is enabled, the response also contains `export_url.url`
+— currently an `s3://bucket/{tenant_id}/` pointer plus a TTL hint.
+Operators use it to drive `aws s3 sync` or list-by-prefix; a future
+iteration will presign a real listing / zip URL.
+
+## Guarantees summary
+
+| Concern              | Default OSS build                 | SaaS (`provisioning.enabled: true`) |
+|----------------------|-----------------------------------|-------------------------------------|
+| `POST /api/v1/orgs`  | `201 Created` + in-memory tenant  | `202 Accepted` + background saga    |
+| Tenant lifecycle     | in-memory only                    | saga-backed side effects            |
+| `suspend`            | pipeline pause only               | pipeline pause + Polaris read-only  |
+| `hard delete`        | in-memory only                    | IAM + Polaris + `.keep` cleanup     |
+| `export`             | JSON dump                         | JSON + presigned S3 export URL      |
+| `POST /api/v1/orgs` idempotency | per org_id                       | per org_id                          |
 
 ## Running against LocalStack
 
