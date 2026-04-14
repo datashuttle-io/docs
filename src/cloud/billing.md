@@ -181,3 +181,110 @@ The `IF NOT EXISTS` guard makes this idempotent on existing live
 databases. No backfill is required: legacy rows default to `NULL` /
 `false` and the cron treats them as "no reminder yet sent / no card
 on file" — the safest defaults.
+
+## Daily Stripe DPU usage reporting (#555 task 3.5)
+
+The dunning + trial state machines drive customer lifecycle; the
+**usage reporter** is the third leg — it pushes per-tenant DPU
+consumption to Stripe so customers are billed correctly for what
+they used.
+
+> **OSS / self-managed users:** This entire section is opt-in and
+> SaaS-only. If `state.stripe_client` is `None` (the default for any
+> deployment that hasn't explicitly wired a Stripe client), the
+> reporter is never spawned and no DPU data leaves the process.
+
+### Per-tenant segmentation
+
+`DpuMeter` exposes two methods used by the reporter:
+
+- `snapshot_per_tenant() -> HashMap<String, u64>` — non-destructive
+  read of every tenant's accumulated DPU. The system bucket
+  (`SYSTEM_TENANT_BUCKET = "__system__"`) holds usage that couldn't
+  be attributed to a paying tenant and is **never** reported.
+- `reset_tenant(tenant_id) -> u64` — atomically swap a tenant's
+  bucket back to zero and return the previous value. Called by the
+  reporter only after Stripe acknowledges the usage record.
+
+Call sites that have a `tenant_id` (e.g. the pipeline manager, since
+`PipelineRecord.tenant_id` is populated on tenant-scoped pipelines)
+should use the `record_*_for_tenant` variants on `DpuCounters`.
+Anything that doesn't know the tenant — system metrics, infra-level
+ingest — leaves the per-tenant map alone and only updates the global
+counters that drive quota / license enforcement.
+
+### Daily reporter cron
+
+When `AppState::stripe_client` is set, the constructor spawns a
+background task (see
+`crates/datashuttle-api/src/billing/usage_reporter.rs`) that runs
+once per `interval_secs` (24h by default).
+
+For each non-zero, non-`__system__` tenant bucket, the cron:
+
+1. Looks up the matching `BillingCustomer` by `tenant_id` via
+   `BillingRepository::get_customer_by_tenant`.
+2. Skips the tenant if the customer record is missing or has no
+   `subscription_item_id` (logged at `warn!` level).
+3. Calls `StripeClient::report_usage(subscription_item_id, dpu, ts)`
+   with the current Unix timestamp.
+4. **On success only:** resets the tenant bucket and emits a
+   `billing.usage_reported` audit event.
+5. On failure: logs at `warn!` and leaves the bucket intact for the
+   next tick to retry.
+
+### Idempotency
+
+`report_usage` posts to Stripe with `action=set` (not `increment`),
+so re-reporting the same total on a retry is a safe no-op — Stripe
+overwrites the day's quantity rather than stacking it. This means a
+crash between two cron ticks results in the **next** tick reporting
+the cumulative total, not double-billing.
+
+### Crash-recovery limitation
+
+`DpuMeter`'s per-tenant bucket lives in process memory. If the API
+server crashes or restarts between the last successful Stripe report
+and the next cron tick, all DPU accumulated in the interim is lost.
+
+> **Mitigation track:** persist per-tenant DPU totals to Postgres so
+> the reporter can resume from a checkpoint after restart. Tracked
+> as `TODO(#555 task 3.5 follow-up)` in
+> `crates/datashuttle-license/src/metering.rs`.
+
+### Disabling or changing the cadence
+
+The reporter is opt-in via `AppState::stripe_client`. To disable it
+on a node that already has Stripe wired (e.g. for staging), set
+`state.stripe_client = None` before construction or before the
+cron-spawn line.
+
+To change the cadence without rebuilding (useful for staging
+verification), set the `DS_BILLING_USAGE_REPORT_INTERVAL_SECS`
+environment variable. Values are seconds; absence or any unparseable
+value falls back to the 24h default. The variable is intentionally
+optional — no new mandatory env vars are introduced by this feature
+(per the on-prem hard invariant).
+
+```sh
+# Report every 5 minutes for staging end-to-end verification.
+DS_BILLING_USAGE_REPORT_INTERVAL_SECS=300 datashuttle serve
+```
+
+### Testing
+
+Two test surfaces cover the reporter:
+
+- **Unit tests in `crates/datashuttle-license/src/metering.rs`** —
+  `per_tenant_*` cases prove `DpuCounters` segments tenants
+  correctly, accumulates DPU across all three source types, and that
+  `reset_tenant` returns the pre-reset value.
+- **Wiremock integration tests in
+  `crates/datashuttle-api/src/billing/usage_reporter.rs`** —
+  exercise the OSS no-op path, the happy path with bucket reset, the
+  failure path with bucket preservation, and the
+  no-`subscription_item_id` skip path. Run with:
+
+```sh
+cargo test -p datashuttle-api --lib billing::usage_reporter
+```
