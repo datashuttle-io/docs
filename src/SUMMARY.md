@@ -70,6 +70,7 @@
 - [Backup & Recovery](./operations/backup.md)
 - [Backup & Restore CLI](./operations/backup-restore.md)
 - [Secret Management](./operations/secrets.md)
+- [TLS & ACME / Let's Encrypt](./operations/tls-acme.md)
 - [Licensing](./operations/licensing.md)
 - [Billing](./operations/billing.md)
 - [Audit & Compliance](./operations/audit-compliance.md)
