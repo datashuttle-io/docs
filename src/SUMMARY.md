@@ -73,6 +73,7 @@
 
 - [Tenant Provisioning](./cloud/provisioning.md)
 - [Billing & Dunning](./cloud/billing.md)
+- [Quotas & Tiers](./cloud/quotas.md)
 
 # API Reference
 
