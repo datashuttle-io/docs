@@ -67,6 +67,8 @@
 - [Secret Management](./operations/secrets.md)
 - [Licensing](./operations/licensing.md)
 - [Billing](./operations/billing.md)
+- [Audit & Compliance](./operations/audit-compliance.md)
+- [Cryptographic Integrity](./operations/cryptographic-integrity.md)
 - [Troubleshooting](./operations/troubleshooting.md)
 
 # Cloud / SaaS
