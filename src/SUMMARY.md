@@ -58,6 +58,7 @@
 
 - [Deployment](./operations/deployment.md)
 - [Monitoring & Alerting](./operations/monitoring.md)
+- [Grafana Dashboards](./operations/dashboards.md)
 - [GitOps](./operations/gitops.md)
 - [Cluster Management](./operations/cluster.md)
 - [Registry Backends](./operations/registry-backends.md)
@@ -76,6 +77,10 @@
 - [Tenant Provisioning](./cloud/provisioning.md)
 - [Billing & Dunning](./cloud/billing.md)
 - [Quotas & Tiers](./cloud/quotas.md)
+
+# Development
+
+- [Test Environment](./development/test-environment.md)
 
 # API Reference
 
