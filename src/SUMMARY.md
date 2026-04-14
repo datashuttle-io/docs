@@ -64,6 +64,7 @@
 - [Upgrades & Schema Migrations](./operations/upgrades.md)
 - [Local Auth Mode](./operations/auth-local.md)
 - [Backup & Recovery](./operations/backup.md)
+- [Backup & Restore CLI](./operations/backup-restore.md)
 - [Secret Management](./operations/secrets.md)
 - [Licensing](./operations/licensing.md)
 - [Billing](./operations/billing.md)
