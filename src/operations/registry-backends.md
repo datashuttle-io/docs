@@ -105,14 +105,104 @@ DS_TEST_POSTGRES_URL=postgres://postgres:postgres@localhost:5432/postgres \
 When `DS_TEST_POSTGRES_URL` is unset, the tests skip silently so the
 default `cargo test --workspace` flow doesn't require a live DB.
 
-## What's next
+## Operator CLI — `datashuttle registry …`
 
-- **#572** ships `datashuttle migrate` — a dedicated CLI for upgrading
-  the registry schema when DataShuttle itself bumps a migration
-  version.
-- **Task 2.5b** ships `datashuttle registry migrate --from
-  sqlite://... --to postgres://...` with row-count verify and
-  `--dry-run`, for operators moving from single-node to HA.
+The CLI ships five subcommands for working with registry state. SQLite
+endpoints (`sqlite:///…`) are always supported; Postgres endpoints
+(`postgres://…`) require a build with `--features postgres-registry`.
+
+```bash
+datashuttle registry --help
+datashuttle registry <subcommand> --help
+```
+
+### Export a snapshot (JSON)
+
+Portable snapshot format — use as a disaster-recovery backup, to ship
+registry state between environments, or to diff what two clusters know
+about:
+
+```bash
+datashuttle registry export \
+    --from sqlite:///var/lib/datashuttle/registry.db \
+    --out   registry-snapshot.json
+```
+
+The resulting file is a single pretty-printed JSON document containing
+all connections, pipelines, history entries, metric counters, and
+metric samples plus the registry version counter.
+
+### Import a snapshot
+
+```bash
+# Dry-run first to confirm row counts:
+datashuttle registry import \
+    --input registry-snapshot.json \
+    --to    sqlite:///tmp/target.db \
+    --dry-run
+
+# Then apply. Destination must be empty or pass --force to overwrite.
+datashuttle registry import \
+    --input registry-snapshot.json \
+    --to    sqlite:///tmp/target.db
+```
+
+### Migrate SQLite → Postgres (or any pair)
+
+The migrate engine runs in six phases: connect both endpoints → ensure
+destination is empty → stream all data across → re-count rows on
+destination → stamp `meta.migrated_from` / `meta.migrated_at` → rename
+the SQLite source to `<path>.bak-<UTC-timestamp>`.
+
+```bash
+# Preview the plan — no writes, no rename:
+datashuttle registry migrate \
+    --from sqlite:///var/lib/datashuttle/registry.db \
+    --to   postgres://ds:secret@pg.local/datashuttle \
+    --dry-run
+
+# Commit. `--yes` skips the confirm prompt; `--verify` is on by default.
+datashuttle registry migrate \
+    --from sqlite:///var/lib/datashuttle/registry.db \
+    --to   postgres://ds:secret@pg.local/datashuttle \
+    --yes
+```
+
+**Safety notes:**
+
+- `--verify` is **on by default** — the migrate step fails (non-zero
+  exit) if any row-count check mismatches between source and
+  destination.
+- On SQLite sources, the original `.db` file is renamed to
+  `.db.bak-<timestamp>`. **Keep this backup for at least 7 days** as
+  the operator-recommended rollback window.
+- On Postgres sources, the migrate engine does **not** mutate the
+  source — take your own `pg_dump` backup before running.
+- The destination must be empty unless `--force` is passed.
+
+### Revert from a `.bak` file
+
+If a migration turns out to be wrong, point `revert` at the backup
+file and the original SQLite destination:
+
+```bash
+datashuttle registry revert \
+    --backup /var/lib/datashuttle/registry.db.bak-20260414T120000Z \
+    --to     sqlite:///var/lib/datashuttle/registry.db
+```
+
+Revert is SQLite-only — to restore a Postgres registry, replay your
+`pg_dump` artifact directly.
+
+### Status
+
+Quick health check — prints the schema version, row counts, and (on
+SQLite) the last recorded `schema_migrations` entry plus any
+`migrated_from` / `migrated_at` stamps:
+
+```bash
+datashuttle registry status --url sqlite:///var/lib/datashuttle/registry.db
+```
 
 [`rusqlite`]: https://docs.rs/rusqlite
 [`sqlx`]: https://docs.rs/sqlx
