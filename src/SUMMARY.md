@@ -58,6 +58,7 @@
 
 - [Deployment](./operations/deployment.md)
 - [Monitoring & Alerting](./operations/monitoring.md)
+- [Per-tenant Observability](./operations/per-tenant-observability.md)
 - [GitOps](./operations/gitops.md)
 - [Cluster Management](./operations/cluster.md)
 - [Registry Backends](./operations/registry-backends.md)
