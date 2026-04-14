@@ -85,6 +85,7 @@
 # Development
 
 - [Test Environment](./development/test-environment.md)
+- [UI Architecture](./development/ui-architecture.md)
 
 # API Reference
 
