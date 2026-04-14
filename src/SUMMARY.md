@@ -35,6 +35,7 @@
 - [SQL Server](./connectors/sqlserver.md)
 - [CockroachDB](./connectors/cockroachdb.md)
 - [Snowflake](./connectors/snowflake.md)
+- [Amazon Redshift](./connectors/redshift.md)
 - [Google BigQuery](./connectors/bigquery.md)
 - [Databricks / Delta Lake](./connectors/databricks.md)
 - [ClickHouse](./connectors/clickhouse.md)

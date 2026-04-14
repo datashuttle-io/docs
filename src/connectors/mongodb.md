@@ -95,6 +95,31 @@ Becomes:
 |-------|-----------------|---------|
 | `"abc"` | `{name: "Alice", age: 30}` | `99.5` |
 
+## What happens if the oplog rotates?
+
+MongoDB change streams resume from an opaque **resume token** issued by the server. The token points into the replica set's oplog — a capped collection whose size is fixed at deployment time. If the oplog rotates past the persisted resume token (e.g. because a pipeline was paused for longer than the oplog's retention window, or an ingestion rate spike evicted older entries), the server rejects the resume with the `ChangeStreamHistoryLost` error (code 286).
+
+DataShuttle detects this condition and **auto-recovers**:
+
+1. The MongoDB connector returns a typed `ResumeTokenExpired` error instead of a generic failure.
+2. The pipeline manager catches this error and:
+   - Resets the checkpoint for every tracked collection in the pipeline.
+   - Emits a `cdc.resume_token_expired` lifecycle event (severity: `Warning`) with the collection list and the old token for observability.
+3. On the next scheduler tick the pipeline re-enters the snapshot phase, re-reads every collection from scratch, and opens a **fresh change stream** from the current oplog tail.
+
+**Durability guarantee.** Events already committed to Iceberg before the token expired are not re-read from the oplog — they are already in the lake. The re-snapshot covers any in-flight documents that were observed on the stream but had not yet landed in a committed Iceberg snapshot at the moment of expiry. The result is at-least-once delivery across the rotation boundary; Iceberg merge-on-read with primary-key identity (`_id`) deduplicates any overlap on the target side.
+
+**Preventing expiry.** Size the oplog for your longest expected pipeline pause plus a safety margin. Rule of thumb:
+
+```javascript
+// In mongosh — check current oplog window
+rs.printReplicationInfo()
+// Resize if too small (example: 50 GB)
+db.adminCommand({ replSetResizeOplog: 1, size: 50000 })
+```
+
+Monitor the `cdc.resume_token_expired` event — a spike indicates the oplog is undersized for your workload.
+
 ## Limitations
 
 - **Replica set required**: Standalone MongoDB instances do not support change streams.
