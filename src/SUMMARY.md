@@ -60,6 +60,7 @@
 - [Monitoring & Alerting](./operations/monitoring.md)
 - [GitOps](./operations/gitops.md)
 - [Cluster Management](./operations/cluster.md)
+- [Registry Backends](./operations/registry-backends.md)
 - [Local Auth Mode](./operations/auth-local.md)
 - [Backup & Recovery](./operations/backup.md)
 - [Secret Management](./operations/secrets.md)
