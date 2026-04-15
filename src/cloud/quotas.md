@@ -59,7 +59,7 @@ Returned when `current_usage_for_tenant >= dpu_included + overage_allowance`.
   "error": "DPU quota exceeded for tier 'pro'. Upgrade your plan or wait for the next billing period.",
   "code": "quota_exceeded",
   "tier": "pro",
-  "billing_url": "https://app.datashuttle.io/billing/upgrade?tenant=acme"
+  "billing_url": "https://app.datashuttle.ai/billing/upgrade?tenant=acme"
 }
 ```
 
@@ -73,7 +73,7 @@ must update their payment method.
   "error": "Subscription is past due. Update your payment method to keep using DataShuttle.",
   "code": "subscription_past_due",
   "tier": "pro",
-  "billing_url": "https://app.datashuttle.io/billing/upgrade?tenant=acme"
+  "billing_url": "https://app.datashuttle.ai/billing/upgrade?tenant=acme"
 }
 ```
 
@@ -87,7 +87,7 @@ preserved by the auth layer; only mutating endpoints reject.
   "error": "Subscription has been canceled. Contact support to reactivate.",
   "code": "subscription_canceled",
   "tier": "pro",
-  "billing_url": "https://app.datashuttle.io/billing/upgrade?tenant=acme"
+  "billing_url": "https://app.datashuttle.ai/billing/upgrade?tenant=acme"
 }
 ```
 
@@ -105,7 +105,7 @@ Set the optional `billing` block in `datashuttle.yaml`:
 
 ```yaml
 billing:
-  billing_portal_url: "https://app.datashuttle.io/billing"
+  billing_portal_url: "https://app.datashuttle.ai/billing"
   # Optional — defaults to "{portal}/upgrade?tenant={tenant_id}".
   upgrade_url_template: "{portal}/upgrade?tenant={tenant_id}"
 ```

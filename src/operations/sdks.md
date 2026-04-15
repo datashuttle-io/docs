@@ -26,7 +26,7 @@ generator, and pushes the resulting package to PyPI / npm.
 from datashuttle_sdk import Client
 
 client = Client(
-    base_url="https://api.datashuttle.cloud",
+    base_url="https://api.datashuttle.ai",
     token="eyJhbGciOi...",
 )
 
@@ -43,7 +43,7 @@ code.
 import { DataShuttleClient } from "@datashuttle/sdk";
 
 const client = new DataShuttleClient({
-  BASE: "https://api.datashuttle.cloud",
+  BASE: "https://api.datashuttle.ai",
   TOKEN: process.env.DATASHUTTLE_TOKEN,
 });
 
