@@ -34,6 +34,7 @@ Data engineers and platform teams who need to keep operational database changes 
 
 ## Quick links
 
-- [GitHub Repository](https://github.com/evgenyestepanov-star/datashuttle)
-- [Full Specification](https://github.com/evgenyestepanov-star/datashuttle/blob/main/docs/SPEC.md)
-- [Contributing Guide](https://github.com/evgenyestepanov-star/datashuttle/blob/main/docs/CONTRIBUTING.md)
+- [Full Specification](./development/spec.md) — state machines, commit
+  batching invariants, tenant isolation rules.
+- [Contributing Guide](./development/contributing.md) — coding style,
+  commit format, CI expectations.

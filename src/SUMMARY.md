@@ -90,6 +90,8 @@
 
 - [Test Environment](./development/test-environment.md)
 - [UI Architecture](./development/ui-architecture.md)
+- [Specification](./development/spec.md)
+- [Contributing](./development/contributing.md)
 
 # API Reference
 
