@@ -37,28 +37,21 @@ scrape_configs:
     metrics_path: /metrics
 ```
 
-For Kubernetes with the Prometheus operator, use the ServiceMonitor:
+For Kubernetes with the Prometheus operator, enable the ServiceMonitor via the Helm chart attached to every [GitHub Release](https://github.com/datashuttle-ai/datashuttle/releases):
 
 ```bash
-# Installed via Helm:
-helm install datashuttle deploy/helm/datashuttle \
+curl -fsSLO https://github.com/datashuttle-ai/datashuttle/releases/latest/download/datashuttle-chart.tgz
+helm install datashuttle ./datashuttle-chart.tgz \
   --set serviceMonitor.enabled=true
-
-# Or standalone:
-kubectl apply -f deploy/k8s/servicemonitor.yaml
 ```
 
 ### Alerting rules
 
-Pre-built alerting rules for Prometheus operator:
+Pre-built alerting rules for the Prometheus operator ship in the same chart:
 
 ```bash
-# Installed via Helm:
-helm install datashuttle deploy/helm/datashuttle \
+helm install datashuttle ./datashuttle-chart.tgz \
   --set prometheusRule.enabled=true
-
-# Or standalone:
-kubectl apply -f deploy/k8s/prometheusrule.yaml
 ```
 
 Included alerts:
@@ -74,7 +67,8 @@ Included alerts:
 
 ### Grafana dashboard
 
-Import the pre-built dashboard from `deploy/k8s/grafana-dashboard.json`. Includes 14 panels:
+The pre-built dashboard ships inside the Helm chart tarball (unpack it
+and look under `datashuttle/dashboards/`). It includes 14 panels:
 - Active pipelines, cluster nodes, avg sync lag, queue depth, uptime (stats)
 - Rows ingested rate, commit rate, error rate (timeseries)
 - Pipelines per node (bar gauge)
@@ -96,7 +90,7 @@ DataShuttle exports metrics designed for Kubernetes HPA auto-scaling. With `prom
 - Pipelines per node < 5
 - CPU < 40%
 
-See `deploy/k8s/hpa.yaml` for the HPA manifest.
+The Helm chart enables HPA out of the box with `--set autoscaling.enabled=true`.
 
 ## Resource pool monitoring
 

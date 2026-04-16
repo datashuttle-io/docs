@@ -7,7 +7,7 @@ Pre-built binaries are attached to every [GitHub Release](https://github.com/dat
 The install script detects your OS and architecture, downloads the binary, verifies the checksum, and installs to `/usr/local/bin`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/datashuttle-ai/datashuttle/main/install.sh | bash
+curl -fsSL https://datashuttle.ai/install.sh | bash
 ```
 
 ### Options

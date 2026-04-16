@@ -43,30 +43,33 @@ journalctl -u datashuttle -f
 
 ## Kubernetes (Helm)
 
-The recommended way to deploy on Kubernetes is the official Helm chart:
+The Helm chart is attached as a `.tgz` to every [GitHub Release](https://github.com/datashuttle-ai/datashuttle/releases). Download it once, then use standard `helm install`:
 
 ```bash
+# Fetch the latest chart
+curl -fsSLO https://github.com/datashuttle-ai/datashuttle/releases/latest/download/datashuttle-chart.tgz
+
 # Single-node
-helm install datashuttle deploy/helm/datashuttle
+helm install datashuttle ./datashuttle-chart.tgz
 
 # 3-node cluster
-helm install datashuttle deploy/helm/datashuttle \
+helm install datashuttle ./datashuttle-chart.tgz \
   --set replicaCount=3
 
 # With Prometheus monitoring
-helm install datashuttle deploy/helm/datashuttle \
+helm install datashuttle ./datashuttle-chart.tgz \
   --set replicaCount=3 \
   --set serviceMonitor.enabled=true \
   --set prometheusRule.enabled=true
 
 # With HPA auto-scaling (requires prometheus-adapter)
-helm install datashuttle deploy/helm/datashuttle \
+helm install datashuttle ./datashuttle-chart.tgz \
   --set replicaCount=3 \
   --set autoscaling.enabled=true \
   --set autoscaling.customMetrics=true
 
 # With resource pools
-helm install datashuttle deploy/helm/datashuttle \
+helm install datashuttle ./datashuttle-chart.tgz \
   --set replicaCount=3 \
   -f my-pool-values.yaml
 ```
@@ -101,7 +104,7 @@ kubectl create secret generic storage-creds \
   --from-literal=DS_S3_SECRET_KEY=minioadmin
 
 # Reference in values
-helm install datashuttle deploy/helm/datashuttle \
+helm install datashuttle ./datashuttle-chart.tgz \
   --set catalogSecret=catalog-creds \
   --set storageSecret=storage-creds
 ```
@@ -127,7 +130,7 @@ config:
         max_pipelines: 50
 ```
 
-See `deploy/helm/datashuttle/values.yaml` for all configuration options.
+Unpack the chart (`tar xzf datashuttle-chart.tgz`) and read `datashuttle/values.yaml` for all configuration options.
 
 ## Kubernetes Operator (CRD-based)
 
@@ -167,8 +170,6 @@ CRDs available:
 - **DataShuttlePipeline** — manages pipeline lifecycle
 - **DataShuttleConnection** — manages source connections (with K8s Secret support)
 - **DataShuttleCluster** — manages StatefulSet replicas and auto-scaling
-
-Source: `deploy/operator/`
 
 ## Standalone binary
 

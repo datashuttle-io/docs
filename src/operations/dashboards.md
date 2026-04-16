@@ -36,7 +36,7 @@ grafana:
 Then:
 
 ```sh
-helm upgrade --install datashuttle deploy/helm/datashuttle \
+helm upgrade --install datashuttle ./datashuttle-chart.tgz \
   --set grafana.dashboards.enabled=true
 ```
 

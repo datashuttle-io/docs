@@ -12,8 +12,6 @@
 - [Binary Download](./installation/binary.md)
 - [Homebrew](./installation/homebrew.md)
 - [DEB / RPM Packages](./installation/packages.md)
-- [Cargo Install](./installation/cargo.md)
-- [From Source](./installation/source.md)
 
 # Concepts
 

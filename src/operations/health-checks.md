@@ -195,8 +195,9 @@ existing background sweep.
 
 ## Kubernetes probe example
 
-The bundled Helm chart (`deploy/helm/datashuttle`) configures all
-three probes out of the box:
+The Helm chart (attached as `datashuttle-chart.tgz` to every
+[GitHub Release](https://github.com/datashuttle-ai/datashuttle/releases))
+configures all three probes out of the box:
 
 ```yaml
 livenessProbe:
