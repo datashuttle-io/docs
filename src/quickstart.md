@@ -12,12 +12,14 @@ That's it. Everything runs in containers.
 
 ## Step 1: Start the stack with a demo database
 
-Clone the repository and start DataShuttle with the full demo environment (includes PostgreSQL with sample data):
+Download the packaged demo bundle and start DataShuttle with the full
+demo environment (PostgreSQL with sample data + Polaris + MinIO):
 
 ```bash
-git clone https://github.com/evgenyestepanov-star/datashuttle.git
-cd datashuttle
-docker compose -f examples/docker-compose.yml up -d
+# Grab the demo compose bundle from the latest release
+curl -LO https://github.com/evgenyestepanov-star/datashuttle/releases/latest/download/datashuttle-demo.tar.gz
+tar xzf datashuttle-demo.tar.gz && cd datashuttle-demo
+docker compose up -d
 ```
 
 This starts the following services:
@@ -32,7 +34,7 @@ This starts the following services:
 Wait for everything to be healthy:
 
 ```bash
-docker compose -f examples/docker-compose.yml ps
+docker compose ps
 ```
 
 All services should show `healthy` status. This usually takes 15–30 seconds.
@@ -173,7 +175,7 @@ docker compose -f examples/docker-compose.yml down -v
 ## Next steps
 
 - **Add more connectors** — [MySQL](./connectors/mysql.md), [MongoDB](./connectors/mongodb.md), [S3 files](./connectors/files.md)
-- **Run the full demo** — [examples/](https://github.com/evgenyestepanov-star/datashuttle/tree/main/examples) with PostgreSQL, MySQL, MongoDB, and file ingestion
+- **Run the full demo** — the `datashuttle-demo.tar.gz` release asset covers PostgreSQL, MySQL, MongoDB, and file ingestion end-to-end
 - **Deploy to production** — [Deployment guide](./operations/deployment.md)
 - **Set up monitoring** — [Monitoring & alerting](./operations/monitoring.md)
 - **Manage pipelines as code** — [GitOps](./operations/gitops.md)

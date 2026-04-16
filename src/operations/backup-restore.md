@@ -1,7 +1,7 @@
 # Backup & Restore
 
-DataShuttle ships a first-class backup / restore CLI (Phase 6 task 6.6,
-tracked in [#564]). Archives are portable `tar.zst` files with an
+DataShuttle ships a first-class backup / restore CLI (Phase 6 task 6.6).
+Archives are portable `tar.zst` files with an
 Ed25519-signed `manifest.json` and per-entry SHA-256 hashes. The
 signing key is the **same** key that anchors the Phase 5.5 audit chain,
 so backup signatures and audit-log signatures share a single trust
@@ -10,8 +10,6 @@ anchor.
 > **TL;DR** — run `datashuttle backup create --output ./backups/` from
 > a cron job, stage the `.tar.zst` somewhere off-host, and restore with
 > `datashuttle backup restore --from … --to /var/lib/datashuttle`.
-
-[#564]: https://github.com/evgenyestepanov-star/datashuttle/issues/564
 
 ---
 

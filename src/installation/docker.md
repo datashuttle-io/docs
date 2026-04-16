@@ -22,11 +22,12 @@ docker run -p 8080:8080 ghcr.io/evgenyestepanov-star/datashuttle:latest
 
 ## Docker Compose
 
-The `docker-compose.yaml` at the project root starts DataShuttle with the minimum required infrastructure — MinIO (object storage) and Apache Polaris (Iceberg catalog):
+A minimal-infrastructure bundle (DataShuttle + MinIO object storage +
+Apache Polaris catalog) ships with every release as a compose tarball:
 
 ```bash
-git clone https://github.com/evgenyestepanov-star/datashuttle.git
-cd datashuttle
+curl -LO https://github.com/evgenyestepanov-star/datashuttle/releases/latest/download/datashuttle-demo.tar.gz
+tar xzf datashuttle-demo.tar.gz && cd datashuttle-demo
 docker compose up -d
 ```
 
