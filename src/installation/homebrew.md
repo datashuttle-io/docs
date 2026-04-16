@@ -5,7 +5,7 @@ Available on macOS and Linux via Homebrew.
 ## Install
 
 ```bash
-brew tap datashuttle/datashuttle
+brew tap datashuttle-ai/tap
 brew install datashuttle
 ```
 

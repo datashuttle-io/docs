@@ -10,7 +10,7 @@ docker run -d \
   -p 8080:8080 \
   -p 9090:9090 \
   -v /path/to/datashuttle.yaml:/etc/datashuttle/datashuttle.yaml:ro \
-  ghcr.io/datashuttle/datashuttle:latest
+  ghcr.io/datashuttle-ai/datashuttle:latest
 ```
 
 See [Docker installation](../installation/docker.md) for image details.
@@ -172,7 +172,7 @@ Source: `deploy/operator/`
 
 ## Standalone binary
 
-Download from [GitHub Releases](https://github.com/datashuttle/datashuttle/releases) and run directly:
+Download from [GitHub Releases](https://github.com/datashuttle-ai/datashuttle/releases) and run directly:
 
 ```bash
 datashuttle start --config /etc/datashuttle/datashuttle.yaml

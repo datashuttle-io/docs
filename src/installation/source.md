@@ -11,11 +11,11 @@ Build DataShuttle from the Git repository. This is primarily for contributors or
 
 ```bash
 # Preferred: download a tagged-release source tarball (matches CI hash)
-curl -L https://github.com/datashuttle/datashuttle/archive/refs/tags/v$(curl -s https://api.github.com/repos/datashuttle/datashuttle/releases/latest | jq -r .tag_name | sed s/v//).tar.gz | tar xz
+curl -L https://github.com/datashuttle-ai/datashuttle/archive/refs/tags/v$(curl -s https://api.github.com/repos/datashuttle-ai/datashuttle/releases/latest | jq -r .tag_name | sed s/v//).tar.gz | tar xz
 cd datashuttle-*
 
 # Or, for active development, clone the repo (git history + latest main)
-# git clone https://github.com/datashuttle/datashuttle.git && cd datashuttle
+# git clone https://github.com/datashuttle-ai/datashuttle.git && cd datashuttle
 
 cargo build --release
 ```

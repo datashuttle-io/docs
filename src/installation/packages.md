@@ -1,6 +1,6 @@
 # DEB / RPM Packages
 
-Native Linux packages are attached to each [GitHub Release](https://github.com/datashuttle/datashuttle/releases).
+Native Linux packages are attached to each [GitHub Release](https://github.com/datashuttle-ai/datashuttle/releases).
 
 ## Debian / Ubuntu
 
