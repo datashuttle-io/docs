@@ -5,15 +5,15 @@ The official multi-arch Docker image is the fastest way to run DataShuttle.
 ## Pull and run
 
 ```bash
-docker pull ghcr.io/evgenyestepanov-star/datashuttle:latest
-docker run -p 8080:8080 ghcr.io/evgenyestepanov-star/datashuttle:latest
+docker pull ghcr.io/datashuttle/datashuttle:latest
+docker run -p 8080:8080 ghcr.io/datashuttle/datashuttle:latest
 ```
 
 ## Image details
 
 | Property | Value |
 |----------|-------|
-| Registry | `ghcr.io/evgenyestepanov-star/datashuttle` |
+| Registry | `ghcr.io/datashuttle/datashuttle` |
 | Base | `debian:bookworm-slim` |
 | Platforms | `linux/amd64`, `linux/arm64` |
 | PID 1 | `tini` (proper signal handling) |
@@ -26,7 +26,7 @@ A minimal-infrastructure bundle (DataShuttle + MinIO object storage +
 Apache Polaris catalog) ships with every release as a compose tarball:
 
 ```bash
-curl -LO https://github.com/evgenyestepanov-star/datashuttle/releases/latest/download/datashuttle-demo.tar.gz
+curl -LO https://github.com/datashuttle/datashuttle/releases/latest/download/datashuttle-demo.tar.gz
 tar xzf datashuttle-demo.tar.gz && cd datashuttle-demo
 docker compose up -d
 ```
@@ -51,7 +51,7 @@ docker run -d \
   -p 8080:8080 \
   -p 9090:9090 \
   -v /path/to/datashuttle.yaml:/etc/datashuttle/datashuttle.yaml:ro \
-  ghcr.io/evgenyestepanov-star/datashuttle:latest
+  ghcr.io/datashuttle/datashuttle:latest
 ```
 
 Or use environment variables instead of a config file:
@@ -67,7 +67,7 @@ docker run -d \
   -e DS_S3_ENDPOINT=http://minio:9000 \
   -e DS_S3_ACCESS_KEY=minioadmin \
   -e DS_S3_SECRET_KEY=minioadmin \
-  ghcr.io/evgenyestepanov-star/datashuttle:latest
+  ghcr.io/datashuttle/datashuttle:latest
 ```
 
 See [Configuration](../concepts/configuration.md) for all available options.
@@ -76,7 +76,7 @@ See [Configuration](../concepts/configuration.md) for all available options.
 
 ```bash
 # Check version
-docker run --rm ghcr.io/evgenyestepanov-star/datashuttle:latest --version
+docker run --rm ghcr.io/datashuttle/datashuttle:latest --version
 
 # Health check
 curl http://localhost:8080/health
