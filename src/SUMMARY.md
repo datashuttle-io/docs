@@ -77,6 +77,10 @@
 - [Client SDKs (Python + TypeScript)](./operations/sdks.md)
 - [Troubleshooting](./operations/troubleshooting.md)
 
+# Playground
+
+- [Interactive Playground](./playground.md)
+
 # Cloud / SaaS
 
 - [Tenant Provisioning](./cloud/provisioning.md)
