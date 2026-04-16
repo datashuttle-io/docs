@@ -7,6 +7,10 @@ src = "src"
 [output.html]
 default-theme = "navy"
 preferred-dark-theme = "navy"
+# Default for the binary-embedded build (served at /docs/ on the api).
+# The website Dockerfile overrides this to "/" at build time for the
+# standalone docs.datashuttle.ai subdomain. See website/Dockerfile.
 site-url = "/docs/"
-git-repository-url = "https://github.com/evgenyestepanov-star/datashuttle"
-edit-url-template = "https://github.com/evgenyestepanov-star/datashuttle/edit/main/docs/book/src/{path}"
+# git-repository-url / edit-url-template intentionally unset — the
+# source repository is private, so "Edit this page" links would 404
+# for every reader. Restore once the repo goes public.
