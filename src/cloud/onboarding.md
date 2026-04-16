@@ -148,5 +148,5 @@ the same page they'd reach from the sidebar.
   for the email), so they skip the `/verify-email` step entirely.
 - The wizard is tolerant of backend drift: if `GET /billing/plans`
   fails (for example, in OSS mode with no billing configured), the
-  step falls back to a baked-in free/pro/enterprise list so the
-  wizard still renders.
+  step falls back to a baked-in community/team/business/enterprise
+  list so the wizard still renders.

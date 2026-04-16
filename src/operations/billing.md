@@ -24,7 +24,7 @@ to the usage ledger.
 ## Stripe Integration (Cloud)
 
 - Subscriptions managed via Stripe: Team, Business, Enterprise plans
-- Free tier: 10,000 DPU credit automatically applied
+- Community tier: 10,000 DPU credit automatically applied
 - Usage-based billing: DPU consumption reported at billing cycle end
 - Overage: billed at next-tier-down rate
 - Customer portal: manage payment methods, view invoices

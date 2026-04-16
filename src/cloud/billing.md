@@ -13,9 +13,9 @@ DataShuttle Cloud's billing layer covers three responsibilities:
    `billing_customers` / `billing_invoices` tables.
 2. **Dunning** — escalate failed payments from a polite reminder to a
    tenant suspend to (eventually) a soft-delete + cancel.
-3. **Trials** — start a 14-day Pro trial on signup, warn the user 24h
+3. **Trials** — start a 14-day Team trial on signup, warn the user 24h
    before it expires, and either charge them (if a payment method is
-   on file) or downgrade them to Free.
+   on file) or downgrade them to Community.
 
 All three pieces share the [`crate::notifications::NotificationSender`]
 trait. In the default build it's a [`LogNotificationSender`] stub that
@@ -76,7 +76,7 @@ truth**.
 ## Trial lifecycle
 
 ```
-signup tier=pro  ──►  status=Trialing, trial_ends_at = now + 14d
+signup tier=team ──►  status=Trialing, trial_ends_at = now + 14d
                       audit: <none — visible via /api/v1/billing/customers>
 
 T-24h  sweep_trials_ending_soon cron tick
@@ -84,9 +84,9 @@ T-24h  sweep_trials_ending_soon cron tick
            billing_customers.last_trial_reminder_at)
 
 T+0    sweep_expired_trials cron tick
-       ├─ has_payment_method = true  → status = Active, tier = pro
+       ├─ has_payment_method = true  → status = Active, tier = team
        │                              → TrialExpired { downgraded:false }
-       └─ has_payment_method = false → status = Active, tier = free
+       └─ has_payment_method = false → status = Active, tier = community
                                        trial_ends_at = NULL
                                        → TrialExpired { downgraded:true }
        audit: billing.trial.expired
@@ -96,7 +96,7 @@ Constants live in `crates/datashuttle-api/src/billing/trial.rs`:
 
 | Constant | Value | Purpose |
 |---|---|---|
-| `TRIAL_DAYS` | `14` | Pro-tier trial length |
+| `TRIAL_DAYS` | `14` | Team-tier trial length |
 | `TRIAL_ENDING_SOON_WINDOW_HOURS` | `24` | Reminder window |
 
 ### Idempotency
@@ -108,12 +108,15 @@ within the current trial window we skip subsequent ticks. The check
 considers the trial's start time (`trial_ends_at - 14d`) so a
 re-trial after a downgrade-and-resub still triggers a fresh ping.
 
-### Free / Enterprise tiers
+### Community / Business / Enterprise tiers
 
-* **Free** signups create a `BillingCustomer` with `status=Active`
+* **Community** signups create a `BillingCustomer` with `status=Active`
   and no `trial_ends_at`. This is necessary so the
   [QuotaGuard](../operations/billing.md) middleware (Phase 3 task 3.2)
   can find a tier row.
+* **Business** signups route through the same trial path as Team —
+  14-day trial, then downgrade to Community on expiry without a
+  payment method.
 * **Enterprise** signups skip `start_trial` entirely — Sales sets up
   the customer record manually via the admin API.
 

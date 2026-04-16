@@ -13,11 +13,17 @@ runtime starts rejecting mutating requests with `HTTP 429`.
 
 ## Tier definitions
 
-| Tier         | DPUs included | Overage allowance | What `QuotaGuard` does                                         |
-| ------------ | -------------:| -----------------:| -------------------------------------------------------------- |
-| `free`       |        10 000 |                 0 | rejects with `429` immediately past included DPUs              |
-| `pro`        |       500 000 |           100 000 | rejects with `429` past `dpu_included + overage_allowance`     |
-| `enterprise` |    *unlimited*|     *unlimited*   | always passes — never enforced at the edge                     |
+| Tier          | DPUs included | Overage allowance | What `QuotaGuard` does                                         |
+| ------------- | -------------:| -----------------:| -------------------------------------------------------------- |
+| `community`   |        10 000 |                 0 | rejects with `429` immediately past included DPUs              |
+| `team`        |       500 000 |           100 000 | rejects with `429` past `dpu_included + overage_allowance`     |
+| `business`    |     5 000 000 |         1 000 000 | rejects with `429` past `dpu_included + overage_allowance`     |
+| `enterprise`  |    *unlimited*|     *unlimited*   | always passes — never enforced at the edge                     |
+
+Legacy tier names `free` and `pro` are still accepted on the wire via
+the `BillingCustomer.tier` deserialize shim (#620) and mapped to
+`community` / `team` respectively. New persisted rows always emit the
+canonical 4-tier strings.
 
 Plans are defined in `crate::billing::default_plans()` and can be
 overridden by an operator. A custom plan with a tier name not in the
@@ -45,7 +51,7 @@ All rejection bodies use the same JSON shape:
 {
   "error": "string — safe to render in a UI",
   "code":  "quota_exceeded | subscription_past_due | subscription_canceled",
-  "tier":  "free | pro | enterprise",          // optional
+  "tier":  "community | team | business | enterprise", // optional
   "billing_url": "https://app.example.com/..." // optional, only when configured
 }
 ```
@@ -56,9 +62,9 @@ Returned when `current_usage_for_tenant >= dpu_included + overage_allowance`.
 
 ```json
 {
-  "error": "DPU quota exceeded for tier 'pro'. Upgrade your plan or wait for the next billing period.",
+  "error": "DPU quota exceeded for tier 'team'. Upgrade your plan or wait for the next billing period.",
   "code": "quota_exceeded",
-  "tier": "pro",
+  "tier": "team",
   "billing_url": "https://app.datashuttle.ai/billing/upgrade?tenant=acme"
 }
 ```
@@ -72,7 +78,7 @@ must update their payment method.
 {
   "error": "Subscription is past due. Update your payment method to keep using DataShuttle.",
   "code": "subscription_past_due",
-  "tier": "pro",
+  "tier": "team",
   "billing_url": "https://app.datashuttle.ai/billing/upgrade?tenant=acme"
 }
 ```
@@ -86,7 +92,7 @@ preserved by the auth layer; only mutating endpoints reject.
 {
   "error": "Subscription has been canceled. Contact support to reactivate.",
   "code": "subscription_canceled",
-  "tier": "pro",
+  "tier": "team",
   "billing_url": "https://app.datashuttle.ai/billing/upgrade?tenant=acme"
 }
 ```
