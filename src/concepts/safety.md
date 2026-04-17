@@ -97,8 +97,8 @@ collapsed cross-shard cursor uses the conservative `min` of all
 shards, which can cause a small re-read from the slowest shard's
 tail on crash.
 
-The full `docs/SAFETY.md` specification in the repository root goes
-deeper on the crash-recovery proofs, replay contracts, and the
-exactly-once guarantees these invariants add up to. The summary
-above is a correct but abridged view — cite the spec when building
-against a particular guarantee in your own code.
+The summary above is the correct abridged view of the crash-recovery
+proofs, replay contracts, and exactly-once guarantees these
+invariants add up to. If a particular guarantee matters to your
+integration and you need the full formal statement, email
+<hello@datashuttle.ai> — we can share the relevant excerpt under NDA.

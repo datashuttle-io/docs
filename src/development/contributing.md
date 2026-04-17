@@ -1,12 +1,13 @@
 # Contributing
 
-DataShuttle is actively developed. The living contribution guide
-(coding conventions, commit format, review expectations, CI layout)
-lives in `docs/CONTRIBUTING.md` at the repository root — always
-reflecting the most recent norms the core team is running on.
+DataShuttle's source is developed in a private repository; the public
+product repo (<https://github.com/datashuttle-ai/datashuttle>) carries
+binaries, the Helm chart, and the docker image only. External
+contribution is by invitation — file bug reports against that repo's
+Issues tab or email the team at <hello@datashuttle.ai>.
 
-This page captures the headline expectations for anyone opening a
-pull request against the public repo.
+This page captures the headline expectations the core team uses
+internally; they also apply to any in-scope external contributions.
 
 ## Coding style
 
