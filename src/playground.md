@@ -7,8 +7,20 @@ replay from the dead-letter queue — all without installing anything
 beyond Docker.
 
 It ships in every deployment tier (Community, Team, Business,
-Enterprise) and in every mode (Cloud, self-hosted, airgapped). Access
-is gated by authentication — sign in before visiting `/playground`.
+Enterprise) in **self-hosted and airgapped** installs, where the
+same docker-compose project owns both the DataShuttle api and the
+per-scenario side containers (Postgres, MySQL, ClickHouse, Kafka,
+MongoDB, Cassandra, …). Access is gated by authentication — sign in
+before visiting `/playground`.
+
+> **Managed cloud (app.datashuttle.ai) note.** The Playground is
+> disabled on DataShuttle Cloud right now. Every scenario's actions
+> execute `docker compose exec` against a sibling container, which
+> only works when the api shares a compose project with those
+> containers — true locally, not true on managed cloud. Per-user
+> sandbox provisioning on cloud is a future phase. Until then, pull
+> the demo bundle down and run the playground locally; it's the same
+> UI and the same scenarios.
 
 ## Why use it
 
