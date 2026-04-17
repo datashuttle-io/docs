@@ -1,8 +1,19 @@
 # DataShuttle
 
-**Iceberg V3-native ingestion engine.** Declarative data sync from any source to Apache Iceberg with sub-minute latency.
+**One SQL statement. Any source. Apache Iceberg.**
 
-DataShuttle replaces multi-system streaming pipelines with a single SQL statement and a single binary.
+If you've ever tried to keep an operational database in sync with a
+lakehouse, you know the drill: Kafka, Debezium, a Flink job, a schema
+registry, a custom pipeline that nobody wants to touch. Four systems
+to operate, glue code in between, and a latency that's measured in
+minutes when you wanted seconds.
+
+DataShuttle collapses that entire stack into one binary and one SQL
+statement. You point it at a source (Postgres, MySQL, MongoDB, Kafka,
+S3 files, a REST API — 20+ connectors), you declare the target
+Iceberg table, and it runs forever: snapshot first, then live change
+capture, with deletion vectors, partition evolution, and schema
+evolution built in.
 
 ```sql
 CREATE PIPELINE orders_sync
@@ -16,25 +27,78 @@ CREATE PIPELINE orders_sync
   );
 ```
 
-## Who is this for?
+That's it. No Kafka. No Flink. No Spark. No orchestrator. Run that
+statement against a DataShuttle instance and orders land in Iceberg
+within seconds of being written to the source.
 
-Data engineers and platform teams who need to keep operational database changes synced into Apache Iceberg tables — without managing a multi-system streaming pipeline.
+## Why it's different
 
-## What you'll find here
+| | DataShuttle | Debezium + Kafka + Flink | Airbyte | Fivetran |
+|---|---|---|---|---|
+| **Setup** | 1 SQL statement | 4 systems to configure | UI wizard | UI wizard |
+| **Target** | Open Iceberg V3 | Iceberg via connector | Varies | Proprietary |
+| **Latency (hot)** | <100 ms via Arrow Flight | Seconds | 5–60 min | 5–60 min |
+| **Latency (cold → Iceberg)** | <30 s | Seconds | 5–60 min | 5–60 min |
+| **Deletion vectors** | Native V3 | — | — | N/A |
+| **Architecture** | Shared-nothing, one binary | 4+ JVMs | Docker / K8s | SaaS |
+| **Deployment** | Cloud · self-hosted · airgapped | Self-hosted | Cloud + self-hosted | Cloud only |
 
-| Section | What's covered |
-|---------|----------------|
-| [Quickstart](./quickstart.md) | End-to-end in 5 minutes with Docker Compose |
-| [Installation](./installation/docker.md) | Docker, binary, Homebrew, DEB/RPM, cargo, source |
-| [Concepts](./concepts/architecture.md) | Architecture, pipeline lifecycle, safety guarantees |
-| [Connectors](./connectors/postgresql.md) | PostgreSQL, MySQL, MongoDB, S3 — setup and type mappings |
-| [SQL Reference](./sql-reference/connections.md) | Full DDL syntax for connections and pipelines |
-| [Operations](./operations/deployment.md) | Deployment, monitoring, GitOps, clustering, troubleshooting |
-| [API Reference](./api-reference/rest.md) | REST API, CLI commands, WebSocket events |
+## Try it in 2 minutes — no install needed
 
-## Quick links
+The fastest way to see DataShuttle work is the
+**[interactive Playground](./playground.md)**. Spin it up once with
+Docker Compose and you get a guided sandbox with 18 pre-built
+scenarios: a happy-path Postgres CDC run, schema evolution on a live
+pipeline, Kafka poison messages + replay from the DLQ, MongoDB
+nested-field evolution, ClickHouse time travel, even Tier-4 chaos
+scenarios (network latency, slow consumers, 50 MB BLOBs). Click
+**Start**, watch Iceberg fill up in real time, break the pipeline on
+purpose, replay. No real data involved.
 
-- [Full Specification](./development/spec.md) — state machines, commit
-  batching invariants, tenant isolation rules.
-- [Contributing Guide](./development/contributing.md) — coding style,
-  commit format, CI expectations.
+Once the playground feels familiar, the [Quickstart](./quickstart.md)
+takes ~5 minutes to connect DataShuttle to a real Postgres and start
+streaming your own data into Iceberg.
+
+## What you'll find in these docs
+
+**Getting started**
+
+- [Quickstart](./quickstart.md) — end-to-end demo in 5 minutes
+- [Playground](./playground.md) — guided scenarios, no setup beyond Docker
+- [Installation](./installation/docker.md) — Docker, Homebrew, DEB/RPM, binary
+
+**Understanding the engine**
+
+- [Architecture](./concepts/architecture.md) — shared-nothing, Arrow Flight hot path, Iceberg cold path
+- [Pipeline Lifecycle](./concepts/pipeline-lifecycle.md) — state machine you'll see in the UI
+- [Safety & Correctness](./concepts/safety.md) — exactly-once, replay, crash recovery
+- [Configuration](./concepts/configuration.md) — `datashuttle.yaml` reference
+
+**Connecting your data**
+
+- [Connectors](./connectors/postgresql.md) — 20+ sources (PostgreSQL, MySQL, MongoDB, Kafka, S3, REST, and more)
+- [Iceberg Catalogs](./connectors/iceberg-catalogs.md) — Polaris, Unity, Glue, REST catalogs
+
+**Shipping it**
+
+- [Deployment](./operations/deployment.md) — Docker, Helm, systemd, standalone binary
+- [Monitoring](./operations/monitoring.md) — Prometheus, Grafana dashboards, alerting rules
+- [Backup & Recovery](./operations/backup.md) — DR-ready backups, tested runbooks
+- [Licensing](./operations/licensing.md) — tiers, DPU pricing, airgap workflow
+
+**Building against it**
+
+- [SQL Reference](./sql-reference/connections.md) — full DDL syntax
+- [REST API](./api-reference/rest.md) · [CLI](./api-reference/cli.md) · [WebSocket](./api-reference/websocket.md)
+
+## How to deploy it
+
+DataShuttle runs the same binary in three modes:
+
+| Mode | Who it's for | Setup |
+|---|---|---|
+| **DataShuttle Cloud** (private beta) | Teams that want zero-ops, managed Iceberg ingestion | Sign up at [app.datashuttle.ai](https://app.datashuttle.ai) |
+| **Self-hosted** | VPC or on-prem with internet egress | `docker pull ghcr.io/datashuttle-ai/datashuttle:latest` |
+| **Airgapped** | Regulated / disconnected networks | Binary download, local signed ledger, quarterly usage export |
+
+Same licence, same features, same binary.

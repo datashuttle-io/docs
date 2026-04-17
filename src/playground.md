@@ -1,22 +1,42 @@
 # Interactive Playground
 
-The playground is a guided, hands-on sandbox for exploring DataShuttle
+The Playground is a guided, hands-on sandbox for exploring DataShuttle
 end-to-end. Pick a source, click through a pre-built scenario, watch
 rows land in Iceberg in real time, break the pipeline on purpose, and
-replay from the DLQ — all without installing anything beyond Docker.
+replay from the dead-letter queue — all without installing anything
+beyond Docker.
 
-It ships in every deployment tier (dev, self-managed, cloud). Access is
-gated by authentication — sign in before visiting `/playground`.
+It ships in every deployment tier (Community, Team, Business,
+Enterprise) and in every mode (Cloud, self-hosted, airgapped). Access
+is gated by authentication — sign in before visiting `/playground`.
+
+## Why use it
+
+- **Zero real data.** Every session writes into a private namespace
+  that gets torn down after two hours.
+- **See every corner of the product.** The 18 scenarios cover the
+  happy path, schema evolution, DLQ replay, Arrow Flight hot-buffer
+  throughput, Iceberg time travel, and deliberate chaos (network
+  latency, slow consumers, huge payloads).
+- **Share a single URL.** Every scenario has a stable deep link —
+  paste it into a sales call, a bug report, or a training doc.
+- **Whitelisted actions only.** The API rejects any SQL that isn't
+  listed for the current scenario, so the sandbox stays the sandbox.
 
 ## Enabling
 
-```bash
-# Host everything on the same box (docker-compose):
-docker compose -f examples/docker-compose.yml --profile playground up -d
+The [Quickstart](./quickstart.md) demo bundle already ships the
+playground services — start it with the `playground` profile:
 
-# Optional — chaos scenarios (Tier 4):
-docker compose -f examples/docker-compose.yml --profile playground --profile chaos up -d
+```bash
+# From inside the demo-bundle directory:
+docker compose --profile playground up -d
+
+# Optional — Tier 4 chaos scenarios:
+docker compose --profile playground --profile chaos up -d
 ```
+
+Open <http://localhost:8080/playground> and sign in.
 
 Operator knobs:
 
@@ -28,10 +48,9 @@ Operator knobs:
 
 ## Scenario catalogue
 
-The manifest at [`examples/manifest.json`](https://github.com/datashuttle-ai/datashuttle/blob/main/examples/manifest.json)
-is the single source of truth — it's consumed by the web UI, the
-`datashuttle playground` CLI, and this page. Eighteen scenarios cover
-four tiers:
+A single manifest ships inside the demo bundle and is consumed by the
+web UI, the `datashuttle playground` CLI, and this page. Eighteen
+scenarios cover four tiers:
 
 ### Tier 1 — stable sources
 
@@ -144,18 +163,10 @@ so a single URL drives sales demos, bug reports, and training.
 - **One session per user** — stops abusive loops and keeps the
   docker-compose box responsive.
 
-## Contributing a scenario
+## New scenarios
 
-See [`examples/manifest.schema.json`](https://github.com/datashuttle-ai/datashuttle/blob/main/examples/manifest.schema.json)
-for the full contract. A new scenario is:
-
-1. A new entry in `examples/manifest.json`.
-2. Any files it references (SQL, shell, JSON payloads, WireMock
-   mappings) under `examples/`.
-3. A unit test in
-   `crates/datashuttle-core/src/playground.rs` isn't required — the
-   `parses_real_manifest` test already validates every new scenario
-   against the schema and cross-references sources.
-
-Once merged, the scenario is instantly available to every UI and CLI
-user on their next manifest fetch.
+Scenarios are added to the manifest by the DataShuttle team and ship
+with the next release. If you have an ingestion pattern you'd like to
+see covered (a specific connector edge case, a chaos profile, a
+schema-evolution corner), email <hello@datashuttle.ai> with a
+reproducer and it goes on the roadmap for the next manifest rev.

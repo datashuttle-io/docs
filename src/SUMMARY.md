@@ -5,6 +5,7 @@
 # Getting Started
 
 - [Quickstart](./quickstart.md)
+- [Interactive Playground](./playground.md)
 
 # Installation
 
@@ -76,10 +77,6 @@
 - [Cryptographic Integrity](./operations/cryptographic-integrity.md)
 - [Client SDKs (Python + TypeScript)](./operations/sdks.md)
 - [Troubleshooting](./operations/troubleshooting.md)
-
-# Playground
-
-- [Interactive Playground](./playground.md)
 
 # Cloud / SaaS
 

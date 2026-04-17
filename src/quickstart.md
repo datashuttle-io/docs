@@ -1,57 +1,61 @@
 # Quickstart
 
-Get DataShuttle running and replicate your first table in 5 minutes.
+Get DataShuttle running and replicate your first Postgres table into
+Iceberg in about five minutes.
+
+> 💡 **Even faster: try the [Playground](./playground.md) first.**
+> It's the same stack but with 18 pre-built scenarios (happy-path
+> CDC, schema evolution, DLQ replay, ClickHouse time travel, network
+> chaos, and more). No real data touched, no SQL to write — click
+> Start and watch Iceberg fill up.
 
 ## Prerequisites
 
-> **Prefer a binary?** Download the latest release from [GitHub Releases](https://github.com/datashuttle-ai/datashuttle/releases/latest) and skip Docker for DataShuttle itself. You will still need Docker for Polaris and MinIO.
+Just **Docker** (and Docker Compose v2). Everything else runs in
+containers.
 
-- **Docker** and **Docker Compose** (v2)
+## Step 1 — Start the demo stack
 
-That's it. Everything runs in containers.
-
-## Step 1: Start the stack with a demo database
-
-Download the packaged demo bundle and start DataShuttle with the full
-demo environment (PostgreSQL with sample data + Polaris + MinIO):
+The tagged release ships a `datashuttle-demo.tar.gz` bundle with a
+Docker Compose file that starts DataShuttle alongside all the
+supporting services it needs:
 
 ```bash
-# Grab the demo compose bundle from the latest release
 curl -LO https://github.com/datashuttle-ai/datashuttle/releases/latest/download/datashuttle-demo.tar.gz
 tar xzf datashuttle-demo.tar.gz && cd datashuttle-demo
 docker compose up -d
 ```
 
-This starts the following services:
+Services that come up:
 
-| Service | Port | Purpose |
-|---------|------|---------|
-| DataShuttle | [localhost:8080](http://localhost:8080) | Ingestion engine (API + Web UI) |
-| Apache Polaris | `:8181` | Iceberg REST catalog |
-| MinIO | [localhost:9001](http://localhost:9001) | S3-compatible object storage |
-| PostgreSQL | `:5432` | Demo source database (`ecommerce`) |
+| Service | Where to reach it | Purpose |
+|---|---|---|
+| DataShuttle | <http://localhost:8080> | Ingestion engine (API + Web UI) |
+| Apache Polaris | `localhost:8181` | Iceberg REST catalog |
+| MinIO | <http://localhost:9001> | S3-compatible object storage |
+| PostgreSQL | `localhost:5432` | Demo source database (`ecommerce`) |
 
-Wait for everything to be healthy:
+Wait for the stack to be ready:
 
 ```bash
 docker compose ps
 ```
 
-All services should show `healthy` status. This usually takes 15–30 seconds.
+All services should show `healthy` (usually 15–30 s).
 
-The PostgreSQL database comes pre-loaded with sample e-commerce data:
+The Postgres container comes pre-loaded with e-commerce data:
 
-| Table | Rows | Description |
-|-------|------|-------------|
-| `customers` | 500 | Customer profiles with addresses |
-| `products` | 100 | Product catalog with pricing |
-| `orders` | 2,000 | Order headers with totals |
-| `order_items` | 5,000 | Line items per order |
-| `payments` | 2,000 | Payment records per order |
+| Table | Rows | What's in it |
+|---|---|---|
+| `customers` | 500 | Profiles + addresses |
+| `products` | 100 | Product catalog |
+| `orders` | 2,000 | Order headers |
+| `order_items` | 5,000 | Line items |
+| `payments` | 2,000 | Payments |
 
-## Step 2: Create a connection
+## Step 2 — Create a connection
 
-Open the **Web UI** at [http://localhost:8080/ui/sql](http://localhost:8080/ui/sql) and enter:
+Open the Web UI at <http://localhost:8080/ui/sql> and run:
 
 ```sql
 CREATE CONNECTION demo_pg
@@ -66,28 +70,24 @@ CREATE CONNECTION demo_pg
   );
 ```
 
-Or via the CLI:
+Or from the CLI:
 
 ```bash
 docker exec datashuttle-datashuttle-1 datashuttle sql -e "
-  CREATE CONNECTION demo_pg
-    TYPE POSTGRES
-    WITH (
-      host = 'postgres',
-      port = '5432',
-      database = 'ecommerce',
-      user = 'postgres',
-      password = 'postgres',
-      publication = 'datashuttle_pub'
-    );
+  CREATE CONNECTION demo_pg TYPE POSTGRES
+    WITH (host='postgres', port='5432', database='ecommerce',
+          user='postgres', password='postgres',
+          publication='datashuttle_pub');
 "
 ```
 
-> **Note:** The hostname `postgres` matches the Docker Compose service name. The publication `datashuttle_pub` is created automatically by the init script.
+> The hostname `postgres` matches the Compose service name. The
+> publication `datashuttle_pub` is created by the init script on
+> first boot.
 
-## Step 3: Create a pipeline
+## Step 3 — Create a pipeline
 
-Replicate the orders, customers, and products tables:
+Replicate three tables in one statement:
 
 ```sql
 CREATE PIPELINE ecommerce_sync
@@ -100,83 +100,91 @@ CREATE PIPELINE ecommerce_sync
   );
 ```
 
-This single statement:
-1. Loads all existing data from the `orders`, `customers`, and `products` tables
-2. Starts continuous sync — changes in PostgreSQL appear in Iceberg within seconds
-3. Writes Parquet data files to MinIO
-4. Commits to the Iceberg catalog every 10 seconds
+That one line does four things:
 
-## Step 4: Verify data is flowing
+1. Takes an initial snapshot of all three tables.
+2. Starts continuous replication — every insert/update/delete in
+   Postgres lands in Iceberg within the commit interval.
+3. Writes Parquet data files to MinIO.
+4. Commits to the Iceberg catalog every 10 seconds.
 
-Check the pipeline status in the SQL console:
+## Step 4 — Watch it work
+
+Check status in the SQL console:
 
 ```sql
-SHOW PIPELINE STATUS ecommerce_cdc
+SHOW PIPELINE STATUS ecommerce_sync;
 ```
 
-Or via the CLI:
+Or from the CLI:
 
 ```bash
-docker exec datashuttle-datashuttle-1 datashuttle pipeline status ecommerce_cdc
+docker exec datashuttle-datashuttle-1 datashuttle pipeline status ecommerce_sync
 ```
 
-You should see the pipeline in `running` or `syncing` state. The initial load will process:
-- 500 customer rows
-- 100 product rows
-- 2,000 order rows
+The pipeline should be `running` once the initial snapshot finishes
+(2,600 rows total — a second or two).
 
-Open the **Web UI** at [http://localhost:8080](http://localhost:8080) to see the pipeline dashboard with live metrics.
+The Web UI at <http://localhost:8080> has a live pipeline dashboard
+with rows/sec, commit cadence, and per-table progress.
 
-### Make a change and watch it replicate
+### Replicate a change
 
-Insert a new row in the source:
+Insert a new customer in the source:
 
 ```bash
 docker exec postgres psql -U postgres -d ecommerce -c \
-  "INSERT INTO customers (first_name, last_name, email, segment) VALUES ('Eve', 'New', 'eve@example.com', 'premium');"
+  "INSERT INTO customers (first_name, last_name, email, segment)
+   VALUES ('Eve', 'New', 'eve@example.com', 'premium');"
 ```
 
-Within 10 seconds (the commit interval), the row count increases by 1.
+Within 10 seconds (the commit interval) the new row is in Iceberg.
+Deletes and updates propagate the same way — deletes use Iceberg V3
+deletion vectors, so the target table is position-accurate without
+full rewrites.
 
-## Step 5: Explore
+## Step 5 — Explore
 
 ```sql
--- List all pipelines
-SHOW PIPELINES
+-- List everything
+SHOW PIPELINES;
+SHOW CONNECTIONS;
 
--- Describe pipeline details
-DESCRIBE PIPELINE ecommerce_cdc
+-- Inspect
+DESCRIBE PIPELINE ecommerce_sync;
+DESCRIBE CONNECTION demo_pg;
 
--- List connections
-SHOW CONNECTIONS
-
--- Describe connection
-DESCRIBE CONNECTION demo_pg
-
--- Pause the pipeline
-PAUSE PIPELINE ecommerce_cdc
-
--- Resume it
-RESUME PIPELINE ecommerce_cdc
+-- Pause + resume
+PAUSE PIPELINE ecommerce_sync;
+RESUME PIPELINE ecommerce_sync;
 ```
 
-Or check Prometheus metrics:
-
-```bash
-curl -s http://localhost:9090/metrics | grep ecommerce_cdc
-```
+Prometheus metrics at <http://localhost:9090/metrics> include per-pipeline
+counters (bytes, rows, commits, DLQ events) and the Arrow Flight
+hot-buffer latency histogram.
 
 ## Clean up
 
 ```bash
-docker compose -f examples/docker-compose.yml down -v
+docker compose down -v
 ```
 
-## Next steps
+## Where to go next
 
-- **Add more connectors** — [MySQL](./connectors/mysql.md), [MongoDB](./connectors/mongodb.md), [S3 files](./connectors/files.md)
-- **Run the full demo** — the `datashuttle-demo.tar.gz` release asset covers PostgreSQL, MySQL, MongoDB, and file ingestion end-to-end
-- **Deploy to production** — [Deployment guide](./operations/deployment.md)
-- **Set up monitoring** — [Monitoring & alerting](./operations/monitoring.md)
+- **[Playground](./playground.md)** — 18 guided scenarios: schema
+  evolution, DLQ replay, Kafka throughput, MongoDB nested fields,
+  network chaos. Same stack, zero setup beyond Docker.
+- **Connect your own sources** — [PostgreSQL](./connectors/postgresql.md),
+  [MySQL](./connectors/mysql.md), [MongoDB](./connectors/mongodb.md),
+  [Kafka](./connectors/files.md), [S3 files](./connectors/files.md),
+  [REST APIs](./connectors/rest-api.md), and 15+ more.
+- **Deploy it properly** — [Deployment guide](./operations/deployment.md)
+  covers Docker, Helm, systemd, and clustered setups.
+- **Monitor it** — [Monitoring & alerting](./operations/monitoring.md)
+  walks through Prometheus rules and the Grafana dashboard the Helm
+  chart ships.
 - **Manage pipelines as code** — [GitOps](./operations/gitops.md)
-- **Learn the SQL syntax** — [SQL Reference](./sql-reference/connections.md)
+  (`datashuttle apply / diff / validate`).
+- **Learn the full syntax** — [SQL Reference](./sql-reference/connections.md).
+
+If you get stuck, <hello@datashuttle.ai> goes to a real person.
