@@ -53,6 +53,32 @@ datashuttle --version
 datashuttle --help
 ```
 
+## Thin client vs. full daemon
+
+Since #816 releases ship two flavours of binary:
+
+| Binary | Intended audience | Size (stripped) | Notes |
+|---|---|---|---|
+| `datashuttle-client` | Developer workstations | ~15-25 MB | Talks to a remote daemon over HTTP. No server, no connector drivers, no embedded UI. Set `DS_SERVER` env var or pass `--server http://host:3000`. |
+| `datashuttle` / `datashuttled` | Operators running the cluster | ~40-50 MB (cdc-cloud) | Identical contents; `datashuttled` is the daemon-flavoured alias under systemd / launchd. Includes every CLI command (backup, crypto rotate, registry migrate, doctor, …). |
+
+Developer install example:
+
+```bash
+# On the dev workstation — talk to the production daemon over HTTPS.
+curl -fsSL https://datashuttle.ai/install.sh | bash -s -- --client-only
+export DS_SERVER=https://datashuttle.example.com
+datashuttle-client status
+datashuttle-client pipeline list
+```
+
+Operator install example — same as before, ships `datashuttle` +
+`datashuttled`:
+
+```bash
+curl -fsSL https://datashuttle.ai/install.sh | sudo bash -s -- --systemd
+```
+
 ## Connector catalogue
 
 The pre-built binary ships with the six-connector `cdc-cloud`
