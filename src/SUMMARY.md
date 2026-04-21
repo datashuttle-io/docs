@@ -9,8 +9,10 @@
 
 # Installation
 
+- [Overview & Decision Tree](./installation/README.md)
 - [Docker](./installation/docker.md)
 - [Binary Download](./installation/binary.md)
+- [Air-gapped Install](./installation/air-gapped.md)
 - [Homebrew](./installation/homebrew.md)
 - [DEB / RPM Packages](./installation/packages.md)
 
@@ -56,6 +58,7 @@
 # Operations
 
 - [Deployment](./operations/deployment.md)
+- [Persistence](./operations/persistence.md)
 - [First-Run Setup Wizard](./operations/setup-wizard.md)
 - [Monitoring & Alerting](./operations/monitoring.md)
 - [Grafana Dashboards](./operations/dashboards.md)

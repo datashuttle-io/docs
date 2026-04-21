@@ -41,6 +41,41 @@ After starting, open [http://localhost:8080](http://localhost:8080) to access th
 
 > Source databases are **not included** — connect DataShuttle to your existing PostgreSQL, MySQL, or MongoDB. See the [Quickstart](../quickstart.md) for a step-by-step walkthrough.
 
+## Before `compose up`: set secrets
+
+The shipped compose file refuses to start until you populate `.env`:
+
+```bash
+cp .env.example .env
+openssl rand -base64 24  # MINIO_ROOT_PASSWORD
+openssl rand -base64 24  # POLARIS_CLIENT_SECRET
+openssl rand -base64 24  # POLARIS_PG_PASSWORD  (dedicated Polaris Postgres sidecar, never user-facing)
+```
+
+`POLARIS_PG_PASSWORD` is new in the persistence-hardening release — the
+Polaris catalog is now backed by a dedicated Postgres sidecar (`polaris-postgres`)
+so the catalog survives container restarts. The password is stored in
+the Postgres volume on first boot; rotating requires `ALTER USER` on
+the live DB before updating `.env`. See [Persistence](../operations/persistence.md).
+
+## Persistent data directory
+
+The API container writes to `/var/lib/datashuttle` inside the container,
+backed by the `datashuttle-data` named volume. This is mandatory —
+DataShuttle refuses to start on a `tmpfs` data directory (`/tmp/*`)
+because a wipe-on-reboot state dir silently masks broken deployments.
+
+If you previously bind-mounted `./data:/data`, rename it to the named
+volume on upgrade:
+
+```bash
+docker volume create datashuttle-data
+# Copy old bind-mount contents in if upgrading from a pre-persistence
+# release:
+docker run --rm -v "$PWD/data:/from" -v datashuttle-data:/to alpine \
+  sh -c 'cp -a /from/. /to/'
+```
+
 ## Running with your own config
 
 Mount a configuration file and expose the ports you need:
