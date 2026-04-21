@@ -12,6 +12,7 @@
 - [Overview & Decision Tree](./installation/README.md)
 - [Docker](./installation/docker.md)
 - [Binary Download](./installation/binary.md)
+- [Kubernetes (Helm)](./installation/kubernetes.md)
 - [Air-gapped Install](./installation/air-gapped.md)
 - [Homebrew](./installation/homebrew.md)
 - [DEB / RPM Packages](./installation/packages.md)

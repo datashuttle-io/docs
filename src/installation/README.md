@@ -32,6 +32,7 @@ uninstall instructions:
 
 - [Docker](./docker.md)
 - [Binary Download](./binary.md)
+- [Kubernetes (Helm)](./kubernetes.md)
 - [Air-gapped install](./air-gapped.md)
 - [Homebrew](./homebrew.md) *(macOS convenience)*
 - [DEB / RPM Packages](./packages.md)
