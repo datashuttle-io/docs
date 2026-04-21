@@ -53,6 +53,26 @@ datashuttle --version
 datashuttle --help
 ```
 
+## Connector catalogue
+
+The pre-built binary ships with the six-connector `cdc-cloud`
+subset — **postgres, mysql, mongodb, kafka, file, rest-api**. This
+covers the mainstream ingestion surface while keeping the binary
+compact (~40-50 MB). If you need Oracle, SQL Server, Snowflake,
+Databricks, Cassandra, ClickHouse, DynamoDB, Kinesis, CockroachDB,
+Redshift, Greenplum, Hadoop, cloud-storage, Vertica, StarRocks or
+BigQuery, build from source with the full matrix:
+
+```bash
+git clone https://github.com/datashuttle-ai/datashuttle
+cd datashuttle
+cargo build --release -p datashuttle-cli --features cdc-all
+sudo install -m 0755 target/release/datashuttle /usr/local/bin/
+```
+
+Premium connectors will eventually gate on a license feature-flag
+instead of a build flag — this opt-in is the transitional answer.
+
 ## Install as a systemd service
 
 Add `--systemd` to the install-script invocation (or to a manual
