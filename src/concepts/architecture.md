@@ -35,16 +35,34 @@ DataShuttle uses a **shared-nothing architecture** where every node is equal and
 
 ## Crate map
 
+DataShuttle ships as a workspace of ~13 Rust crates. Cloud-only concerns are isolated in their own crates so OSS builds stay lean and dep-free.
+
 | Crate | Purpose |
 |-------|---------|
-| `datashuttle-core` | SQL parser, pipeline registry, transforms, config, schema evolution, RBAC, lineage |
+| `datashuttle-traits` | Zero-dependency contract crate; trait definitions shared across the workspace |
+| `datashuttle-core` | SQL parser, pipeline registry, transforms, config, schema evolution, RBAC, lineage, playground manifest types |
+| `datashuttle-control` | Identity / org / membership / invitation / API-tokens / SSO domain + repositories (in-memory default; Postgres impl lives in cloud crate) |
+| `datashuttle-license` | Tier + feature-gate + DPU metering |
 | `datashuttle-iceberg` | Iceberg V3 writer, commit protocol, deletion vectors (Puffin), compaction, credential vending |
-| `datashuttle-cdc` | Source connectors (23 types), checkpoint manager, schema evolution, DLQ, rate limiting |
+| `datashuttle-cdc` | Source connectors (up to 22 types, feature-gated: `cdc-cloud` ships 6 in OSS default, `cdc-all` ships the full catalogue in cloud) |
 | `datashuttle-flight` | Arrow Flight hot buffer, flush worker, Raft replication, backpressure |
-| `datashuttle-gossip` | Cluster membership via SWIM gossip, rebalancing |
-| `datashuttle-api` | REST API, WebSocket, Prometheus `/metrics`, auth, pool scheduler, time-series metrics, cgroups |
-| `datashuttle-cli` | CLI binary: pipeline/connection management, SQL console, GitOps |
-| `datashuttle-ui` | Embedded React Web UI (rust-embed, served from any node) |
+| `datashuttle-gossip` | Cluster membership via SWIM gossip, lease-based ownership, rebalancing |
+| `datashuttle-api` | REST API, WebSocket, Prometheus `/metrics`, auth, pool scheduler, time-series metrics, cgroups. **Cloud-free dep graph** — no sqlx / aws-sdk / redis pulled in by default |
+| `datashuttle-playground` | Interactive demo runtime — sessions, TCP dispatcher, per-user quota, prometheus bundle, `/playground/*` handlers |
+| `datashuttle-cloud` | SaaS-only augmentations: Postgres control-plane repos, Redis kv, AWS tenant provisioning, admin-console handlers, enterprise SSO, cloud playground dispatcher |
+| `datashuttle-client` | Thin HTTP-only client crate backing the `datashuttle` CLI binary (~12MB, zero server deps) |
+| `datashuttle-ui` | Embedded React Web UI (rust-embed) + mdBook docs; served from any node, CDN-hostable as a separate tarball |
+| `datashuttle-cli` | Binary crate(s): `datashuttle` thin client, `datashuttled` server daemon. Only crate that can pull all others together behind the `saas` feature |
+
+### Extension hooks
+
+Post-decomposition, the api crate doesn't carry cloud-specific or playground-specific code. Instead it exposes three **extension slots** on `AppState` that the cli wires at boot:
+
+- `cloud_router_extender` — cloud mounts sibling routes (`/orgs/:id/sso/*`, billing, etc.) without touching the base router
+- `admin_router_provider` — cloud provides admin-console routes (`/admin/users`, `/admin/orgs`, `/admin/tenants`) that merge into the base admin tree before middleware layers
+- `playground_runtime` + `playground_router_extender` — the playground crate plugs its runtime + `/playground/*` mount
+
+OSS builds leave these at safe defaults (Noop trait-objects / `None` fn-pointers); the cli's `saas` feature swaps in cloud impls. This pattern is what made #817 (cloud extraction) + #818 (playground extraction) + #830 (admin-router split) possible without forking api or sprinkling `#[cfg(feature = "saas")]` through the codebase.
 
 ## Coordination model
 
