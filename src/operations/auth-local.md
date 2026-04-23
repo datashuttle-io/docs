@@ -6,8 +6,6 @@ Okta, Auth0, ...). Users live in `datashuttle.yaml`, passwords are
 stored as one-way hashes, and `/auth/login` mints a short-lived session
 JWT served as an HttpOnly cookie.
 
-> Tracking issue: [#562](https://github.com/datashuttle-ai/datashuttle/issues/562)
-
 ---
 
 ## Quick start

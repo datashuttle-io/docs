@@ -90,8 +90,10 @@ Redshift, Greenplum, Hadoop, cloud-storage, Vertica, StarRocks or
 BigQuery, build from source with the full matrix:
 
 ```bash
-git clone https://github.com/datashuttle-ai/datashuttle
-cd datashuttle
+# Source tarball for the latest release (SHA256 available alongside).
+curl -LO https://datashuttle.ai/releases/latest/datashuttle-source.tar.gz
+tar xzf datashuttle-source.tar.gz
+cd datashuttle-*
 cargo build --release -p datashuttle-cli --features cdc-all
 sudo install -m 0755 target/release/datashuttle /usr/local/bin/
 ```

@@ -222,8 +222,9 @@ On failure:
 
 ## Additive to on-prem
 
-The existing in-memory [`provision_tenant`](../../../crates/datashuttle-api/src/tenant.rs)
-flow continues to run unchanged for OSS deployments, tests, and any SaaS
+The existing in-memory `provision_tenant` flow (defined in the api
+crate's `tenant` module) continues to run unchanged for OSS deployments,
+tests, and any SaaS
 install that keeps `provisioning.enabled = false`. The two paths coexist
 until Task 2.3 replaces the in-memory call site with a gated dispatch to
 `state.provisioner`.
