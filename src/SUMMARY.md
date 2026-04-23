@@ -23,6 +23,7 @@
 - [Pipeline Lifecycle](./concepts/pipeline-lifecycle.md)
 - [Partitioning & Clustering](./concepts/partitioning-clustering.md)
 - [Iceberg Commit Batching](./concepts/iceberg-commit-batching.md)
+- [Query engine](./concepts/query-engine.md)
 - [Safety & Correctness](./concepts/safety.md)
 - [Sinks & Hooks](./concepts/sinks-and-hooks.md)
 - [Configuration](./concepts/configuration.md)
