@@ -30,7 +30,7 @@
 }
 
 /* ---------- LIGHT THEME remap ---------- */
-.light {
+.light, html:not(.js) {
   --bg: var(--ds-paper-50);
   --fg: var(--ds-ink-900);
   --sidebar-bg: var(--ds-paper-50);
@@ -60,6 +60,19 @@
   --searchresults-border-color: var(--ds-ink-300);
   --searchresults-li-bg: var(--ds-paper-100);
   --search-mark-bg: var(--ds-signal-300);
+  --warning-border: var(--ds-signal-400);
+  --footnote-highlight: var(--ds-signal-400);
+  --overlay-bg: rgba(15, 15, 16, 0.35);
+  --blockquote-note-color: var(--ds-cargo-400);
+  --blockquote-tip-color: var(--ds-moss-400);
+  --blockquote-important-color: var(--ds-signal-500);
+  --blockquote-warning-color: #B8902F;
+  --blockquote-caution-color: var(--ds-rust-400);
+  --sidebar-header-border-color: var(--ds-signal-400);
+  /* Copy-icon CSS filter. Upstream invert(45%) is a neutral gray; we
+   * bias it warmer to match the paper background. */
+  --copy-button-filter: invert(45%);
+  --copy-button-filter-hover: invert(57%) sepia(93%) saturate(1290%) hue-rotate(351deg) brightness(92%) contrast(95%);
 }
 
 /* ---------- DARK THEMES (navy / coal / ayu / rust) ---------- */
@@ -93,6 +106,17 @@
   --searchresults-border-color: #26262A;
   --searchresults-li-bg: #1E1E21;
   --search-mark-bg: var(--ds-signal-400);
+  --warning-border: var(--ds-signal-400);
+  --footnote-highlight: var(--ds-signal-300);
+  --overlay-bg: rgba(0, 0, 0, 0.5);
+  --blockquote-note-color: #5AA4AE;
+  --blockquote-tip-color: #8CA069;
+  --blockquote-important-color: var(--ds-signal-300);
+  --blockquote-warning-color: #E0B64A;
+  --blockquote-caution-color: #D96951;
+  --sidebar-header-border-color: var(--ds-signal-400);
+  --copy-button-filter: invert(70%);
+  --copy-button-filter-hover: invert(60%) sepia(88%) saturate(1400%) hue-rotate(350deg) brightness(102%) contrast(94%);
 }
 
 /* ---------- BASE TYPE ---------- */
@@ -151,13 +175,21 @@ code, pre, kbd, .hljs {
 }
 
 /* ---------- SIDEBAR ---------- */
+/* mdBook's upstream `.sidebar` uses `position: fixed` for the entire
+ * chrome layout; do NOT override `position` here or the left rail
+ * vanishes. We only layer on a border + the orange spine. */
 .sidebar {
-  border-right: 1px solid var(--quote-border, var(--ds-signal-400));
-  position: relative;
+  border-right: 1px solid var(--table-border-color) !important;
 }
-/* The signal-orange spine — a persistent 3px vertical rule on the left
- * of the sidebar, ties the docs visually to the marketing manifest. */
-.sidebar::before {
+.sidebar .sidebar-scrollbox {
+  /* Let the orange spine peek through without overlapping content. */
+  padding-left: 14px !important;
+}
+/* The signal-orange spine — a persistent 3px vertical rule anchored to
+ * the sidebar scrollbox (which IS absolute-positioned by mdBook, so
+ * ::before has a positioned ancestor). Ties the docs visually to the
+ * marketing manifest. */
+.sidebar .sidebar-scrollbox::before {
   content: '';
   position: absolute;
   left: 0;
@@ -165,7 +197,7 @@ code, pre, kbd, .hljs {
   bottom: 0;
   width: 3px;
   background: var(--ds-signal-400);
-  z-index: 1;
+  pointer-events: none;
 }
 .sidebar .chapter li.part-title {
   font-family: var(--ds-font-mono);
