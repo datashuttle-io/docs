@@ -119,6 +119,64 @@
   --copy-button-filter-hover: invert(60%) sepia(88%) saturate(1400%) hue-rotate(350deg) brightness(102%) contrast(94%);
 }
 
+/* ---------- OS DARK PREFERENCE ----------
+ * mdBook's default-theme is "light" (paper-first). When the visitor's
+ * OS is in dark mode we want dark palette regardless of which class
+ * mdBook picked on first load. Override ALL theme classes inside a
+ * prefers-color-scheme media query — user's explicit theme-picker
+ * choice is the tradeoff (OS preference wins for now). */
+@media (prefers-color-scheme: dark) {
+  .light, html:not(.js), .navy, .coal, .ayu, .rust {
+    --bg: #0B0B0C;
+    --fg: #EDECE7;
+    --sidebar-bg: #0B0B0C;
+    --sidebar-fg: #C8C7C1;
+    --sidebar-non-existant: #5A5954;
+    --sidebar-active: var(--ds-signal-300);
+    --sidebar-spacer: #1E1E21;
+    --scrollbar: #26262A;
+    --icons: #8E8D87;
+    --icons-hover: var(--ds-signal-400);
+    --links: #5AA4AE;
+    --inline-code-color: var(--ds-signal-300);
+    --theme-popup-bg: #131315;
+    --theme-popup-border: #26262A;
+    --theme-hover: #1E1E21;
+    --quote-bg: rgba(244, 118, 23, 0.08);
+    --quote-border: var(--ds-signal-400);
+    --table-border-color: #26262A;
+    --table-header-bg: var(--ds-signal-400);
+    --table-header-fg: var(--ds-ink-900);
+    --table-alternate-bg: #131315;
+    --searchbar-border-color: #26262A;
+    --searchbar-bg: #131315;
+    --searchbar-fg: #EDECE7;
+    --searchbar-shadow-color: rgba(0, 0, 0, 0.5);
+    --searchresults-header-fg: #8E8D87;
+    --searchresults-border-color: #26262A;
+    --searchresults-li-bg: #1E1E21;
+    --search-mark-bg: var(--ds-signal-400);
+    --warning-border: var(--ds-signal-400);
+    --footnote-highlight: var(--ds-signal-300);
+    --overlay-bg: rgba(0, 0, 0, 0.5);
+    --blockquote-note-color: #5AA4AE;
+    --blockquote-tip-color: #8CA069;
+    --blockquote-important-color: var(--ds-signal-300);
+    --blockquote-warning-color: #E0B64A;
+    --blockquote-caution-color: #D96951;
+    --sidebar-header-border-color: var(--ds-signal-400);
+    --copy-button-filter: invert(70%);
+    --copy-button-filter-hover: invert(60%) sepia(88%) saturate(1400%) hue-rotate(350deg) brightness(102%) contrast(94%);
+  }
+
+  /* Light-themed code chips need to be dark too — inline <code> has a
+   * hardcoded background via mdBook's chrome. Remap. */
+  .light pre, .light pre > code {
+    background: var(--ds-ink-900) !important;
+    color: var(--ds-paper-50) !important;
+  }
+}
+
 /* ---------- BASE TYPE ---------- */
 html,
 body,
