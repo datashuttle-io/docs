@@ -5,8 +5,12 @@ language = "en"
 src = "src"
 
 [output.html]
-default-theme = "navy"
+default-theme = "light"
 preferred-dark-theme = "navy"
+# Brand theme overlay — paper/ink palette, signal-orange spine, IBM
+# Plex / Instrument Serif / JetBrains Mono. Leaves mdBook's base CSS
+# intact and only overrides the variables it exposes.
+additional-css = ["theme/brand.css"]
 # Default for the binary-embedded build (served at /docs/ on the api).
 # The website Dockerfile overrides this to "/" at build time for the
 # standalone docs.datashuttle.ai subdomain. See website/Dockerfile.
