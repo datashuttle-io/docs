@@ -1,0 +1,267 @@
+/* DataShuttle quiet-technical palette overlaid on mdBook's theme vars.
+ * Loaded via `additional-css` in book.toml. Retints .light / .navy /
+ * .coal / .ayu without touching the upstream variables bundle. */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --mono-font: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+html,
+body {
+  font-family: 'Inter Tight', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+code,
+pre,
+.hljs {
+  font-family: var(--mono-font);
+}
+
+/* ── Light theme: paper + ink ──────────────────────────────────── */
+.light,
+html:not(.js) {
+  --bg: #FAFAFB;
+  --fg: #141416;
+
+  --sidebar-bg: #F4F4F5;
+  --sidebar-fg: #2C2C30;
+  --sidebar-non-existant: #8D8D95;
+  --sidebar-active: #527273;
+  --sidebar-spacer: #EAEAEC;
+  --sidebar-header-border-color: #527273;
+
+  --scrollbar: #BCBCC0;
+
+  --icons: #6B6B73;
+  --icons-hover: #141416;
+
+  --links: #527273;
+
+  --inline-code-color: #3D5A5B;
+
+  --theme-popup-bg: #FFFFFF;
+  --theme-popup-border: #DDDDE0;
+  --theme-hover: #EAEAEC;
+
+  --quote-bg: #F4F4F5;
+  --quote-border: #DDDDE0;
+
+  --warning-border: #A88A3E;
+
+  --table-border-color: #EAEAEC;
+  --table-header-bg: #F4F4F5;
+  --table-alternate-bg: #FAFAFB;
+
+  --searchbar-border-color: #DDDDE0;
+  --searchbar-bg: #FFFFFF;
+  --searchbar-fg: #141416;
+  --searchbar-shadow-color: #BCBCC0;
+  --searchresults-header-fg: #6B6B73;
+  --searchresults-border-color: #DDDDE0;
+  --searchresults-li-bg: #F4F4F5;
+  --search-mark-bg: #B4C4C4;
+
+  --color-scheme: light;
+
+  --footnote-highlight: #7F9797;
+  --overlay-bg: rgba(20, 20, 22, 0.4);
+
+  --blockquote-note-color: #527273;
+  --blockquote-tip-color: #5E7357;
+  --blockquote-important-color: #527273;
+  --blockquote-warning-color: #A88A3E;
+  --blockquote-caution-color: #9C4A3D;
+}
+
+/* ── Dark themes: ink + paper ──────────────────────────────────── */
+.navy,
+.coal,
+.ayu {
+  --bg: #141416;
+  --fg: #F4F4F5;
+
+  --sidebar-bg: #1E1E21;
+  --sidebar-fg: #DDDDE0;
+  --sidebar-non-existant: #8D8D95;
+  --sidebar-active: #7F9797;
+  --sidebar-spacer: #2C2C30;
+  --sidebar-header-border-color: #527273;
+
+  --scrollbar: #484851;
+
+  --icons: #8D8D95;
+  --icons-hover: #F4F4F5;
+
+  --links: #7F9797;
+
+  --inline-code-color: #BCBCC0;
+
+  --theme-popup-bg: #1E1E21;
+  --theme-popup-border: #484851;
+  --theme-hover: #2C2C30;
+
+  --quote-bg: #1E1E21;
+  --quote-border: #2C2C30;
+
+  --warning-border: #A88A3E;
+
+  --table-border-color: #2C2C30;
+  --table-header-bg: #2C2C30;
+  --table-alternate-bg: #1E1E21;
+
+  --searchbar-border-color: #484851;
+  --searchbar-bg: #2C2C30;
+  --searchbar-fg: #F4F4F5;
+  --searchbar-shadow-color: #484851;
+  --searchresults-header-fg: #8D8D95;
+  --searchresults-border-color: #484851;
+  --searchresults-li-bg: #1E1E21;
+  --search-mark-bg: #3D5A5B;
+
+  --color-scheme: dark;
+
+  --footnote-highlight: #527273;
+  --overlay-bg: rgba(20, 20, 22, 0.6);
+
+  --blockquote-note-color: #7F9797;
+  --blockquote-tip-color: #8B9B82;
+  --blockquote-important-color: #B4C4C4;
+  --blockquote-warning-color: #C2A65E;
+  --blockquote-caution-color: #B06C62;
+}
+
+/* Slightly tighten the content typography to match the marketing site. */
+.content h1,
+.content h2,
+.content h3,
+.content h4 {
+  font-family: 'Inter Tight', ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.content h1 { font-weight: 600; }
+.content h2 { font-weight: 600; }
+.content h3 { font-weight: 600; }
+.content h4 { font-weight: 600; }
+
+.content p,
+.content li {
+  line-height: 1.65;
+}
+
+/* Monospaced identifiers in body text render in the brand mono. */
+.content code {
+  font-size: 0.9em;
+}
+
+/* ── Syntax highlighting (highlight.js) ─────────────────────────────
+ * mdBook ships highlight.css (light) + tomorrow-night.css (dark) +
+ * ayu-highlight.css. All three use bright primary colors that fight
+ * the quiet-technical palette. Overlay a muted version here so code
+ * blocks read like the marketing site's <pre>.
+ * ───────────────────────────────────────────────────────────────── */
+
+/* Code-block container — paper-raised on light, ink-raised on dark. */
+.light pre,
+html:not(.js) pre {
+  background: #F4F4F5 !important;
+  border: 1px solid #EAEAEC;
+  border-radius: 5px;
+}
+.light pre code,
+html:not(.js) pre code,
+.light .hljs,
+html:not(.js) .hljs {
+  background: transparent !important;
+  color: #141416;
+}
+
+.navy pre,
+.coal pre,
+.ayu pre {
+  background: #1E1E21 !important;
+  border: 1px solid #2C2C30;
+  border-radius: 5px;
+}
+.navy pre code, .coal pre code, .ayu pre code,
+.navy .hljs, .coal .hljs, .ayu .hljs {
+  background: transparent !important;
+  color: #F4F4F5;
+}
+
+/* Light theme — quiet-technical hljs palette. */
+.light .hljs-comment,
+.light .hljs-quote,
+html:not(.js) .hljs-comment,
+html:not(.js) .hljs-quote { color: #8D8D95; font-style: italic; }
+
+.light .hljs-variable, .light .hljs-template-variable,
+.light .hljs-attribute, .light .hljs-attr, .light .hljs-tag,
+.light .hljs-name, .light .hljs-regexp, .light .hljs-link,
+.light .hljs-selector-id, .light .hljs-selector-class,
+html:not(.js) .hljs-variable, html:not(.js) .hljs-template-variable,
+html:not(.js) .hljs-attribute, html:not(.js) .hljs-attr, html:not(.js) .hljs-tag,
+html:not(.js) .hljs-name, html:not(.js) .hljs-regexp, html:not(.js) .hljs-link,
+html:not(.js) .hljs-selector-id, html:not(.js) .hljs-selector-class { color: #713528; }
+
+.light .hljs-number, .light .hljs-meta, .light .hljs-built_in,
+.light .hljs-builtin-name, .light .hljs-literal, .light .hljs-type, .light .hljs-params,
+html:not(.js) .hljs-number, html:not(.js) .hljs-meta, html:not(.js) .hljs-built_in,
+html:not(.js) .hljs-builtin-name, html:not(.js) .hljs-literal, html:not(.js) .hljs-type,
+html:not(.js) .hljs-params { color: #7A6229; }
+
+.light .hljs-string, .light .hljs-symbol, .light .hljs-bullet,
+html:not(.js) .hljs-string, html:not(.js) .hljs-symbol, html:not(.js) .hljs-bullet { color: #445240; }
+
+.light .hljs-title, .light .hljs-section,
+html:not(.js) .hljs-title, html:not(.js) .hljs-section { color: #2B4142; font-weight: 600; }
+
+.light .hljs-keyword, .light .hljs-selector-tag,
+html:not(.js) .hljs-keyword, html:not(.js) .hljs-selector-tag { color: #3D5A5B; font-weight: 600; }
+
+/* Dark themes — quiet-technical hljs palette. */
+.navy .hljs-comment, .coal .hljs-comment, .ayu .hljs-comment,
+.navy .hljs-quote, .coal .hljs-quote, .ayu .hljs-quote { color: #8D8D95; font-style: italic; }
+
+.navy .hljs-variable, .coal .hljs-variable, .ayu .hljs-variable,
+.navy .hljs-attribute, .coal .hljs-attribute, .ayu .hljs-attribute,
+.navy .hljs-attr, .coal .hljs-attr, .ayu .hljs-attr,
+.navy .hljs-tag, .coal .hljs-tag, .ayu .hljs-tag,
+.navy .hljs-regexp, .coal .hljs-regexp, .ayu .hljs-regexp { color: #B06C62; }
+
+.navy .hljs-number, .coal .hljs-number, .ayu .hljs-number,
+.navy .hljs-literal, .coal .hljs-literal, .ayu .hljs-literal,
+.navy .hljs-built_in, .coal .hljs-built_in, .ayu .hljs-built_in,
+.navy .hljs-type, .coal .hljs-type, .ayu .hljs-type,
+.navy .hljs-params, .coal .hljs-params, .ayu .hljs-params,
+.navy .hljs-meta, .coal .hljs-meta, .ayu .hljs-meta { color: #C2A65E; }
+
+.navy .hljs-string, .coal .hljs-string, .ayu .hljs-string,
+.navy .hljs-symbol, .coal .hljs-symbol, .ayu .hljs-symbol { color: #8B9B82; }
+
+.navy .hljs-title, .coal .hljs-title, .ayu .hljs-title,
+.navy .hljs-section, .coal .hljs-section, .ayu .hljs-section { color: #B4C4C4; font-weight: 600; }
+
+.navy .hljs-keyword, .coal .hljs-keyword, .ayu .hljs-keyword,
+.navy .hljs-selector-tag, .coal .hljs-selector-tag, .ayu .hljs-selector-tag { color: #7F9797; font-weight: 600; }
+
+/* Inline code — subtle raised pill in both themes. */
+.light :not(pre) > code,
+html:not(.js) :not(pre) > code {
+  background: #F4F4F5;
+  color: #3D5A5B;
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid #EAEAEC;
+}
+.navy :not(pre) > code,
+.coal :not(pre) > code,
+.ayu :not(pre) > code {
+  background: #2C2C30;
+  color: #BCBCC0;
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid #484851;
+}

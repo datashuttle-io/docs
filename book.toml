@@ -12,7 +12,7 @@ src = "src"
 # cache on the prior v1 brand.css.
 default-theme = "light"
 preferred-dark-theme = "navy"
-additional-css = ["theme/brand-v3.css"]
+additional-css = ["theme/brand-v4.css"]
 # Default for the binary-embedded build (served at /docs/ on the api).
 # The website Dockerfile overrides this to "/" at build time for the
 # standalone docs.datashuttle.ai subdomain. See website/Dockerfile.
