@@ -167,10 +167,14 @@ namespace your users will query.
 
 Every subsequent SELECT against the registered ref gets the
 predicate AND-ed into the scan when `DATASHUTTLE_QUERY_RLS=1` is
-set. Distributed scans still enforce at the coordinator today —
-shard tickets do not yet carry policy SQL. See the
-[query-engine runbook](../../../runbooks/query-engine.md) for
-operator mechanics.
+set. Distributed scans push predicates into the shard ticket, so
+iceberg and buffer workers filter rows **before** the Flight
+encode — pushdown is a throughput optimisation; coordinator-side
+RLS still runs unconditionally, so an older worker that ignores
+the field stays correct. Source shards are filtered coordinator-
+side (worker-side source streaming bypasses the provider plan).
+See the [query-engine runbook](../../../runbooks/query-engine.md)
+for operator mechanics.
 
 ## Environment flags
 
