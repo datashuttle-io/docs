@@ -150,12 +150,27 @@ distributed operators highlighted.
 
 ## Row-level security
 
-`CREATE ROW POLICY <name> ON iceberg.<ns>.<t> FOR SELECT USING (<expr>)`
-registers a predicate; every subsequent SELECT against the table
-gets the predicate AND-ed into the scan when
-`DATASHUTTLE_QUERY_RLS=1` is set. See the
-[query-engine runbook](../../../runbooks/query-engine.md)
-for operator mechanics.
+```sql
+CREATE ROW POLICY <name> ON <ref> FOR SELECT USING (<expr>)
+```
+
+`<ref>` is any of:
+- `iceberg.<ns>.<table>` — cold snapshot
+- `buffer.<pipeline>` — hot Flight buffer
+- `source.<connection>.<schema>.<table>` — connector pass-through
+
+Policies registered against one namespace do **not** apply to the
+others — a policy on `buffer.orders_live` is not honoured for
+`iceberg.warehouse.orders_live` even though they typically share
+the same underlying table. Register policies against every
+namespace your users will query.
+
+Every subsequent SELECT against the registered ref gets the
+predicate AND-ed into the scan when `DATASHUTTLE_QUERY_RLS=1` is
+set. Distributed scans still enforce at the coordinator today —
+shard tickets do not yet carry policy SQL. See the
+[query-engine runbook](../../../runbooks/query-engine.md) for
+operator mechanics.
 
 ## Environment flags
 
