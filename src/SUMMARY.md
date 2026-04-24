@@ -24,6 +24,7 @@
 - [Partitioning & Clustering](./concepts/partitioning-clustering.md)
 - [Iceberg Commit Batching](./concepts/iceberg-commit-batching.md)
 - [Query engine](./concepts/query-engine.md)
+- [Distributed queries](./concepts/distributed-queries.md)
 - [Safety & Correctness](./concepts/safety.md)
 - [Sinks & Hooks](./concepts/sinks-and-hooks.md)
 - [Configuration](./concepts/configuration.md)
@@ -56,6 +57,8 @@
 - [Pipelines](./sql-reference/pipelines.md)
 - [Transforms & UDFs](./sql-reference/transforms.md)
 - [Pipeline Control](./sql-reference/pipeline-control.md)
+- [Query engine](./sql-reference/query-engine.md)
+- [Cross-target joins](./sql-reference/cross-target-joins.md)
 
 # Operations
 
@@ -68,6 +71,7 @@
 - [Per-tenant Observability](./operations/per-tenant-observability.md)
 - [GitOps](./operations/gitops.md)
 - [Cluster Management](./operations/cluster.md)
+- [SQL Console](./operations/sql-console.md)
 - [Registry Backends](./operations/registry-backends.md)
 - [Upgrades & Schema Migrations](./operations/upgrades.md)
 - [Local Auth Mode](./operations/auth-local.md)
