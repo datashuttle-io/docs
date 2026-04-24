@@ -86,9 +86,10 @@ subscription, payment and invoices. Sections:
 
 1. **Current Plan card**
    - Tier name in large type.
-   - Coloured status pill: `trialing` (purple), `active` (green),
-     `past_due` (yellow), `canceled` / `unpaid` (red).
-   - Trial-ends-at countdown when `status == trialing`.
+   - Coloured status pill: `awaiting_approval` (purple), `active`
+     (green), `past_due` (yellow), `canceled` / `unpaid` (red).
+     Community-tier accounts carry the `active` pill — Community is
+     the entry tier, not a transitional state.
    - Renewal / cancellation date derived from `current_period_end` and
      `cancel_at_period_end`.
    - Last-4 of the payment method when present.
@@ -121,7 +122,8 @@ subscription, payment and invoices. Sections:
      `Manage payment method` in the header).
 
 > **Screenshot:** _placeholder — capture each of the four sections at
-> 1440x900 with a `trialing` customer and a populated invoice list._
+> 1440x900 with an `active` Team-tier customer and a populated invoice
+> list._
 
 ## Mobile breakpoints
 

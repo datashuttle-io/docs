@@ -1,26 +1,68 @@
-# Billing, Dunning & Trials (SaaS)
+# Billing & Dunning (SaaS)
 
 > **OSS users:** the billing webhook handler is compiled in every build,
-> but the dunning + trial cron only runs when the API server is built
-> with the `saas` cargo feature. Default OSS deployments seed an
-> in-memory `BillingRepository`, never spawn the cron, and never need a
-> Stripe key. You can ignore the rest of this page.
+> but the dunning cron and Stripe usage reporter only run when the API
+> server is built with the `saas` cargo feature. Default OSS deployments
+> seed an in-memory `BillingRepository`, never spawn the cron, and never
+> need a Stripe key. You can ignore the rest of this page.
 
-DataShuttle Cloud's billing layer covers three responsibilities:
+DataShuttle Cloud's billing layer covers two responsibilities:
 
 1. **Webhook ingest** — turn Stripe `invoice.*` and
    `customer.subscription.*` events into mutations on the
    `billing_customers` / `billing_invoices` tables.
 2. **Dunning** — escalate failed payments from a polite reminder to a
-   tenant suspend to (eventually) a soft-delete + cancel.
-3. **Trials** — start a 14-day Team trial on signup, warn the user 24h
-   before it expires, and either charge them (if a payment method is
-   on file) or downgrade them to Community.
+   tenant suspend to (eventually) a downgrade back to Community.
 
-All three pieces share the [`crate::notifications::NotificationSender`]
+There is no time-boxed paid trial. Every new Cloud account lands in
+**Community** (see
+[BUSINESS-MODEL §3.3](../../../BUSINESS-MODEL.md#33-community-tier-the-free-entry-tier)
+and [LICENSING — Cloud signup flow](../../../LICENSING.md#signup-approval-cloud-beta)).
+Upgrading to Team or Business requires a payment method on file and
+takes effect immediately; downgrading on dunning drops the tenant back
+to Community with existing data intact.
+
+Both pieces share the [`crate::notifications::NotificationSender`]
 trait. In the default build it's a [`LogNotificationSender`] stub that
 just writes a `tracing::info!` line; **Phase 4** swaps in the
-SMTP/SES-backed implementation. No new mandatory env vars.
+SMTP/SES-backed implementation. The signup-approval emails
+(`send_signup_approved`, `send_signup_rejected`) flow through the same
+trait — see
+[SAAS-PRODUCTION-PLAN §4.1](../../../../.planning/SAAS-PRODUCTION-PLAN.md#41-email-service).
+No new mandatory env vars.
+
+---
+
+## Lifecycle overview
+
+```
+awaiting_email_verification  ─►  awaiting_approval  ─►  community (active)
+                                                              │
+                                                              ▼    upgrade + attach card
+                                                              active (paid tier)
+                                                              │
+                          ┌───────────────────────────────────┤
+                          ▼                                   ▼
+                    past_due (dunning)                    cancel_at_period_end
+                          │
+                          ▼  14d grace
+                    community (active)        ← downgrade, data retained
+```
+
+- The two top-of-funnel states — `awaiting_email_verification` and
+  `awaiting_approval` — are owned by the signup flow and the admin
+  approval queue. See
+  [ADMIN-CONSOLE-PLAN §9.2](../../../../.planning/ADMIN-CONSOLE-PLAN.md#92-signup-approval-queue).
+  The tenant provisioning saga does **not** run until admin approval.
+- Once approved the user lands in `community` with the standard 10,000
+  DPU/month grant. That is the free entry tier — not a trial, no
+  deadline, no card required.
+- Upgrading to Team or Business creates a Stripe subscription and flips
+  `status = active` once the first invoice succeeds.
+- If a subsequent invoice fails, the dunning state machine below drives
+  the account back to Community rather than `canceled` — operators
+  asked for "don't make customers re-signup after a lapse" on the #823
+  design review.
 
 ---
 
@@ -34,10 +76,10 @@ T+3d  Stripe retry → if it fails: attempt 3 → status = PastDue
                                             → DunningFinal mail
                                             → audit: billing.dunning.suspended
 …
-T+14d sweep_past_due cron flip → status = Canceled
-                              → soft_delete_tenant (30d grace)
-                              → SubscriptionCanceled mail
-                              → audit: billing.dunning.canceled
+T+14d sweep_past_due cron flip → tier = community, status = active
+                              → tenant resumed with Community limits
+                              → SubscriptionDowngraded mail
+                              → audit: billing.dunning.downgraded
 ```
 
 Constants live in `crates/datashuttle-api/src/billing/dunning.rs`:
@@ -45,13 +87,13 @@ Constants live in `crates/datashuttle-api/src/billing/dunning.rs`:
 | Constant | Value | Purpose |
 |---|---|---|
 | `MAX_PAYMENT_RETRIES` | `3` | Failures before suspend |
-| `PAST_DUE_GRACE_DAYS` | `14` | Days in `PastDue` before cancel |
+| `PAST_DUE_GRACE_DAYS` | `14` | Days in `PastDue` before downgrade |
 
 A successful `invoice.paid` at any point calls
 [`crate::billing::dunning::on_payment_succeeded`], which:
 
 * resets `payment_failure_count` to 0,
-* flips status back to `Active`,
+* flips status back to `Active` on the paid tier,
 * automatically resumes the tenant **iff** it is currently `Suspended`
   (manual operator suspends are preserved).
 
@@ -73,52 +115,22 @@ truth**.
 
 ---
 
-## Trial lifecycle
+## Tier-specific entry paths
 
-```
-signup tier=team ──►  status=Trialing, trial_ends_at = now + 14d
-                      audit: <none — visible via /api/v1/billing/customers>
-
-T-24h  sweep_trials_ending_soon cron tick
-       └─► TrialEndingSoon mail (sent at most once per trial via
-           billing_customers.last_trial_reminder_at)
-
-T+0    sweep_expired_trials cron tick
-       ├─ has_payment_method = true  → status = Active, tier = team
-       │                              → TrialExpired { downgraded:false }
-       └─ has_payment_method = false → status = Active, tier = community
-                                       trial_ends_at = NULL
-                                       → TrialExpired { downgraded:true }
-       audit: billing.trial.expired
-```
-
-Constants live in `crates/datashuttle-api/src/billing/trial.rs`:
-
-| Constant | Value | Purpose |
-|---|---|---|
-| `TRIAL_DAYS` | `14` | Team-tier trial length |
-| `TRIAL_ENDING_SOON_WINDOW_HOURS` | `24` | Reminder window |
-
-### Idempotency
-
-The hourly cron will see "ends in <24h" for ~24 ticks, but each
-customer should only get one reminder. We dedup using
-`billing_customers.last_trial_reminder_at`: once the column is set
-within the current trial window we skip subsequent ticks. The check
-considers the trial's start time (`trial_ends_at - 14d`) so a
-re-trial after a downgrade-and-resub still triggers a fresh ping.
-
-### Community / Business / Enterprise tiers
-
-* **Community** signups create a `BillingCustomer` with `status=Active`
-  and no `trial_ends_at`. This is necessary so the
-  [QuotaGuard](../operations/billing.md) middleware (Phase 3 task 3.2)
-  can find a tier row.
-* **Business** signups route through the same trial path as Team —
-  14-day trial, then downgrade to Community on expiry without a
-  payment method.
-* **Enterprise** signups skip `start_trial` entirely — Sales sets up
-  the customer record manually via the admin API.
+* **Community** is the entry tier for every approved Cloud signup. A
+  `BillingCustomer` row is created with `status = active`,
+  `tier = community`, `stripe_customer_id = NULL`,
+  `subscription_id = NULL` — the tier row exists from day one so the
+  [QuotaGuard](../operations/billing.md) middleware can always resolve
+  a tier.
+* **Team** and **Business** upgrades go through Stripe Checkout
+  (`POST /api/v1/billing/subscribe`). The webhook handler flips
+  `tier` + `status` once `invoice.paid` confirms the first charge.
+  There is no trial period on the Stripe subscription; billing begins
+  on subscription creation.
+* **Enterprise** signups bypass the self-serve checkout entirely —
+  Sales provisions the customer record via the admin API after
+  contract execution.
 
 ---
 
@@ -148,7 +160,9 @@ by `crate::state::build_notification_sender()`. Phase 4 will:
 
 No call sites change. Tests use the in-tree `MockNotificationSender`
 helper (see `crates/datashuttle-api/src/notifications.rs::test_support`)
-which records every send for assertion.
+which records every send for assertion. The same helper is used by the
+signup-approval flow
+([SAAS-PRODUCTION-PLAN §4.2](../../../../.planning/SAAS-PRODUCTION-PLAN.md#42-registerverify-flow)).
 
 ---
 
@@ -160,37 +174,48 @@ emits an entry through `crate::audit::audit_log!`:
 | Action | Trigger |
 |---|---|
 | `billing.dunning.suspended` | 3rd consecutive payment failure |
-| `billing.dunning.canceled` | 14d in `PastDue` |
-| `billing.trial.expired` | Trial expiry sweep |
+| `billing.dunning.downgraded` | 14d in `PastDue`, tier flipped back to `community` |
+| `billing.upgrade` | Webhook flips tier from Community → paid |
+| `billing.cancel` | Explicit cancel via portal (`customer.subscription.deleted`) |
 
 These flow into `audit.jsonl` and the in-memory ring buffer the same
 way as every other admin action — operators can query them via
 `GET /api/v1/audit/events?action=billing.*`.
 
+Signup approval / rejection events
+(`admin.signup.approved`, `admin.signup.rejected`) are emitted by the
+admin console API, not by this module — see
+[ADMIN-CONSOLE-PLAN §9.4](../../../../.planning/ADMIN-CONSOLE-PLAN.md#94-audit-events).
+
 ---
 
 ## Migration notes
 
-Phase 3 task 3.4 introduces two new columns on `billing_customers`:
+`billing_customers` carries a `has_payment_method` boolean used by the
+upgrade and dunning paths to decide whether a tier flip is allowed
+without a Checkout redirect:
 
 ```sql
--- 011_billing_trial_reminders.sql
+-- 011_billing_has_payment_method.sql
 ALTER TABLE billing_customers
-    ADD COLUMN IF NOT EXISTS last_trial_reminder_at TIMESTAMPTZ,
     ADD COLUMN IF NOT EXISTS has_payment_method BOOLEAN NOT NULL DEFAULT false;
 ```
 
 The `IF NOT EXISTS` guard makes this idempotent on existing live
-databases. No backfill is required: legacy rows default to `NULL` /
-`false` and the cron treats them as "no reminder yet sent / no card
-on file" — the safest defaults.
+databases. No backfill is required: legacy rows default to `false` and
+the webhook flips the column to `true` on the first successful
+`payment_method.attached` event.
+
+The legacy `last_trial_reminder_at` column (introduced while the
+14-day Team trial was in scope) is no longer populated. A follow-up
+migration will drop the column once the dunning smoke path no longer
+reads it — tracked separately.
 
 ## Daily Stripe DPU usage reporting (#555 task 3.5)
 
-The dunning + trial state machines drive customer lifecycle; the
-**usage reporter** is the third leg — it pushes per-tenant DPU
-consumption to Stripe so customers are billed correctly for what
-they used.
+The dunning state machine drives customer lifecycle; the **usage
+reporter** is the second leg — it pushes per-tenant DPU consumption to
+Stripe so customers are billed correctly for what they used.
 
 > **OSS / self-managed users:** This entire section is opt-in and
 > SaaS-only. If `state.stripe_client` is `None` (the default for any
@@ -228,7 +253,9 @@ For each non-zero, non-`__system__` tenant bucket, the cron:
 1. Looks up the matching `BillingCustomer` by `tenant_id` via
    `BillingRepository::get_customer_by_tenant`.
 2. Skips the tenant if the customer record is missing or has no
-   `subscription_item_id` (logged at `warn!` level).
+   `subscription_item_id` (logged at `warn!` level). Community-tier
+   tenants have no `subscription_item_id` and are skipped by design —
+   the 10,000 DPU/month grant is a local quota, not a Stripe line item.
 3. Calls `StripeClient::report_usage(subscription_item_id, dpu, ts)`
    with the current Unix timestamp.
 4. **On success only:** resets the tenant bucket and emits a
