@@ -136,11 +136,115 @@ workers can self-limit without round-tripping back.
 
 Quotas are enforced at three layers: admission (reject before
 dispatch), per-shard (stop streaming past the cap), and audit
-(record overage attempts). See the Phase 7 governance doc once
-#858 lands.
+(record overage attempts).
+
+## Shipped features (epic #850)
+
+Everything below is live in `main` and feature-gated through
+environment variables so a deployment can opt in incrementally.
+See the [query-engine runbook](../../../runbooks/query-engine.md)
+for day-to-day operator mechanics.
+
+### Coordinator-side streaming — always on
+
+The `FlightExchangeExec` physical operator pulls rows from remote
+shards lazily; a `LIMIT 10` short-circuits after the first batch
+without the coordinator allocating RAM for the rest of the
+result. Landed in #903; no flag — this is the default shape for
+distributed iceberg scans.
+
+### Worker-side streaming — always on
+
+`LocalShardExecutor` drives each iceberg / buffer scan through
+`plan.execute(partition, task_ctx)` and feeds batches directly
+into the Flight encoder. Replaced a `physical_plan::collect()`
+at the worker in #906. Source shards still micro-collect for
+limit slicing — tracked, not load-bearing in the current workloads.
+
+### Cost-aware placement — always on
+
+`rank_eligible_workers` orders peers by
+`cost_score = cpu% + memory% + 10 × pipeline_count` ascending;
+ties rotate deterministically by `hash(query_id)` so retries
+preserve cache locality. `allocate_uris_by_weight` splits files
+via the Largest Remainder Method so lighter peers take more
+partitions than heavier ones. Landed in #902 / #905.
+
+### Rendezvous-hash affinity — **`DATASHUTTLE_QUERY_AFFINITY=1`**
+
+URI→worker affinity: each parquet URI's preferred worker is
+`argmax_w hash(uri || 0x00 || worker_id(w))`. Repeat scans of
+the same URI land on the same peer so the kernel page cache
+stays warm. When a preferred worker is overloaded
+(`cost_score > 90`) the URI falls back through the weight-based
+allocator. Landed in #907 as an opt-in gate.
+
+HRW's low-disruption property: when a worker leaves, only URIs
+whose winner was that worker reshuffle — not the whole fleet.
+
+### Row-level security — **`DATASHUTTLE_QUERY_RLS=1`**
+
+`CREATE ROW POLICY <name> ON iceberg.<ns>.<t> FOR SELECT USING (<expr>)`
+registers a predicate; enforcement wraps the iceberg provider in
+a `RowPolicyTableProvider` that AND-injects the predicate into
+every scan as a `FilterExec`. Landed in #911.
+
+Caveats:
+
+- In-memory only (no backend persistence yet). Policies
+  evaporate on restart; the env gate exists so production
+  deployments don't silently enable a non-persistent security
+  feature.
+- Only `SELECT` operation is honoured. INSERT / UPDATE / DELETE
+  don't flow through the SQL handler in this system.
+- Only iceberg targets accepted. Buffer is owner-pinned, source
+  re-resolves credentials per worker — wrapping those paths
+  lands in a follow-up.
+- On distributed fan-out the coordinator applies the filter
+  above the remote scan (shard ticket doesn't carry policy
+  SQL). Predicate pushdown into the shard ticket is a separate
+  task.
+
+### Cross-source predicate pushdown — always on
+
+`ConnectorScanProvider::supports_filters_pushdown` returns
+`Inexact` for every filter so DataFusion's planner forwards the
+WHERE predicate into `scan(filters=...)`. The legacy driver's
+`expr_translator::translate_filters_to_postgres` turns it into
+connector-native SQL; unsupported sub-expressions stay in the
+`FilterExec` above the scan. Landed as a correctness fix in #912
+after the regression test caught the default-Unsupported
+behaviour was stripping the predicate.
+
+### UI Console surfaces
+
+Three Console hooks round out the epic:
+
+- **Distributed footnote** (#908) — `SqlResult.distributed:
+  {workers, kind}` structured field lights up a badge in the
+  SQL console. Click a single-worker badge to deep-link into
+  that peer's health row on the cluster page.
+- **Workers dashboard** (#909) — `/cluster` page shows per-node
+  CPU / memory bars, the `query_capable` pill, max-lag seconds,
+  and auto-refreshes on a 5-second cadence. Deep link target is
+  `/cluster#node-<id>`.
+- **Plan viewer** (#910) — `EXPLAIN` results render as a card
+  per plan with DataFusion's indentation preserved; distributed
+  operators (`FlightExchangeExec`, `CoalescePartitionsExec`,
+  `RepartitionExec`) get a blue tag so the fan-out boundary is
+  visually obvious.
+
+## Environment flags
+
+| Flag | Default | Effect |
+|------|---------|--------|
+| `DATASHUTTLE_QUERY_DISTRIBUTE` | off | Coordinator may route iceberg / buffer / source scans to remote workers via Flight. Default-off path is byte-identical to the single-node one. |
+| `DATASHUTTLE_QUERY_AFFINITY` | off | Rendezvous-hash URI→worker affinity instead of straight weight-based allocation. Requires `DISTRIBUTE=1`. |
+| `DATASHUTTLE_QUERY_RLS` | off | Enforce registered row policies at iceberg scan time. Experimental — policies are in-memory only today. |
 
 ## See also
 
+- [Query-engine operator runbook](../../../runbooks/query-engine.md)
 - [ADR-0001: Distributed query engine](../../../query/adr-0001-distributed-query-engine.md)
 - [Epic #850](https://github.com/datashuttle-ai/datashuttle/issues/850)
 - [`datashuttle_core::query`](../api-reference/rust.md) — wire
