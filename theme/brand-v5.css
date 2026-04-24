@@ -76,9 +76,9 @@ html:not(.js) {
 }
 
 /* ── Dark themes: ink + paper ──────────────────────────────────── */
-.navy,
-.coal,
-.ayu {
+html.navy,
+html.coal,
+html.ayu {
   --bg: #141416;
   --fg: #F4F4F5;
 
@@ -178,15 +178,15 @@ html:not(.js) .hljs {
   color: #141416;
 }
 
-.navy pre,
-.coal pre,
-.ayu pre {
+html.navy pre,
+html.coal pre,
+html.ayu pre {
   background: #1E1E21 !important;
   border: 1px solid #2C2C30;
   border-radius: 5px;
 }
 .navy pre code, .coal pre code, .ayu pre code,
-.navy .hljs, .coal .hljs, .ayu .hljs {
+html.navy .hljs, .coal .hljs, .ayu .hljs {
   background: transparent !important;
   color: #F4F4F5;
 }
@@ -222,30 +222,30 @@ html:not(.js) .hljs-title, html:not(.js) .hljs-section { color: #2B4142; font-we
 html:not(.js) .hljs-keyword, html:not(.js) .hljs-selector-tag { color: #3D5A5B; font-weight: 600; }
 
 /* Dark themes — quiet-technical hljs palette. */
-.navy .hljs-comment, .coal .hljs-comment, .ayu .hljs-comment,
-.navy .hljs-quote, .coal .hljs-quote, .ayu .hljs-quote { color: #8D8D95; font-style: italic; }
+html.navy .hljs-comment, .coal .hljs-comment, .ayu .hljs-comment,
+html.navy .hljs-quote, .coal .hljs-quote, .ayu .hljs-quote { color: #8D8D95; font-style: italic; }
 
-.navy .hljs-variable, .coal .hljs-variable, .ayu .hljs-variable,
-.navy .hljs-attribute, .coal .hljs-attribute, .ayu .hljs-attribute,
-.navy .hljs-attr, .coal .hljs-attr, .ayu .hljs-attr,
-.navy .hljs-tag, .coal .hljs-tag, .ayu .hljs-tag,
-.navy .hljs-regexp, .coal .hljs-regexp, .ayu .hljs-regexp { color: #B06C62; }
+html.navy .hljs-variable, .coal .hljs-variable, .ayu .hljs-variable,
+html.navy .hljs-attribute, .coal .hljs-attribute, .ayu .hljs-attribute,
+html.navy .hljs-attr, .coal .hljs-attr, .ayu .hljs-attr,
+html.navy .hljs-tag, .coal .hljs-tag, .ayu .hljs-tag,
+html.navy .hljs-regexp, .coal .hljs-regexp, .ayu .hljs-regexp { color: #B06C62; }
 
-.navy .hljs-number, .coal .hljs-number, .ayu .hljs-number,
-.navy .hljs-literal, .coal .hljs-literal, .ayu .hljs-literal,
-.navy .hljs-built_in, .coal .hljs-built_in, .ayu .hljs-built_in,
-.navy .hljs-type, .coal .hljs-type, .ayu .hljs-type,
-.navy .hljs-params, .coal .hljs-params, .ayu .hljs-params,
-.navy .hljs-meta, .coal .hljs-meta, .ayu .hljs-meta { color: #C2A65E; }
+html.navy .hljs-number, .coal .hljs-number, .ayu .hljs-number,
+html.navy .hljs-literal, .coal .hljs-literal, .ayu .hljs-literal,
+html.navy .hljs-built_in, .coal .hljs-built_in, .ayu .hljs-built_in,
+html.navy .hljs-type, .coal .hljs-type, .ayu .hljs-type,
+html.navy .hljs-params, .coal .hljs-params, .ayu .hljs-params,
+html.navy .hljs-meta, .coal .hljs-meta, .ayu .hljs-meta { color: #C2A65E; }
 
-.navy .hljs-string, .coal .hljs-string, .ayu .hljs-string,
-.navy .hljs-symbol, .coal .hljs-symbol, .ayu .hljs-symbol { color: #8B9B82; }
+html.navy .hljs-string, .coal .hljs-string, .ayu .hljs-string,
+html.navy .hljs-symbol, .coal .hljs-symbol, .ayu .hljs-symbol { color: #8B9B82; }
 
-.navy .hljs-title, .coal .hljs-title, .ayu .hljs-title,
-.navy .hljs-section, .coal .hljs-section, .ayu .hljs-section { color: #B4C4C4; font-weight: 600; }
+html.navy .hljs-title, .coal .hljs-title, .ayu .hljs-title,
+html.navy .hljs-section, .coal .hljs-section, .ayu .hljs-section { color: #B4C4C4; font-weight: 600; }
 
-.navy .hljs-keyword, .coal .hljs-keyword, .ayu .hljs-keyword,
-.navy .hljs-selector-tag, .coal .hljs-selector-tag, .ayu .hljs-selector-tag { color: #7F9797; font-weight: 600; }
+html.navy .hljs-keyword, .coal .hljs-keyword, .ayu .hljs-keyword,
+html.navy .hljs-selector-tag, .coal .hljs-selector-tag, .ayu .hljs-selector-tag { color: #7F9797; font-weight: 600; }
 
 /* Inline code — subtle raised pill in both themes. */
 .light :not(pre) > code,
@@ -256,9 +256,9 @@ html:not(.js) :not(pre) > code {
   border-radius: 3px;
   border: 1px solid #EAEAEC;
 }
-.navy :not(pre) > code,
-.coal :not(pre) > code,
-.ayu :not(pre) > code {
+html.navy :not(pre) > code,
+html.coal :not(pre) > code,
+html.ayu :not(pre) > code {
   background: #2C2C30;
   color: #BCBCC0;
   padding: 1px 5px;
