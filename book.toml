@@ -5,8 +5,14 @@ language = "en"
 src = "src"
 
 [output.html]
-default-theme = "navy"
+# Respect the visitor's OS preference — light by default, navy when the
+# system prefers dark. The brand overlay at theme/brand-v2.css retints
+# both onto the quiet-technical palette (paper + ink + slate-teal accent).
+# File is versioned (brand-v2.css) to bypass Cloudflare's 30-day edge
+# cache on the prior v1 brand.css.
+default-theme = "light"
 preferred-dark-theme = "navy"
+additional-css = ["theme/brand-v3.css"]
 # Default for the binary-embedded build (served at /docs/ on the api).
 # The website Dockerfile overrides this to "/" at build time for the
 # standalone docs.datashuttle.ai subdomain. See website/Dockerfile.
