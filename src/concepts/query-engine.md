@@ -75,7 +75,7 @@ operator needs to tune for their cluster.
 
 | Target | Shard strategy | Who runs the shard |
 |--------|----------------|---------------------|
-| `source.*` | `PlanSource(parallelism_hint)` on the connector driver — N shards or 1 depending on driver + table. | Sidecarized connector (any worker) OR the connector-lease owner node for legacy in-proc drivers. |
+| `source.*` | `PlanSource(parallelism_hint)` on the connector — N shards or 1 depending on driver + table. | The supervisor's lazy-spawned sidecar binary for the connector type (any worker the supervisor schedules). Phase 7.2 removed all in-proc driver paths from the api; every `source.*` shard runs in a sidecar process. |
 | `iceberg.*` | File-list split: `ceil(num_files / target_files_per_shard)`. Any worker can read the object store. | Any worker from the pool's eligible set. |
 | `buffer.<p>` | Exactly **one** shard; the buffer only exists on the pipeline's lease-owner node. | `lease.owner_node(p)`. Hard affinity. |
 | `union.<p>` | Composite: one buffer shard on the owner + N iceberg shards as above. Dedup merged on the coordinator. | Mixed, per shard kind. |

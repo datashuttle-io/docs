@@ -112,7 +112,9 @@ This means you can lose any node and the cluster self-heals. There is no "brain"
 | `rest_api` | — | ✅ cursor/watermark | — | Minutes |
 | `hadoop` | — | ✅ directory scan | — | Minutes |
 | `s3` / cloud storage | — | ✅ file listing | — | Seconds–Minutes |
-| `salesforce` | — | ✅ | — | Minutes |
+| `oracle` | ✅ LogMiner | ✅ ORA_HASH | ✅ | Sub-second |
+| `redshift` | — | ✅ unload+read | ✅ | Minutes |
+| `cockroachdb` | ✅ changefeed | ✅ ranges | ✅ | Sub-second |
 
 ## Key design decisions
 
