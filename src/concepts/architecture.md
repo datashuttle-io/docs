@@ -44,7 +44,10 @@ DataShuttle ships as a workspace of ~13 Rust crates. Cloud-only concerns are iso
 | `datashuttle-control` | Identity / org / membership / invitation / API-tokens / SSO domain + repositories (in-memory default; Postgres impl lives in cloud crate) |
 | `datashuttle-license` | Tier + feature-gate + DPU metering |
 | `datashuttle-iceberg` | Iceberg V3 writer, commit protocol, deletion vectors (Puffin), compaction, credential vending |
-| `datashuttle-cdc` | Source connectors (up to 22 types, feature-gated: `cdc-cloud` ships 6 in OSS default, `cdc-all` ships the full catalogue in cloud) |
+| `datashuttle-cdc` | `SourceConnector` trait + `CdcError` enum (419 LOC after Phase 7 cleanup, #839). Driver code lives in 22 sidecar crates (`datashuttle-connector-<X>`), one binary each, spawned out-of-process by the api over gRPC + Arrow Flight. |
+| `datashuttle-orchestration` | Pipeline-level utilities — checkpoint manager, schema-evolution, dlq, snapshot lease, retry, parallel-read assignment, `ConnectorFactory` registry. Linked into the api; never compiled into sidecars. |
+| `datashuttle-connector-protocol` | gRPC `ConnectorControl` service contract + ed25519 Flight-ticket helpers. Tonic-generated stubs ship here; both api and sidecars depend on this crate. |
+| `datashuttle-connector-supervisor` | `ProcessManager`, manifest loader, ed25519 trust store, lazy-spawn (`ensure_worker_for`), idle reaper. Owned by the api; reads connector binaries from the manifest at boot, terminates them post-`Capabilities`, respawns on first pipeline that needs them. |
 | `datashuttle-flight` | Arrow Flight hot buffer, flush worker, Raft replication, backpressure |
 | `datashuttle-gossip` | Cluster membership via SWIM gossip, lease-based ownership, rebalancing |
 | `datashuttle-api` | REST API, WebSocket, Prometheus `/metrics`, auth, pool scheduler, time-series metrics, cgroups. **Cloud-free dep graph** — no sqlx / aws-sdk / redis pulled in by default |
