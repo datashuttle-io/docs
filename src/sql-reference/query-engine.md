@@ -148,6 +148,45 @@ EXPLAIN SELECT id FROM iceberg.warehouse.orders WHERE status = 'active';
 Or use the Console's Explain button — renders the plan tree with
 distributed operators highlighted.
 
+## Column masking
+
+```sql
+CREATE COLUMN MASK <name> ON <ref>.<column> USING (<expr>)
+```
+
+Replaces a column's value at scan time with the result of a SQL
+expression. Output schema preserves the original column name and
+type, so a join on the masked column still works — every row sees
+the masked value. Common shapes:
+
+```sql
+-- Constant redaction
+CREATE COLUMN MASK redact_email ON iceberg.default.users.email
+  USING ('***');
+
+-- Conditional, branching on a sibling column
+CREATE COLUMN MASK region_aware ON iceberg.default.users.email
+  USING (CASE WHEN region = 'us' THEN email ELSE '***' END);
+```
+
+`<ref>` accepts the same three namespaces as row policies
+(`iceberg.<ns>.<table>`, `buffer.<pipeline>`,
+`source.<conn>.<schema>.<table>`). Drop with
+`DROP COLUMN MASK [IF EXISTS] <name> ON <ref>.<column>`.
+
+Activation is behind `DATASHUTTLE_QUERY_MASK=1` (parallel to RLS's
+own flag — operators can land masking and row policies
+independently). When the flag is on, every SELECT against a
+masked ref runs the mask expression; off, masks persist but don't
+fire. Persistence is identical to row policies (#16): SQLite +
+catalog backends store masks across restarts.
+
+Composition with RLS: row policies filter rows first, then masks
+transform the surviving columns. The reverse order would let
+policies branch on masked values, which would surprise authors —
+`status = 'active' AND email LIKE '%@bigco.com'` mustn't silently
+match nothing if `email` is already `'***'` for the policy author.
+
 ## Row-level security
 
 ```sql
