@@ -265,3 +265,42 @@ html.ayu :not(pre) > code {
   border-radius: 3px;
   border: 1px solid #484851;
 }
+
+/* ── Underlines: only inside prose, never on chrome ─────────────────
+ * mdBook ships text-decoration: underline on every <a> globally. The
+ * quiet-technical brand keeps prose links underlined for affordance,
+ * but the sidebar / chapter nav / breadcrumbs / theme picker / page
+ * footer should be plain — they read as buttons. */
+.sidebar a,
+.sidebar a:hover,
+.sidebar a:focus,
+.chapter a,
+.chapter a:hover,
+.chapter a:focus,
+.menu-bar a,
+.menu-bar a:hover,
+.menu-bar a:focus,
+.nav-chapters a,
+.nav-chapters a:hover,
+.nav-chapters a:focus,
+.mobile-nav-chapters a,
+.mobile-nav-chapters a:hover,
+.mobile-nav-chapters a:focus,
+.theme-popup a,
+.theme-popup a:hover,
+.theme-popup a:focus,
+nav.pagetoc a,
+nav.pagetoc a:hover,
+nav.pagetoc a:focus,
+.previous a,
+.next a,
+.previous a:hover,
+.next a:hover,
+a.header,
+a.header:hover,
+a.header:focus,
+.right-buttons a,
+.right-buttons a:hover,
+.right-buttons a:focus {
+  text-decoration: none !important;
+}

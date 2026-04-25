@@ -13,6 +13,7 @@ src = "src"
 default-theme = "light"
 preferred-dark-theme = "navy"
 additional-css = ["theme/brand-v5.css"]
+additional-js = ["theme/theme-sync.js"]
 # Default for the binary-embedded build (served at /docs/ on the api).
 # The website Dockerfile overrides this to "/" at build time for the
 # standalone docs.datashuttle.ai subdomain. See website/Dockerfile.
