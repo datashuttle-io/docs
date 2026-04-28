@@ -64,6 +64,7 @@
 
 - [Deployment](./operations/deployment.md)
 - [Persistence](./operations/persistence.md)
+- [Hot-Buffer Durability](./operations/durability.md)
 - [First-Run Setup Wizard](./operations/setup-wizard.md)
 - [Monitoring & Alerting](./operations/monitoring.md)
 - [Grafana Dashboards](./operations/dashboards.md)
