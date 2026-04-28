@@ -2,6 +2,37 @@
 
 DataShuttle nodes discover each other via SWIM gossip. No external service registry is needed.
 
+## Cluster authentication (#968)
+
+Cluster mode requires a pre-shared `cluster_token` on every node. Same
+secret across the whole cluster. The chitchat `cluster_id` is derived
+from the token via HMAC-SHA256 — peers without the secret compute a
+different cluster_id and the membership protocol rejects them.
+
+```bash
+# Option 1 — env var
+export DS_CLUSTER_TOKEN=$(openssl rand -hex 32)
+datashuttle start --config datashuttle.yaml
+
+# Option 2 — config file
+[cluster]
+gossip_addr = "0.0.0.0:7946"
+cluster_token = "..."
+```
+
+Test harnesses can bypass with `DS_CLUSTER_TOKEN_OPTIONAL=1` (logs a
+WARN, never set in production).
+
+Helm chart users: see `secrets.clusterToken` in `values.yaml`. The
+chart wires it as `DS_CLUSTER_TOKEN` automatically when cluster mode
+is enabled.
+
+> Threat model: the token defends against rogue pods in the same k8s
+> namespace / VPC. Packet-level HMAC over every gossip message
+> remains roadmapped (audit/MPP-004 option B); pair this with
+> NetworkPolicy / mTLS at the pod-network layer for full transport
+> confidentiality.
+
 ## Adding nodes
 
 Start a new node with `--seed-nodes` pointing to any existing node:
