@@ -112,3 +112,28 @@ Step 1 is cheap (JSON snapshot) and gives you a belt-and-braces
 restore path that works across backends — you can replay it into a
 fresh SQLite file with `datashuttle registry import` even if the
 running Postgres instance is lost.
+
+## Cluster rolling upgrades — version compatibility (#975)
+
+In multi-node deployments, every gossip member publishes its binary
+version (`ds:version:binary`) and wire-protocol version
+(`ds:version:wire_protocol`) on self-state at startup. The cluster
+enforces a `[N-1, N+1]` MAJOR window: a node whose local MAJOR is more
+than 1 ahead of the cluster minimum **refuses to start** with a
+diagnostic pointing at this section.
+
+Operational implications:
+
+* You can roll a 5-node cluster from `N` → `N+1` one node at a time —
+  every intermediate state has a min MAJOR within the window.
+* You **cannot** mix `N` and `N+2` in the same cluster. To jump from
+  `N` to `N+2`:
+  1. Walk every node through `N+1` first, **or**
+  2. Drain + stop the cluster, then start every node on `N+2`.
+
+Rollback within the window is unrestricted (no data-plane action).
+Rollback past the window requires draining the misversioned nodes
+first.
+
+Full compat-matrix and bumping rules: `docs/RELEASING.md` §
+"Cluster upgrade compatibility matrix".
