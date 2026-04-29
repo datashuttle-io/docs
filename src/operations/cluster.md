@@ -41,9 +41,37 @@ is enabled.
 > rogue pods in the same k8s namespace / VPC AND against in-network
 > attackers who can sniff and replay packets. For end-to-end transport
 > confidentiality (encryption of metadata in transit), pair with
-> NetworkPolicy / mTLS at the pod-network layer. Token rotation: roll
-> out a new secret one node at a time during a maintenance window —
-> mid-rotation the cluster temporarily has two membership groups.
+> NetworkPolicy / mTLS at the pod-network layer.
+
+### Token rotation (no-downtime)
+
+The HmacTransport supports a rolling rotation via a second
+`cluster_token_previous` slot. While set, receivers accept incoming
+packets verified by EITHER token; outgoing packets are always signed
+with the current `cluster_token`. The cluster stays converged
+throughout the rotation — no membership split.
+
+```bash
+# Step 1: pick a fresh secret.
+NEW=$(openssl rand -hex 32)
+OLD=$DS_CLUSTER_TOKEN     # whatever's running today
+
+# Step 2: rolling restart with both keys present.
+# Each node, one at a time:
+export DS_CLUSTER_TOKEN=$NEW
+export DS_CLUSTER_TOKEN_PREVIOUS=$OLD
+systemctl restart datashuttled
+
+# Step 3: after EVERY node has been restarted with the pair above,
+# do one more rolling restart to drop the previous secret entirely.
+unset DS_CLUSTER_TOKEN_PREVIOUS
+systemctl restart datashuttled
+```
+
+Helm chart users: bump `secrets.clusterToken` and add
+`secrets.clusterTokenPrevious`, deploy. After all pods have rolled,
+remove `clusterTokenPrevious` and deploy once more. The two-deploy
+approach guarantees no node ever boots with neither key in scope.
 
 ## Adding nodes
 
