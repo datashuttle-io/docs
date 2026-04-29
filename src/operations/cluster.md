@@ -5,9 +5,17 @@ DataShuttle nodes discover each other via SWIM gossip. No external service regis
 ## Cluster authentication (#968)
 
 Cluster mode requires a pre-shared `cluster_token` on every node. Same
-secret across the whole cluster. The chitchat `cluster_id` is derived
-from the token via HMAC-SHA256 — peers without the secret compute a
-different cluster_id and the membership protocol rejects them.
+secret across the whole cluster. Two layers of defense:
+
+1. **Membership-layer:** the chitchat `cluster_id` is derived from
+   the token via HMAC-SHA256 — peers without the secret compute a
+   different cluster_id and the membership protocol rejects them.
+2. **Per-packet HMAC** (#968 Phase 2): every gossip datagram is
+   wrapped in a `(MAGIC || ts_ms || payload || HMAC_SHA256)` frame
+   keyed by the same token. Packets without a valid HMAC are dropped
+   at the receiver before chitchat ever sees them. Stale packets
+   (clock skew > 60 s) are dropped too — defends against replay
+   attacks.
 
 ```bash
 # Option 1 — env var
@@ -21,17 +29,21 @@ cluster_token = "..."
 ```
 
 Test harnesses can bypass with `DS_CLUSTER_TOKEN_OPTIONAL=1` (logs a
-WARN, never set in production).
+WARN, never set in production). The bypass falls back to the legacy
+plain `UdpTransport` — no HMAC, no membership-layer derivation. Never
+deploy that way.
 
 Helm chart users: see `secrets.clusterToken` in `values.yaml`. The
 chart wires it as `DS_CLUSTER_TOKEN` automatically when cluster mode
 is enabled.
 
-> Threat model: the token defends against rogue pods in the same k8s
-> namespace / VPC. Packet-level HMAC over every gossip message
-> remains roadmapped (audit/MPP-004 option B); pair this with
-> NetworkPolicy / mTLS at the pod-network layer for full transport
-> confidentiality.
+> Threat model: the token + per-packet HMAC together defend against
+> rogue pods in the same k8s namespace / VPC AND against in-network
+> attackers who can sniff and replay packets. For end-to-end transport
+> confidentiality (encryption of metadata in transit), pair with
+> NetworkPolicy / mTLS at the pod-network layer. Token rotation: roll
+> out a new secret one node at a time during a maintenance window —
+> mid-rotation the cluster temporarily has two membership groups.
 
 ## Adding nodes
 
