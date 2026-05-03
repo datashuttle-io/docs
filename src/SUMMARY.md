@@ -20,7 +20,7 @@
 # Concepts
 
 - [Architecture](./concepts/architecture.md)
-- [Pipeline Lifecycle](./concepts/pipeline-lifecycle.md)
+- [Shuttle Lifecycle](./concepts/shuttle-lifecycle.md)
 - [Partitioning & Clustering](./concepts/partitioning-clustering.md)
 - [Iceberg Commit Batching](./concepts/iceberg-commit-batching.md)
 - [Query engine](./concepts/query-engine.md)
@@ -54,9 +54,9 @@
 # SQL Reference
 
 - [Connections](./sql-reference/connections.md)
-- [Pipelines](./sql-reference/pipelines.md)
+- [Shuttles](./sql-reference/shuttles.md)
 - [Transforms & UDFs](./sql-reference/transforms.md)
-- [Pipeline Control](./sql-reference/pipeline-control.md)
+- [Shuttle Control](./sql-reference/shuttle-control.md)
 - [Query engine](./sql-reference/query-engine.md)
 - [Cross-target joins](./sql-reference/cross-target-joins.md)
 

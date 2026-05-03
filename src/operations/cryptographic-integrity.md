@@ -61,7 +61,7 @@ datashuttle crypto verify release.tar.gz
 
 ## Signed checkpoints
 
-CDC checkpoints land at `$DATA_DIR/cdc-state/<pipeline>/checkpoint.json`.
+CDC checkpoints land at `$DATA_DIR/cdc-state/<shuttle>/checkpoint.json`.
 When the same Ed25519 key from `$DATA_DIR/crypto/ed25519.key` is wired
 into the checkpoint manager, every save also writes a sibling
 `checkpoint.json.sig`. On load:
@@ -73,7 +73,7 @@ into the checkpoint manager, every save also writes a sibling
 | present | valid | accept body |
 | present | invalid / wrong key | **fail closed** with `CheckpointError::Other("checkpoint signature invalid (possible silent corruption)")` |
 
-A failed verification halts pipeline startup. Operators see the
+A failed verification halts shuttle startup. Operators see the
 signature mismatch, restore from backup, then re-sign on next save —
 no silent partial replays.
 
@@ -136,6 +136,6 @@ test code and callers that explicitly opt out of signing.
 | Operator with disk access tampers with `audit.jsonl` | Detected by `audit verify` — hash chain + signature. |
 | Operator deletes a chunk of events | Detected by `audit verify` — `prev_hash` mismatch on the next surviving entry. |
 | Operator forges a signature with a different key | Detected — `key_fingerprint` field exposes the wrong signer. |
-| Silent disk corruption flips a byte in `checkpoint.json` | Detected on next pipeline start — fail-closed. |
+| Silent disk corruption flips a byte in `checkpoint.json` | Detected on next shuttle start — fail-closed. |
 | Stolen private key | Out of scope — rotate immediately, archive the compromised key, re-sign forward. |
 | Tampering between sender and SIEM webhook | HMAC signature in `X-DataShuttle-Signature` header (when `DS_AUDIT_WEBHOOK_HMAC` is set). |

@@ -1,6 +1,6 @@
-# Pipeline Lifecycle
+# Shuttle Lifecycle
 
-A pipeline is the core unit of work in DataShuttle. It connects a source database to an Iceberg table and keeps them in sync.
+A shuttle is the core unit of work in DataShuttle. It connects a source database to an Iceberg table and keeps them in sync.
 
 ## Scheduling
 
@@ -13,24 +13,24 @@ DataShuttle uses a **freshness-based sync model**. Users specify the desired dat
 
 ```sql
 -- Continuous — system picks the fastest available mechanism
-CREATE PIPELINE orders_sync
+CREATE SHUTTLE orders_sync
   SOURCE pg_prod TABLE orders
   TARGET warehouse.raw
   SCHEDULE continuous;
 
 -- Periodic — sync every 15 minutes
-CREATE PIPELINE daily_load
+CREATE SHUTTLE daily_load
   SOURCE bq_prod TABLE reports
   TARGET warehouse.analytics
   SCHEDULE EVERY '15 minutes';
 ```
 
-The initial load is always automatic on first pipeline start — it is not a user-selectable mode.
+The initial load is always automatic on first shuttle start — it is not a user-selectable mode.
 
 After creation, the UI and CLI show the achievable latency:
 
 ```
-Pipeline: orders_sync
+Shuttle: orders_sync
   Schedule: Continuous
   Latency: ~800ms (change tracking)
   Status: Synced
@@ -51,13 +51,13 @@ Created → Syncing (initial load) → Running → Paused
 | **Running** | Continuous sync — data is flowing |
 | **Paused** | User-initiated pause; position is held, no data lost |
 | **Error** | Automatic pause on failure (circuit breaker tripped) |
-| **Unassigned** | No node currently owns this pipeline (awaiting lease) |
+| **Unassigned** | No node currently owns this shuttle (awaiting lease) |
 
 ## Phases of operation
 
 ### 1. Initial load
 
-When a pipeline starts for the first time, DataShuttle loads all existing data from the source into Iceberg:
+When a shuttle starts for the first time, DataShuttle loads all existing data from the source into Iceberg:
 
 ```
 Source table → chunked reads → Arrow RecordBatch → Parquet → Iceberg commit
@@ -87,7 +87,7 @@ The specific mechanism used (native change tracking, incremental query, or full 
 When DataShuttle detects a schema change in the source (e.g., `ALTER TABLE ADD COLUMN`):
 
 - **`compatible`** (default): Automatically applies compatible changes to the Iceberg table (add columns, widen types)
-- **`strict`**: Pauses the pipeline and emits a `pipeline.schema.changed` event for manual approval
+- **`strict`**: Pauses the shuttle and emits a `shuttle.schema.changed` event for manual approval
 
 ### 4. Compaction
 
@@ -104,20 +104,20 @@ DataShuttle guarantees exactly-once delivery through:
 ## Example: full lifecycle
 
 ```bash
-# Create — pipeline is now in "Created" state
-datashuttle sql -e "CREATE PIPELINE p1 SOURCE pg TABLE t1 TARGET wh.raw"
+# Create — shuttle is now in "Created" state
+datashuttle sql -e "CREATE SHUTTLE p1 SOURCE pg TABLE t1 TARGET wh.raw"
 
-# Pipeline auto-transitions: Created → Syncing → Running
+# Shuttle auto-transitions: Created → Syncing → Running
 
 # Pause — position is held, stops reading
-datashuttle sql -e "PAUSE PIPELINE p1"
+datashuttle sql -e "PAUSE SHUTTLE p1"
 
 # Resume — continues from last position
-datashuttle sql -e "RESUME PIPELINE p1"
+datashuttle sql -e "RESUME SHUTTLE p1"
 
 # Resync — re-load from source, then resume continuous sync
-datashuttle pipeline resnapshot p1
+datashuttle shuttle resnapshot p1
 
-# Drop — removes pipeline definition
-datashuttle sql -e "DROP PIPELINE p1"
+# Drop — removes shuttle definition
+datashuttle sql -e "DROP SHUTTLE p1"
 ```

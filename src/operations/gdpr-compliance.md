@@ -71,7 +71,7 @@ the original user_id is gone for good.
 ### Export a user's data
 
 ```bash
-# Default tar bundle — user.json + memberships.json + pipelines.json
+# Default tar bundle — user.json + memberships.json + shuttles.json
 # + connections.json + webhooks.json + billing.json + audit.jsonl.
 datashuttle gdpr export --user-id u-123 --output /tmp/u-123.tar
 
@@ -116,11 +116,11 @@ datashuttle gdpr list-pending --json
 
 ## Iceberg PII scrub
 
-Pipelines may be tagged with a `pii_columns` option listing columns
+Shuttles may be tagged with a `pii_columns` option listing columns
 that must be NULL-ed out when a user is hard-deleted:
 
 ```sql
-CREATE PIPELINE analytics_events ...
+CREATE SHUTTLE analytics_events ...
 WITH (
   pii_columns = '["email","full_name","ip_address"]'
 );

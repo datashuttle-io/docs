@@ -42,18 +42,18 @@ CREATE CONNECTION redshift_prod
 | `watermark_column` | No | — | Column for incremental reads |
 | `ssl_mode` | No | — | `disable` / `prefer` / `require` |
 
-## CREATE PIPELINE
+## CREATE SHUTTLE
 
 ```sql
 -- Incremental sync (recommended)
-CREATE PIPELINE redshift_events
+CREATE SHUTTLE redshift_events
   SOURCE redshift_prod TABLE public.events
   TARGET warehouse.raw
   SCHEDULE EVERY '15 minutes'
   WITH (watermark_column = 'updated_at');
 
 -- Full snapshot, periodic
-CREATE PIPELINE redshift_dim
+CREATE SHUTTLE redshift_dim
   SOURCE redshift_prod TABLE public.dim_product
   TARGET warehouse.raw
   SCHEDULE EVERY '1 hour';

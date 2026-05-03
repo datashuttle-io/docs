@@ -34,16 +34,16 @@ CREATE CONNECTION mongo_prod
 
 The URI follows the [MongoDB connection string](https://www.mongodb.com/docs/manual/reference/connection-string/) format. Include all replica set members for failover.
 
-## CREATE PIPELINE
+## CREATE SHUTTLE
 
 ```sql
 -- Single collection, continuous schedule (default)
-CREATE PIPELINE events_sync
+CREATE SHUTTLE events_sync
   SOURCE mongo_prod TABLE events
   TARGET warehouse.raw;
 
 -- Multiple collections with options
-CREATE PIPELINE app_sync
+CREATE SHUTTLE app_sync
   SOURCE mongo_prod TABLE events, users, sessions
   TARGET warehouse.raw
   WITH (
@@ -51,7 +51,7 @@ CREATE PIPELINE app_sync
   );
 
 -- Periodic sync
-CREATE PIPELINE hourly_sync
+CREATE SHUTTLE hourly_sync
   SOURCE mongo_prod TABLE analytics
   TARGET warehouse.raw
   SCHEDULE EVERY '1 hour';
@@ -97,19 +97,19 @@ Becomes:
 
 ## What happens if the oplog rotates?
 
-MongoDB change streams resume from an opaque **resume token** issued by the server. The token points into the replica set's oplog — a capped collection whose size is fixed at deployment time. If the oplog rotates past the persisted resume token (e.g. because a pipeline was paused for longer than the oplog's retention window, or an ingestion rate spike evicted older entries), the server rejects the resume with the `ChangeStreamHistoryLost` error (code 286).
+MongoDB change streams resume from an opaque **resume token** issued by the server. The token points into the replica set's oplog — a capped collection whose size is fixed at deployment time. If the oplog rotates past the persisted resume token (e.g. because a shuttle was paused for longer than the oplog's retention window, or an ingestion rate spike evicted older entries), the server rejects the resume with the `ChangeStreamHistoryLost` error (code 286).
 
 DataShuttle detects this condition and **auto-recovers**:
 
 1. The MongoDB connector returns a typed `ResumeTokenExpired` error instead of a generic failure.
-2. The pipeline manager catches this error and:
-   - Resets the checkpoint for every tracked collection in the pipeline.
+2. The shuttle manager catches this error and:
+   - Resets the checkpoint for every tracked collection in the shuttle.
    - Emits a `cdc.resume_token_expired` lifecycle event (severity: `Warning`) with the collection list and the old token for observability.
-3. On the next scheduler tick the pipeline re-enters the snapshot phase, re-reads every collection from scratch, and opens a **fresh change stream** from the current oplog tail.
+3. On the next scheduler tick the shuttle re-enters the snapshot phase, re-reads every collection from scratch, and opens a **fresh change stream** from the current oplog tail.
 
 **Durability guarantee.** Events already committed to Iceberg before the token expired are not re-read from the oplog — they are already in the lake. The re-snapshot covers any in-flight documents that were observed on the stream but had not yet landed in a committed Iceberg snapshot at the moment of expiry. The result is at-least-once delivery across the rotation boundary; Iceberg merge-on-read with primary-key identity (`_id`) deduplicates any overlap on the target side.
 
-**Preventing expiry.** Size the oplog for your longest expected pipeline pause plus a safety margin. Rule of thumb:
+**Preventing expiry.** Size the oplog for your longest expected shuttle pause plus a safety margin. Rule of thumb:
 
 ```javascript
 // In mongosh — check current oplog window

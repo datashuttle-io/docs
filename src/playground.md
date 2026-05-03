@@ -2,7 +2,7 @@
 
 The Playground is a guided, hands-on sandbox for exploring DataShuttle
 end-to-end. Pick a source, click through a pre-built scenario, watch
-rows land in Iceberg in real time, break the pipeline on purpose, and
+rows land in Iceberg in real time, break the shuttle on purpose, and
 replay from the dead-letter queue — all without installing anything
 beyond Docker.
 
@@ -80,9 +80,9 @@ scenarios cover four tiers:
 
 | Scenario id                   | Source      | What it shows                                        |
 |-------------------------------|-------------|------------------------------------------------------|
-| `mysql-binlog-restart`        | MySQL       | Pipeline recovers cleanly after a 30s source outage. |
+| `mysql-binlog-restart`        | MySQL       | Shuttle recovers cleanly after a 30s source outage. |
 | `mongodb-nested-evolution`    | MongoDB     | Adding nested fields without a restart.              |
-| `file-s3-mixed-formats`       | S3 files    | CSV + JSON + Parquet into one pipeline.              |
+| `file-s3-mixed-formats`       | S3 files    | CSV + JSON + Parquet into one shuttle.              |
 | `file-bad-encoding`           | S3 files    | Bad UTF-8 → DLQ → re-encode → replay.                |
 
 ### Tier 3 — new playground containers
@@ -112,8 +112,8 @@ source, and status.
 Clicking **Start** provisions a session:
 
 1. A private Iceberg namespace `playground_<uhash>_<sid>` is allocated.
-2. A scoped pipeline + connection are created from the scenario's
-   `pipeline_sql` template.
+2. A scoped shuttle + connection are created from the scenario's
+   `shuttle_sql` template.
 3. You land on the runner at `/playground/<session_id>`.
 
 The runner has three panes:
@@ -126,7 +126,7 @@ The runner has three panes:
   WebSocket event stream, and a rolling session log.
 
 Sessions expire after two hours. The **+1h** button extends them; an
-**End** tears down the pipeline + namespace immediately.
+**End** tears down the shuttle + namespace immediately.
 
 ## CLI
 
@@ -170,7 +170,7 @@ so a single URL drives sales demos, bug reports, and training.
   `playground_<uhash>_<sid>`. Namespaces are deterministic so a
   restart-time sweeper can reap orphan data.
 - **TTL cleanup** — the API spawns a background sweep task every
-  60 s; expired sessions are dropped and their pipelines + namespaces
+  60 s; expired sessions are dropped and their shuttles + namespaces
   are torn down.
 - **One session per user** — stops abusive loops and keeps the
   docker-compose box responsive.

@@ -1,6 +1,6 @@
 # Registry Backends
 
-The DataShuttle registry stores pipeline definitions, connection
+The DataShuttle registry stores shuttle definitions, connection
 metadata, history events, and persisted metric counters. Two backends
 ship with the server:
 
@@ -9,7 +9,7 @@ ship with the server:
 | SQLite    | yes      | Single-node, embedded, on-prem                | (always on)           |
 | PostgreSQL| no       | Clustered / HA, shared registry across nodes  | `postgres-registry`   |
 
-Both backends expose the same `RegistryPersistence` surface, so pipeline
+Both backends expose the same `RegistryPersistence` surface, so shuttle
 code doesn't care which one is active. Choose based on your deployment
 topology.
 
@@ -81,9 +81,9 @@ automatically on connect. No manual `psql` step is required.
 |--------------------|------------------------------------------------------|
 | `meta`             | Single-row registry version counter                  |
 | `connections`      | Data source credentials / endpoints                  |
-| `pipelines`        | Pipeline definitions + live fencing state            |
-| `pipeline_history` | Audit log of state transitions                       |
-| `metric_counters`  | Persisted per-pipeline cumulative counters           |
+| `shuttles`        | Shuttle definitions + live fencing state            |
+| `shuttle_history` | Audit log of state transitions                       |
+| `metric_counters`  | Persisted per-shuttle cumulative counters           |
 | `metric_samples`   | 7-day rolling time-series ring buffer                |
 
 All JSON-shaped columns are stored as `JSONB` for index-friendliness.
@@ -129,7 +129,7 @@ datashuttle registry export \
 ```
 
 The resulting file is a single pretty-printed JSON document containing
-all connections, pipelines, history entries, metric counters, and
+all connections, shuttles, history entries, metric counters, and
 metric samples plus the registry version counter.
 
 ### Import a snapshot

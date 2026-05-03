@@ -1,6 +1,6 @@
 # Connections
 
-Connections define how DataShuttle reaches a source system. Create a connection before creating pipelines that use it.
+Connections define how DataShuttle reaches a source system. Create a connection before creating shuttles that use it.
 
 ## CREATE CONNECTION
 
@@ -25,7 +25,7 @@ CREATE CONNECTION IF NOT EXISTS pg_prod TYPE POSTGRES PROPERTIES (...);
 DROP CONNECTION <name>;
 ```
 
-Fails with `409 Conflict` if any pipeline is currently using the connection. Drop or reassign dependent pipelines first.
+Fails with `409 Conflict` if any shuttle is currently using the connection. Drop or reassign dependent shuttles first.
 
 ---
 
@@ -354,7 +354,7 @@ CREATE CONNECTION shopify_api
 curl http://localhost:8080/api/v1/connections/<name>/status
 ```
 
-Returns `is_reachable`, `dependent_pipelines`, and `error_message`.
+Returns `is_reachable`, `dependent_shuttles`, and `error_message`.
 
 ## Discover tables
 
@@ -362,4 +362,4 @@ Returns `is_reachable`, `dependent_pipelines`, and `error_message`.
 curl http://localhost:8080/api/v1/connections/<name>/tables
 ```
 
-Lists all tables available in the source. Useful before writing a `CREATE PIPELINE` statement.
+Lists all tables available in the source. Useful before writing a `CREATE SHUTTLE` statement.

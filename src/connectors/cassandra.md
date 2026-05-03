@@ -44,17 +44,17 @@ CREATE CONNECTION cassandra_prod
 | `datacenter` | No | — | Local datacenter name (for DCAwareRoundRobin policy) |
 | `tls` | No | `false` | Enable TLS |
 
-## CREATE PIPELINE
+## CREATE SHUTTLE
 
 ```sql
 -- Continuous sync with CDC
-CREATE PIPELINE cassandra_orders
+CREATE SHUTTLE cassandra_orders
   SOURCE cassandra_prod TABLE orders
   TARGET warehouse.raw
   SCHEDULE continuous;
 
 -- Periodic full scan (fallback without CDC)
-CREATE PIPELINE cassandra_catalog
+CREATE SHUTTLE cassandra_catalog
   SOURCE cassandra_prod TABLE product_catalog
   TARGET warehouse.raw
   SCHEDULE EVERY '1 hour';
@@ -91,7 +91,7 @@ CREATE PIPELINE cassandra_catalog
 
 ## Limitations
 
-- CDC log retention: Cassandra purges CDC segments based on `cdc_total_space_in_mb`. If the pipeline is paused longer than the available CDC window, a full resync is triggered.
+- CDC log retention: Cassandra purges CDC segments based on `cdc_total_space_in_mb`. If the shuttle is paused longer than the available CDC window, a full resync is triggered.
 - Collection types (`list`, `set`, `map`, UDT, `frozen`) are serialized as JSON strings.
 - `varint` (arbitrary-precision integer) is serialized as a string to avoid precision loss.
 - `counter` tables in Cassandra cannot be replicated via CDC in the same way as regular tables — counter values represent totals, not deltas. Full scan is used for counter tables.

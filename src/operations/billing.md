@@ -33,7 +33,7 @@ to the usage ledger.
 
 ```
 GET  /api/v1/usage                 — Current DPU usage and quota status
-GET  /api/v1/usage/pipelines       — Per-pipeline DPU breakdown for period
+GET  /api/v1/usage/shuttles       — Per-shuttle DPU breakdown for period
 GET  /api/v1/billing/plans         — Available subscription plans
 GET  /api/v1/billing/customer      — Current subscription / customer state
 GET  /api/v1/billing/invoices      — Invoice history (Stripe-hosted PDFs)
@@ -46,7 +46,7 @@ POST /api/v1/billing/webhook       — Stripe webhook handler
 
 - At 80% DPU usage: warning in logs and yellow banner in UI
 - At 95%: red banner + `quota_exceeded_seen` analytics event fires
-- At 100% (cloud): new pipeline creation blocked with upgrade message
+- At 100% (cloud): new shuttle creation blocked with upgrade message
 - At 100% (self-hosted): warning only, 30-day grace period
 - Airgapped: no enforcement, contractual compliance
 
@@ -66,7 +66,7 @@ The UI at `/usage` provides:
 - **30-day timeseries**: a line-chart of daily DPU consumption, plus a
   companion bar-chart for the same window. Period selector (7d / 30d /
   current cycle) in the top-right of the page.
-- **Top-pipelines table**: ranked by total DPU with per-source columns and
+- **Top-shuttles table**: ranked by total DPU with per-source columns and
   `% of total` share. The table carries an `aria-label` and a
   `<caption class="sr-only">` so screen readers announce its purpose;
   the sorted column uses `aria-sort="descending"`.
@@ -74,7 +74,7 @@ The UI at `/usage` provides:
   used / max, current billing period start.
 
 > **Screenshot:** _placeholder — capture at 1440x900 with the 30-day chart
-> populated and a pipeline using >50% of quota. Replace this note with a
+> populated and a shuttle using >50% of quota. Replace this note with a
 > `![Usage dashboard](./img/usage-dashboard.png)` include when the real
 > screenshot lands. The exact selectors above should be stable enough to
 > automate with Playwright._
@@ -153,6 +153,6 @@ adapter during `main.tsx` bootstrap via `setAdapter(...)`.
 | `signup_email_verified` | Verify-email page mount with `?verified=1` |
 | `signup_completed` | `POST /auth/register` 2xx |
 | `onboarding_step_completed` | Each wizard `Next` click |
-| `pipeline_created_from_onboarding` | Wizard step 4 pipeline create |
+| `shuttle_created_from_onboarding` | Wizard step 4 shuttle create |
 | `quota_exceeded_seen` | Usage page mount with `usage.over_limit` true |
 | `upgrade_clicked` | Plan-comparison CTA click on Billing page |

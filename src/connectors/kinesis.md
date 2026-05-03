@@ -85,10 +85,10 @@ CREATE CONNECTION kinesis_local
 | `consumer_name` | No | — | Enhanced fan-out consumer name |
 | `start_position` | No | `LATEST` | `TRIM_HORIZON` / `LATEST` / `AT_TIMESTAMP` |
 
-## CREATE PIPELINE
+## CREATE SHUTTLE
 
 ```sql
-CREATE PIPELINE kinesis_user_events
+CREATE SHUTTLE kinesis_user_events
   SOURCE kinesis_events TABLE events
   TARGET warehouse.raw
   SCHEDULE continuous
@@ -110,7 +110,7 @@ Each record lands as a row with the following fixed schema:
 Use transforms to parse `data` into typed columns. Example with a JSON payload:
 
 ```sql
-CREATE PIPELINE kinesis_events_parsed
+CREATE SHUTTLE kinesis_events_parsed
   SOURCE kinesis_events TABLE events
   TARGET warehouse.raw
   SCHEDULE continuous
@@ -121,10 +121,10 @@ CREATE PIPELINE kinesis_events_parsed
 
 ## Checkpoint and recovery
 
-DataShuttle checkpoints the sequence number per shard after each successful Iceberg commit. On restart, reading resumes from the last committed sequence number per shard. No records are skipped or duplicated across restarts (exactly-once delivery is guaranteed at the pipeline level).
+DataShuttle checkpoints the sequence number per shard after each successful Iceberg commit. On restart, reading resumes from the last committed sequence number per shard. No records are skipped or duplicated across restarts (exactly-once delivery is guaranteed at the shuttle level).
 
 ## Limitations
 
-- `start_position = 'AT_TIMESTAMP'` requires specifying the timestamp via the `start_timestamp` pipeline option (ISO-8601 string). Not yet exposed in the `WITH` clause — contact support for workarounds.
-- Kinesis streams have a 7-day data retention limit. Pausing a pipeline beyond the retention window causes the iterator to expire; a full resync from the start of the available window (`TRIM_HORIZON`) is triggered automatically.
+- `start_position = 'AT_TIMESTAMP'` requires specifying the timestamp via the `start_timestamp` shuttle option (ISO-8601 string). Not yet exposed in the `WITH` clause — contact support for workarounds.
+- Kinesis streams have a 7-day data retention limit. Pausing a shuttle beyond the retention window causes the iterator to expire; a full resync from the start of the available window (`TRIM_HORIZON`) is triggered automatically.
 - Record payloads are treated as opaque strings (UTF-8). Avro/Protobuf deserialization with Schema Registry is planned.

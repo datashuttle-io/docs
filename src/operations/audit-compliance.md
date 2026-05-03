@@ -1,7 +1,7 @@
 # Audit & Compliance
 
 DataShuttle ships a **tamper-evident audit chain** out of the box. Every
-admin action — pipeline create / drop, settings change, drain trigger,
+admin action — shuttle create / drop, settings change, drain trigger,
 SSO callback, login, logout, password reset request — is recorded as a
 structured `AuditEvent` and woven into an Ed25519-signed hash chain.
 
@@ -30,10 +30,10 @@ additional configuration.
 {
   "id": "39e7c7e0-…",
   "timestamp": "2026-04-14T18:25:00.123Z",
-  "action": "create_pipeline",
+  "action": "create_shuttle",
   "user_id": "alice@acme",
   "tenant_id": "tenant-acme",
-  "resource_type": "pipeline",
+  "resource_type": "shuttle",
   "resource_id": "orders-cdc",
   "result": "success",
   "ip_address": "10.1.2.3",
@@ -120,7 +120,7 @@ log; it just replicates the stream.
 | `DS_AUDIT_WEBHOOK_HMAC` | Optional HMAC-SHA256 secret. The hex digest of the body is sent in `X-DataShuttle-Signature`. |
 | `DS_AUDIT_SYSLOG_TARGET` | RFC 5424 UDP target (`host:port`). Facility 13 (audit), severity 5 (notice). |
 
-Sink failures **never block the audit pipeline** — every per-sink error
+Sink failures **never block the audit shuttle** — every per-sink error
 is logged at WARN with the offending `event.id` and `sink.label()`. The
 in-memory ring buffer + JSONL log remain authoritative.
 

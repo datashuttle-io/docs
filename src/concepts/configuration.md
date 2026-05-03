@@ -54,7 +54,7 @@ security:
 # Webhooks
 webhooks: []
   # - url: https://hooks.slack.com/services/T00/B00/xxx
-  #   events: [pipeline.error, pipeline.schema.changed]
+  #   events: [shuttle.error, shuttle.schema.changed]
 
 # Logging
 logging:
@@ -68,17 +68,17 @@ resource_pools:
     nodes: [node-0, node-1]
     priority: high             # high | medium | low
     limits:
-      max_pipelines: 10
+      max_shuttles: 10
       max_concurrent_snapshots: 3
-      max_memory_per_pipeline_mb: 2048
-      max_cpu_percent_per_pipeline: 50
+      max_memory_per_shuttle_mb: 2048
+      max_cpu_percent_per_shuttle: 50
       io_bandwidth_mbps: 500
   - name: batch
     mode: elastic
     nodes: [node-2, node-3]
     priority: low
     limits:
-      max_pipelines: 50
+      max_shuttles: 50
 ```
 
 ## Environment variables

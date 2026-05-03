@@ -3,7 +3,7 @@
 *Cross-Grade #6 (issue #567, SaaS plan phase 7.7).*
 
 Fresh DataShuttle deployments ship with a guided five-step wizard
-that takes a new operator from zero to a working pipeline ingesting
+that takes a new operator from zero to a working shuttle ingesting
 sample data in under five minutes. The wizard fires automatically
 the first time the Web UI is opened and is also available from the
 command line for headless installs.
@@ -13,7 +13,7 @@ command line for headless installs.
 A deployment is considered "first-run" when **both** of the
 following are true:
 
-- The registry contains zero pipelines.
+- The registry contains zero shuttles.
 - The control-plane user store contains zero users.
 
 The probe is served by `GET /api/v1/setup/state`, which returns JSON:
@@ -26,7 +26,7 @@ The endpoint is deliberately cheap — single `AtomicBool` load on
 `AppState` — so the UI can hit it on every app boot without
 measurable overhead. The cache is invalidated when:
 
-- Any pipeline is created.
+- Any shuttle is created.
 - Any user is registered.
 - The operator POSTs `/api/v1/setup/complete`.
 - The on-disk marker (`$DS_DATA_DIR/setup_completed_at`) is
@@ -81,13 +81,13 @@ with 100 synthetic `orders` rows under
 ![Step 5 screenshot placeholder](./images/setup-step5.png)
 
 Renders a summary and drops the completion marker via
-`POST /api/v1/setup/complete`. Clicking **Go to Pipelines** takes
-you to the normal pipeline list.
+`POST /api/v1/setup/complete`. Clicking **Go to Shuttles** takes
+you to the normal shuttle list.
 
 ## Skip link
 
 Every step shows a **Skip wizard** link in the footer. It POSTs
-`/setup/complete` and drops you on the Pipelines page. Use it when
+`/setup/complete` and drops you on the Shuttles page. Use it when
 you already have a YAML config prepared and don't want the built-in
 sample data.
 

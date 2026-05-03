@@ -5,7 +5,7 @@ Sync Snowflake tables to Iceberg using Snowflake Streams for change tracking or 
 ## Sync model
 
 - **Continuous / periodic with Snowflake Streams**: Captures inserts, updates, and deletes from source tables. Latency is in the minutes range — Snowflake Tasks are polled periodically.
-- **Watermark incremental**: For append-only tables, queries only rows newer than the last checkpoint. Set `watermark_column` in the pipeline options.
+- **Watermark incremental**: For append-only tables, queries only rows newer than the last checkpoint. Set `watermark_column` in the shuttle options.
 
 ## Prerequisites
 
@@ -46,17 +46,17 @@ CREATE CONNECTION sf_prod
 | `schema` | No | `PUBLIC` | Schema name |
 | `role` | No | `SYSADMIN` | Role |
 
-## CREATE PIPELINE
+## CREATE SHUTTLE
 
 ```sql
 -- Continuous sync via Snowflake Streams
-CREATE PIPELINE sf_orders
+CREATE SHUTTLE sf_orders
   SOURCE sf_prod TABLE orders
   TARGET warehouse.raw
   SCHEDULE EVERY '10 minutes';
 
 -- Watermark-based for append-only tables
-CREATE PIPELINE sf_events
+CREATE SHUTTLE sf_events
   SOURCE sf_prod TABLE events
   TARGET warehouse.raw
   SCHEDULE EVERY '15 minutes'
@@ -85,7 +85,7 @@ CREATE PIPELINE sf_events
 
 ## Limitations
 
-- **Snowflake Streams consume credits** — each stream scan bills against the compute warehouse. Monitor credit usage for high-frequency pipelines.
+- **Snowflake Streams consume credits** — each stream scan bills against the compute warehouse. Monitor credit usage for high-frequency shuttles.
 - `VARIANT`, `OBJECT`, and `ARRAY` columns are captured as JSON strings. Native V3 VARIANT mapping is planned.
 - Schema changes (column additions) are auto-applied in `compatible` evolution mode. Column drops and type narrowing require manual intervention.
 - `TIMESTAMP_TZ` fractional seconds are truncated to microseconds.

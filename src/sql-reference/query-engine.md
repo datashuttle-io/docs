@@ -13,11 +13,11 @@ SELECT * FROM source.<connection>.<schema>.<table>;
 -- 2. Cold iceberg snapshot — committed parquet files.
 SELECT * FROM iceberg.<namespace>.<table>;
 
--- 3. Hot buffer — live Arrow Flight ring for a running pipeline.
-SELECT * FROM buffer.<pipeline>;
+-- 3. Hot buffer — live Arrow Flight ring for a running shuttle.
+SELECT * FROM buffer.<shuttle>;
 
 -- 4. Union — iceberg ∪ buffer, dedup latest-wins on PK.
-SELECT * FROM union.<pipeline>;
+SELECT * FROM union.<shuttle>;
 ```
 
 Pick one per reference; you can mix them within a single query —
@@ -25,7 +25,7 @@ see [cross-target joins](./cross-target-joins.md).
 
 ## Examples
 
-### Source — peek before a pipeline exists
+### Source — peek before a shuttle exists
 
 ```sql
 -- 1. Row count on a live Postgres table without touching Iceberg.
@@ -81,7 +81,7 @@ SELECT * FROM iceberg.warehouse.orders
 ### Buffer — sub-second freshness
 
 ```sql
--- 1. Latest rows from a running pipeline's in-memory buffer.
+-- 1. Latest rows from a running shuttle's in-memory buffer.
 SELECT id, status, event_at
   FROM buffer.orders_live
  ORDER BY event_at DESC LIMIT 20;
@@ -93,7 +93,7 @@ SELECT COUNT(*) FROM buffer.orders_live;
 -- 3. Freshness probe: max timestamp in the buffer.
 SELECT MAX(event_at) AS newest FROM buffer.orders_live;
 
--- 4. Status histogram for a live pipeline.
+-- 4. Status histogram for a live shuttle.
 SELECT status, COUNT(*) FROM buffer.orders_live GROUP BY status;
 
 -- 5. Pick up a specific row by PK for "did my INSERT land?".
@@ -170,7 +170,7 @@ CREATE COLUMN MASK region_aware ON iceberg.default.users.email
 ```
 
 `<ref>` accepts the same three namespaces as row policies
-(`iceberg.<ns>.<table>`, `buffer.<pipeline>`,
+(`iceberg.<ns>.<table>`, `buffer.<shuttle>`,
 `source.<conn>.<schema>.<table>`). Drop with
 `DROP COLUMN MASK [IF EXISTS] <name> ON <ref>.<column>`.
 
@@ -195,7 +195,7 @@ CREATE ROW POLICY <name> ON <ref> FOR SELECT USING (<expr>)
 
 `<ref>` is any of:
 - `iceberg.<ns>.<table>` — cold snapshot
-- `buffer.<pipeline>` — hot Flight buffer
+- `buffer.<shuttle>` — hot Flight buffer
 - `source.<connection>.<schema>.<table>` — connector pass-through
 
 Policies registered against one namespace do **not** apply to the

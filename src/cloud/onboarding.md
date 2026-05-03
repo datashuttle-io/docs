@@ -1,6 +1,6 @@
 # Cloud onboarding
 
-This page documents the signup → first-pipeline journey for DataShuttle
+This page documents the signup → first-shuttle journey for DataShuttle
 Cloud. The on-premises (OSS) first-run wizard (#567) is documented
 separately in [Installation → First-run setup](../installation/README.md).
 
@@ -17,13 +17,13 @@ separately in [Installation → First-run setup](../installation/README.md).
 └─────────────┘                                     │
        │                                            ▼
        │                                ┌─────────────────────┐
-       └── (SSO) ──▶ /auth/sso/...   ──▶│ /pipelines/{name}   │
+       └── (SSO) ──▶ /auth/sso/...   ──▶│ /shuttles/{name}   │
                  OAuth2 + 302            │ (live detail page)  │
                                          └─────────────────────┘
 ```
 
 The three entry points all converge on the same onboarding wizard, which
-is where plan selection, first-pipeline creation, and live ingestion
+is where plan selection, first-shuttle creation, and live ingestion
 progress happen.
 
 ## Signup paths
@@ -87,8 +87,8 @@ steps. Progress is persisted to `localStorage` under
 | 1 | Organization name | (none — stored locally) |
 | 2 | Plan selection | `POST /api/v1/billing/subscribe` → `api.subscribe(planId)` |
 | 3 | Connection choice | (none — stored locally) |
-| 4 | Create first pipeline | `POST /api/v1/pipelines` → `api.createPipeline(sql)` |
-| 5 | Live ingestion | `WS /ws/pipelines` (filtered by pipeline name) |
+| 4 | Create first shuttle | `POST /api/v1/shuttles` → `api.createShuttle(sql)` |
+| 5 | Live ingestion | `WS /ws/shuttles` (filtered by shuttle name) |
 
 ### Plan selection
 
@@ -107,10 +107,10 @@ Error handling:
 - **5xx** → error toast with a "Retry" affordance, and the details are
   logged to the browser console for support.
 
-### Create first pipeline
+### Create first shuttle
 
-The wizard builds a `CREATE PIPELINE ...` SQL string from the form
-state and posts it to `/api/v1/pipelines`. Error handling:
+The wizard builds a `CREATE SHUTTLE ...` SQL string from the form
+state and posts it to `/api/v1/shuttles`. Error handling:
 
 - **429 Too Many Requests** (`quota_exceeded`) → inline message on the
   step with a "Upgrade plan →" link pointing to `/billing`.
@@ -120,19 +120,19 @@ state and posts it to `/api/v1/pipelines`. Error handling:
 
 ### Live ingestion
 
-The wizard opens a WebSocket to `/ws/pipelines` (the same channel used
+The wizard opens a WebSocket to `/ws/shuttles` (the same channel used
 by the monitoring dashboard) and filters the event stream by the
-pipeline name it just created. Each `rows_ingested` or
+shuttle name it just created. Each `rows_ingested` or
 `batch_committed` event bumps the on-screen row counter and updates
 the "Last commit" timestamp. No polling fallback is required once the
 stream is live, but a low-frequency status poll (`GET
-/api/v1/pipelines/{name}/status`) backs up the display until the first
+/api/v1/shuttles/{name}/status`) backs up the display until the first
 event arrives.
 
 ### Finish
 
 On "Finish", the wizard clears `localStorage` and navigates to
-`/pipelines/{name}` — the pipeline detail page — so the user lands on
+`/shuttles/{name}` — the shuttle detail page — so the user lands on
 the same page they'd reach from the sidebar.
 
 ## Developer notes

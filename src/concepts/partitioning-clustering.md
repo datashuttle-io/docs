@@ -19,9 +19,9 @@ data is physically laid out in your tables:
 > Iceberg readers like Dremio, Spark, and Trino use to prune files
 > without opening them.
 
-Both are declared inline in `CREATE PIPELINE`, persisted in the catalog,
-and applied automatically by the writer to every snapshot the pipeline
-commits. They can be added, removed, or changed on a live pipeline via
+Both are declared inline in `CREATE SHUTTLE`, persisted in the catalog,
+and applied automatically by the writer to every snapshot the shuttle
+commits. They can be added, removed, or changed on a live shuttle via
 the REST API or the Web UI.
 
 ## Why two layers?
@@ -63,7 +63,7 @@ error is returned if you try to apply `year(...)` to an integer column.
 ## SQL syntax
 
 ```sql
-CREATE PIPELINE events
+CREATE SHUTTLE events
   SOURCE pg
   TARGET warehouse.events
   CONNECTION my_pg
@@ -110,21 +110,21 @@ Within a Parquet file, DataShuttle sorts rows lexicographically by the
 fields in the order you specify them. The first field is the primary
 sort key.
 
-## Multi-table pipelines
+## Multi-table shuttles
 
-A single pipeline can cover many destination tables with different
+A single shuttle can cover many destination tables with different
 schemas. Clustering is stored **per destination table** so each table
 can have its own layout:
 
 - The **default** entry (empty-string key `""` in the REST API) is the
-  pipeline-wide setting applied to any table that does not have a
+  shuttle-wide setting applied to any table that does not have a
   specific entry.
 - A **per-table** entry overrides the default for that one table.
 
 The SQL DSL only expresses the default:
 
 ```sql
-CREATE PIPELINE multi
+CREATE SHUTTLE multi
   SOURCE pg
   TARGET warehouse.raw
   CONNECTION prod
@@ -135,7 +135,7 @@ CREATE PIPELINE multi
 
 This works as long as every listed table has a `created_at` column. If
 one table is missing that column the default is silently ignored for
-that table at snapshot time — no pipeline-wide failure.
+that table at snapshot time — no shuttle-wide failure.
 
 For the common case where one table needs its own layout (e.g. an
 events table should be partitioned by `event_ts` while everything else
@@ -143,7 +143,7 @@ uses `created_at`), use the Web UI (which exposes the per-table editor)
 or the REST API directly:
 
 ```bash
-PUT /api/v1/pipelines/multi/clustering
+PUT /api/v1/shuttles/multi/clustering
 {
   "tables": {
     "": {
@@ -161,12 +161,12 @@ PUT /api/v1/pipelines/multi/clustering
 }
 ```
 
-The pipeline runner resolves the effective layout for each table by
+The shuttle runner resolves the effective layout for each table by
 looking up the per-table entry first, then falling back to the default.
 
 ## Live evolution
 
-Both partitioning and sort order can be changed on a running pipeline
+Both partitioning and sort order can be changed on a running shuttle
 through the REST API or the Web UI. **The semantics differ**:
 
 ### Sort order — fully supported
@@ -179,7 +179,7 @@ in place; only future writes use the new order.
 Trigger this from the API:
 
 ```bash
-PUT /api/v1/pipelines/events/clustering
+PUT /api/v1/shuttles/events/clustering
 Content-Type: application/json
 
 {
@@ -198,7 +198,7 @@ Content-Type: application/json
 ```
 
 When `apply_to_existing_tables` is `true`, DataShuttle calls Iceberg
-`UpdateTable` on every table the pipeline writes to, pushing the new
+`UpdateTable` on every table the shuttle writes to, pushing the new
 sort order onto the live tables. The endpoint returns
 `207 Multi-Status` if any of the per-table updates fail; successful
 tables are still committed.
@@ -216,23 +216,23 @@ new layout in the registry but does not call `UpdateTable`.
 If you need to change partitioning on a live table today, the safest
 path is:
 
-1. `DROP PIPELINE` (the Iceberg table is preserved).
-2. `CREATE PIPELINE` with the new `PARTITION BY` clause.
-3. The pipeline's first snapshot will create a new table version with
+1. `DROP SHUTTLE` (the Iceberg table is preserved).
+2. `CREATE SHUTTLE` with the new `PARTITION BY` clause.
+3. The shuttle's first snapshot will create a new table version with
    the new spec; reads transparently merge the old and new partition
    specs.
 
 ## Web UI
 
-The pipeline create wizard has a **Partitioning & Clustering** section
+The shuttle create wizard has a **Partitioning & Clustering** section
 in the Options step. Add fields with the `+` button, drag the grip
 handles to reorder, pick a transform from the dropdown, and the SQL
 preview underneath updates live.
 
-The pipeline detail page shows the current clustering as a SQL block
+The shuttle detail page shows the current clustering as a SQL block
 and exposes an **Edit** modal that uses the same component. Tick
 *Apply to existing tables* to push a sort-order change to the live
-Iceberg tables in addition to updating the pipeline registry.
+Iceberg tables in addition to updating the shuttle registry.
 
 ## Performance guidance
 
@@ -283,10 +283,10 @@ DataShuttle supports two values:
 pre-pass over the data and does not compose with the streaming
 writer.
 
-The mode is set per pipeline via the SQL option:
+The mode is set per shuttle via the SQL option:
 
 ```sql
-CREATE PIPELINE p AS
+CREATE SHUTTLE p AS
 SELECT * FROM source.public.events
 WITH (
     partition_by = 'day(event_ts)',
@@ -295,9 +295,9 @@ WITH (
 ```
 
 A server-wide default lives in `datashuttle.yaml` under
-`pipeline_defaults.write_distribution_mode` and is also editable from
-the **Settings → Pipeline Defaults** page in the Web UI. The
-pipeline-level option always wins over the server default.
+`shuttle_defaults.write_distribution_mode` and is also editable from
+the **Settings → Shuttle Defaults** page in the Web UI. The
+shuttle-level option always wins over the server default.
 
 The chosen mode is also persisted on the table itself as the standard
 Iceberg `write.distribution-mode` property, so external readers and
@@ -315,7 +315,7 @@ maintenance tools see what the writer is doing.
 
 ## Migration from earlier versions
 
-Pipelines created before the partitioning-and-clustering feature
+Shuttles created before the partitioning-and-clustering feature
 landed default to **unpartitioned, unsorted**. The default `sort-order-id`
 in their `metadata.json` is `0` (the reserved unsorted slot), and
 `partition-specs[0].fields` is empty. They continue to work without
@@ -323,21 +323,21 @@ modification.
 
 To opt in:
 
-1. Open the pipeline in the Web UI → **Edit** under
+1. Open the shuttle in the Web UI → **Edit** under
    *Partitioning & Clustering*, configure the layout, optionally tick
    *Apply to existing tables*, and save.
-2. Or via SQL: `DROP PIPELINE` (table is preserved) and re-create with
+2. Or via SQL: `DROP SHUTTLE` (table is preserved) and re-create with
    the new clauses. The next snapshot will reuse the existing data files
    with the legacy spec; only new commits use the new layout.
-3. Or via API: `PUT /api/v1/pipelines/:name/clustering` with the
+3. Or via API: `PUT /api/v1/shuttles/:name/clustering` with the
    structured body — see the
-   [REST reference](../api-reference/rest.md#pipeline-clustering).
+   [REST reference](../api-reference/rest.md#shuttle-clustering).
 
 The legacy `WITH (partition_spec = '...', sort_order = '...')` string
 options are still accepted by the parser for backward compatibility.
 They are parsed into the same structured AST as the native clauses, so
 no behavioural difference at runtime — but the native syntax is
-recommended for new pipelines because it gets type-checked.
+recommended for new shuttles because it gets type-checked.
 
 ## Background
 

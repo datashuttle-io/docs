@@ -120,21 +120,21 @@ config:
       nodes: [datashuttle-0, datashuttle-1]
       priority: high
       limits:
-        max_pipelines: 10
+        max_shuttles: 10
         max_concurrent_snapshots: 3
     - name: batch
       mode: elastic
       nodes: [datashuttle-2]
       priority: low
       limits:
-        max_pipelines: 50
+        max_shuttles: 50
 ```
 
 Unpack the chart (`tar xzf datashuttle-chart.tgz`) and read `datashuttle/values.yaml` for all configuration options.
 
 ## Kubernetes Operator (CRD-based)
 
-For declarative pipeline management, use the DataShuttle Kubernetes Operator:
+For declarative shuttle management, use the DataShuttle Kubernetes Operator:
 
 ```yaml
 # DataShuttleConnection
@@ -151,9 +151,9 @@ spec:
   secretRef: pg-prod-credentials
 
 ---
-# DataShuttlePipeline
+# DataShuttleShuttle
 apiVersion: datashuttle.io/v1
-kind: DataShuttlePipeline
+kind: DataShuttleShuttle
 metadata:
   name: orders-sync
 spec:
@@ -164,10 +164,10 @@ spec:
   resource_pool: critical
 ```
 
-The operator reconciles CRD state with the DataShuttle REST API — creating, updating, and deleting pipelines and connections automatically.
+The operator reconciles CRD state with the DataShuttle REST API — creating, updating, and deleting shuttles and connections automatically.
 
 CRDs available:
-- **DataShuttlePipeline** — manages pipeline lifecycle
+- **DataShuttleShuttle** — manages shuttle lifecycle
 - **DataShuttleConnection** — manages source connections (with K8s Secret support)
 - **DataShuttleCluster** — manages StatefulSet replicas and auto-scaling
 

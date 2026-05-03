@@ -75,17 +75,17 @@ CREATE CONNECTION oracle_cdb
 | `logminer_start_scn` | No | current SCN | Starting SCN for LogMiner CDC |
 | `tls` | No | `false` | Enable TLS for ORDS |
 
-## CREATE PIPELINE
+## CREATE SHUTTLE
 
 ```sql
 -- Continuous CDC (sub-second latency)
-CREATE PIPELINE oracle_orders
+CREATE SHUTTLE oracle_orders
   SOURCE oracle_prod TABLE SCOTT.ORDERS
   TARGET warehouse.raw
   SCHEDULE continuous;
 
 -- Periodic watermark-based sync
-CREATE PIPELINE oracle_events
+CREATE SHUTTLE oracle_events
   SOURCE oracle_prod TABLE DW.FACT_EVENTS
   TARGET warehouse.raw
   SCHEDULE EVERY '30 minutes'

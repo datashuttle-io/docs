@@ -36,7 +36,7 @@ before the next flush). Defaults:
 | `--require-replication` | refuse to start in `mode=cluster` until #970 option A ships | Fail-fast for zero-RPO contracts |
 
 To tighten RPO without waiting for cross-node Raft: lower
-`flush_interval` (per-pipeline `WITH (flush_interval='5s')`), or
+`flush_interval` (per-shuttle `WITH (flush_interval='5s')`), or
 operate in single-node mode where the disk-spill in
 `crates/datashuttle-flight/src/overflow.rs` survives an OS-level crash
 (spilled batches are replayed on startup).

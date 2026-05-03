@@ -55,7 +55,7 @@ data access pattern is different:
   file prefers its rendezvous-hash-winning worker (same URI to
   same peer → warm page cache).
 
-- **`buffer.<pipeline>`** — hard-pinned to the pipeline's
+- **`buffer.<shuttle>`** — hard-pinned to the shuttle's
   lease-owner node. The hot buffer doesn't exist anywhere else,
   so there's no choice to make.
 
@@ -64,7 +64,7 @@ data access pattern is different:
   provisioned, no creds on the wire). One shard per scan today;
   future splitting by primary-key range is tracked.
 
-- **`union.<pipeline>`** — composite: one buffer shard on the
+- **`union.<shuttle>`** — composite: one buffer shard on the
   owner plus N iceberg shards. Coordinator dedups on PK
   (latest-wins).
 
@@ -85,10 +85,10 @@ in-flight shard × partition.
 ## Cost-aware placement
 
 Every worker gossips `NodeHealth { cpu_percent, memory_percent,
-pipeline_count }`. The coordinator scores each peer:
+shuttle_count }`. The coordinator scores each peer:
 
 ```
-cost_score = cpu_percent + memory_percent + 10 * pipeline_count
+cost_score = cpu_percent + memory_percent + 10 * shuttle_count
 ```
 
 Lower is better. Workers sort ascending by cost; ties break

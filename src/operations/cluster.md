@@ -81,24 +81,24 @@ Start a new node with `--seed-nodes` pointing to any existing node:
 datashuttle start --config datashuttle.yaml --seed-nodes node1:7946,node2:7946
 ```
 
-The new node joins the gossip ring automatically. Pipelines rebalance within 30 seconds.
+The new node joins the gossip ring automatically. Shuttles rebalance within 30 seconds.
 
 ## Removing nodes
 
-Simply stop the node. Gossip detects the departure and reassigns its pipelines to surviving nodes.
+Simply stop the node. Gossip detects the departure and reassigns its shuttles to surviving nodes.
 
 ```bash
 # Graceful: drain first, then stop
-datashuttle pipeline pause --owner node-3
+datashuttle shuttle pause --owner node-3
 systemctl stop datashuttle
 ```
 
 ## Rolling upgrades
 
-1. **Drain** pipelines from the target node:
+1. **Drain** shuttles from the target node:
 
     ```bash
-    datashuttle pipeline pause --owner node-3
+    datashuttle shuttle pause --owner node-3
     ```
 
 2. **Upgrade** the binary (replace the file, update the Docker image, etc.)
@@ -109,7 +109,7 @@ systemctl stop datashuttle
     datashuttle start --config datashuttle.yaml
     ```
 
-4. Pipelines **automatically rebalance** back to the upgraded node.
+4. Shuttles **automatically rebalance** back to the upgraded node.
 
 Repeat for each node. The cluster remains available throughout the process.
 

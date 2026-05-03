@@ -11,10 +11,10 @@ to the Hot/Cold toggle:
 
 | Target  | What it reads | Best for |
 |---------|---------------|----------|
-| Source  | Rows live in an upstream connector (Postgres, MySQL, Kafka, file, REST). Each SELECT translates into a connector-driver scan. | Ad-hoc peek into production data before building a pipeline. |
-| Iceberg | Committed Iceberg snapshots from the warehouse. Served via the object store with partition/file pruning. | Stable historical queries; cross-pipeline joins; consistency > freshness. |
-| Buffer  | The in-memory Arrow Flight ring buffer for a live pipeline. Reflects whatever has arrived from the source but hasn't been committed to Iceberg yet. | Sub-second freshness; "did my last INSERT land?" checks. |
-| Union   | Iceberg ∪ Buffer, deduplicated latest-wins by the pipeline's PK. **Default.** | Fresh *and* complete — what most operational dashboards want. |
+| Source  | Rows live in an upstream connector (Postgres, MySQL, Kafka, file, REST). Each SELECT translates into a connector-driver scan. | Ad-hoc peek into production data before building a shuttle. |
+| Iceberg | Committed Iceberg snapshots from the warehouse. Served via the object store with partition/file pruning. | Stable historical queries; cross-shuttle joins; consistency > freshness. |
+| Buffer  | The in-memory Arrow Flight ring buffer for a live shuttle. Reflects whatever has arrived from the source but hasn't been committed to Iceberg yet. | Sub-second freshness; "did my last INSERT land?" checks. |
+| Union   | Iceberg ∪ Buffer, deduplicated latest-wins by the shuttle's PK. **Default.** | Fresh *and* complete — what most operational dashboards want. |
 
 The picker is **advisory**: it scopes the SQL auto-complete and
 tags the request body, but the executor still honours the actual

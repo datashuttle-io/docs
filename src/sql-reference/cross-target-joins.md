@@ -1,8 +1,8 @@
 # Cross-target joins
 
 A single `SELECT` can `JOIN` across more than one namespace kind:
-`iceberg.<ns>.<t>`, `source.<conn>.<schema>.<t>`, `buffer.<pipeline>`,
-and the merged `union.<pipeline>`. This lets you align
+`iceberg.<ns>.<t>`, `source.<conn>.<schema>.<t>`, `buffer.<shuttle>`,
+and the merged `union.<shuttle>`. This lets you align
 historical-at-rest data with fresh-on-the-wire data without
 staging either side.
 
@@ -39,7 +39,7 @@ Cross-target joins run on a single coordinator by default. When
 `DATASHUTTLE_QUERY_DISTRIBUTE=1` is set and the cluster has
 query-capable peers, each referenced target gets its own shard
 allocation: iceberg URIs fan out across workers, source scans
-ship to a chosen peer, buffer reads pin to the pipeline owner.
+ship to a chosen peer, buffer reads pin to the shuttle owner.
 The planner joins the streams coordinator-side.
 
 ## EXPLAIN
@@ -66,7 +66,7 @@ renders it with distributed operators
 - **Perf envelope**: 2×1M + 10K 3-way JOIN targets < 20s on a
   3-node cluster. Bigger than that needs either higher tier
   caps (`max_query_rows`, `max_query_bytes`) or a materialised
-  pipeline.
+  shuttle.
 
 ## Related
 

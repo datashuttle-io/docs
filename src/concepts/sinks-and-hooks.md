@@ -21,19 +21,19 @@ Lifecycle: `open()` -> `write_batch()` x N -> `commit()` -> repeat.
 ### How to Add a New Sink
 
 1. Implement `SinkConnector` for your target system
-2. Wire it into the pipeline builder
+2. Wire it into the shuttle builder
 
 No factory, no registry. Just a trait and one implementation.
 
-## PipelineHook Trait
+## ShuttleHook Trait
 
 In-process hooks for lifecycle events: quality gates, audit logging,
 circuit breakers.
 
 ```rust
 #[async_trait]
-pub trait PipelineHook: Send + Sync {
-    async fn on_start(&self, ctx: &PipelineContext) -> Result<()> { Ok(()) }
+pub trait ShuttleHook: Send + Sync {
+    async fn on_start(&self, ctx: &ShuttleContext) -> Result<()> { Ok(()) }
     async fn after_transform(&self, ctx: &BatchContext, batch: &RecordBatch) -> Result<HookAction> {
         Ok(HookAction::Continue)
     }
@@ -47,14 +47,14 @@ pub enum HookAction { Continue, Skip, Abort }
 ```
 
 Hooks are called in order. `Skip` drops the current batch, `Abort` stops
-the pipeline. The existing webhook system is wrapped as `WebhookHook`.
+the shuttle. The existing webhook system is wrapped as `WebhookHook`.
 
 ### Hook Ordering
 
 The `HookRunner` calls hooks in registration order. If any hook returns
-`Abort`, subsequent hooks are not called and the pipeline stops.
+`Abort`, subsequent hooks are not called and the shuttle stops.
 
 ### Built-in Hooks
 
 - **WebhookHook** — wraps the existing HTTP webhook dispatcher
-- Custom hooks implement `PipelineHook` and are added to the runner
+- Custom hooks implement `ShuttleHook` and are added to the runner

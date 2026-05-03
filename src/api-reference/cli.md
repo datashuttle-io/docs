@@ -1,13 +1,13 @@
 # CLI Commands
 
-The `datashuttle` CLI is the primary interface for managing connections, pipelines, and cluster operations.
+The `datashuttle` CLI is the primary interface for managing connections, shuttles, and cluster operations.
 
 ## Server
 
 ```bash
 datashuttle start                    # Start the server
 datashuttle start --config path.yaml # Start with specific config
-datashuttle status                   # Cluster health and pipeline summary
+datashuttle status                   # Cluster health and shuttle summary
 datashuttle version                  # Print version
 ```
 
@@ -19,21 +19,21 @@ datashuttle sql -f file.sql          # Execute from file
 datashuttle sql                      # Interactive SQL console
 ```
 
-## Pipeline management
+## Shuttle management
 
 ```bash
-datashuttle pipeline list                    # List all pipelines
-datashuttle pipeline status <name>           # Detailed status (state, lag, rows/sec)
-datashuttle pipeline pause <name>            # Pause a pipeline
-datashuttle pipeline resume <name>           # Resume a paused pipeline
-datashuttle pipeline resnapshot <name>       # Re-load all data from source
-datashuttle pipeline logs <name>             # Recent pipeline log entries
+datashuttle shuttle list                    # List all shuttles
+datashuttle shuttle status <name>           # Detailed status (state, lag, rows/sec)
+datashuttle shuttle pause <name>            # Pause a shuttle
+datashuttle shuttle resume <name>           # Resume a paused shuttle
+datashuttle shuttle resnapshot <name>       # Re-load all data from source
+datashuttle shuttle logs <name>             # Recent shuttle log entries
 ```
 
 ## Resource pools
 
 ```bash
-datashuttle sql -e "CREATE PIPELINE p1 SOURCE conn TABLE t TARGET w.ns WITH (resource_pool = 'critical')"
+datashuttle sql -e "CREATE SHUTTLE p1 SOURCE conn TABLE t TARGET w.ns WITH (resource_pool = 'critical')"
 ```
 
 Pool management is via the REST API or Settings UI (`/api/v1/resource-pools`).
@@ -41,9 +41,9 @@ Pool management is via the REST API or Settings UI (`/api/v1/resource-pools`).
 ## Dead letters
 
 ```bash
-datashuttle deadletter list <pipeline>       # List dead letter entries
-datashuttle deadletter replay <pipeline>     # Replay all dead letters
-datashuttle deadletter resolve <pipeline> <id>  # Resolve a specific entry
+datashuttle deadletter list <shuttle>       # List dead letter entries
+datashuttle deadletter replay <shuttle>     # Replay all dead letters
+datashuttle deadletter resolve <shuttle> <id>  # Resolve a specific entry
 ```
 
 ## GitOps
@@ -52,7 +52,7 @@ datashuttle deadletter resolve <pipeline> <id>  # Resolve a specific entry
 datashuttle validate -f dir/                 # Validate SQL files (dry-run)
 datashuttle diff -f dir/                     # Show what would change
 datashuttle apply -f dir/                    # Apply desired state
-datashuttle apply -f dir/ --prune            # Apply and remove unlisted pipelines
+datashuttle apply -f dir/ --prune            # Apply and remove unlisted shuttles
 datashuttle generate --source conn --target ns --output dir/  # Export to SQL files
 ```
 
@@ -61,9 +61,9 @@ datashuttle generate --source conn --target ns --output dir/  # Export to SQL fi
 All commands support machine-readable output:
 
 ```bash
-datashuttle pipeline list -o json            # JSON output
-datashuttle pipeline list -o yaml            # YAML output
-datashuttle pipeline status orders_sync -o json
+datashuttle shuttle list -o json            # JSON output
+datashuttle shuttle list -o yaml            # YAML output
+datashuttle shuttle status orders_sync -o json
 ```
 
 ## Global flags

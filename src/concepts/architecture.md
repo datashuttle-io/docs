@@ -9,13 +9,13 @@ DataShuttle uses a **shared-nothing architecture** where every node is equal and
 │                      DataShuttle Node                            │
 │                                                                  │
 │  ┌────────────┐   ┌─────────────┐   ┌────────────────────────┐  │
-│  │ SQL Parser  │──▶│  Pipeline   │──▶│   Source Connectors    │  │
+│  │ SQL Parser  │──▶│  Shuttle   │──▶│   Source Connectors    │  │
 │  │ (DDL)       │   │  Registry   │   │  23 connector types    │  │
 │  └────────────┘   └─────────────┘   │  (see connector list)  │  │
 │                                      └───────────┬────────────┘  │
 │                                                  │               │
 │  ┌────────────┐   ┌─────────────┐   ┌───────────▼────────────┐  │
-│  │ REST API   │   │  Arrow      │◀──│  Transform Pipeline    │  │
+│  │ REST API   │   │  Arrow      │◀──│  Transform Shuttle    │  │
 │  │ + Web UI   │   │  Flight     │   │  (schema map, cast,    │  │
 │  │ + Metrics  │   │  Server     │   │   metadata injection)  │  │
 │  └────────────┘   └─────────────┘   └───────────┬────────────┘  │
@@ -40,14 +40,14 @@ DataShuttle ships as a workspace of ~13 Rust crates. Cloud-only concerns are iso
 | Crate | Purpose |
 |-------|---------|
 | `datashuttle-traits` | Zero-dependency contract crate; trait definitions shared across the workspace |
-| `datashuttle-core` | SQL parser, pipeline registry, transforms, config, schema evolution, RBAC, lineage, playground manifest types |
+| `datashuttle-core` | SQL parser, shuttle registry, transforms, config, schema evolution, RBAC, lineage, playground manifest types |
 | `datashuttle-control` | Identity / org / membership / invitation / API-tokens / SSO domain + repositories (in-memory default; Postgres impl lives in cloud crate) |
 | `datashuttle-license` | Tier + feature-gate + DPU metering |
 | `datashuttle-iceberg` | Iceberg V3 writer, commit protocol, deletion vectors (Puffin), compaction, credential vending |
 | `datashuttle-cdc` | `SourceConnector` trait + `CdcError` enum (419 LOC after Phase 7 cleanup, #839). Driver code lives in 22 sidecar crates (`datashuttle-connector-<X>`), one binary each, spawned out-of-process by the api over gRPC + Arrow Flight. |
-| `datashuttle-orchestration` | Pipeline-level utilities — checkpoint manager, schema-evolution, dlq, snapshot lease, retry, parallel-read assignment, `ConnectorFactory` registry. Linked into the api; never compiled into sidecars. |
+| `datashuttle-orchestration` | Shuttle-level utilities — checkpoint manager, schema-evolution, dlq, snapshot lease, retry, parallel-read assignment, `ConnectorFactory` registry. Linked into the api; never compiled into sidecars. |
 | `datashuttle-connector-protocol` | gRPC `ConnectorControl` service contract + ed25519 Flight-ticket helpers. Tonic-generated stubs ship here; both api and sidecars depend on this crate. |
-| `datashuttle-connector-supervisor` | `ProcessManager`, manifest loader, ed25519 trust store, lazy-spawn (`ensure_worker_for`), idle reaper. Owned by the api; reads connector binaries from the manifest at boot, terminates them post-`Capabilities`, respawns on first pipeline that needs them. |
+| `datashuttle-connector-supervisor` | `ProcessManager`, manifest loader, ed25519 trust store, lazy-spawn (`ensure_worker_for`), idle reaper. Owned by the api; reads connector binaries from the manifest at boot, terminates them post-`Capabilities`, respawns on first shuttle that needs them. |
 | `datashuttle-flight` | Arrow Flight hot buffer, flush worker, Raft replication, backpressure |
 | `datashuttle-gossip` | Cluster membership via SWIM gossip, lease-based ownership, rebalancing |
 | `datashuttle-api` | REST API, WebSocket, Prometheus `/metrics`, auth, pool scheduler, time-series metrics, cgroups. **Cloud-free dep graph** — no sqlx / aws-sdk / redis pulled in by default |
@@ -71,7 +71,7 @@ OSS builds leave these at safe defaults (Noop trait-objects / `None` fn-pointers
 
 Nodes coordinate through the **Iceberg catalog** — the only shared state:
 
-- **Pipeline definitions** are stored as Iceberg table properties
+- **Shuttle definitions** are stored as Iceberg table properties
 - **Ownership** uses lease-based assignment with monotonic fencing tokens
 - **Commits** use optimistic concurrency with automatic retry
 - **Cluster membership** is discovered via SWIM gossip (no external service registry)
@@ -80,10 +80,10 @@ This means you can lose any node and the cluster self-heals. There is no "brain"
 
 ## Data flow
 
-1. **SQL Parser** receives `CREATE PIPELINE` and validates syntax
-2. **Pipeline Registry** stores the definition and assigns ownership
+1. **SQL Parser** receives `CREATE SHUTTLE` and validates syntax
+2. **Shuttle Registry** stores the definition and assigns ownership
 3. **Source Connector** reads changes from the source database or storage system
-4. **Transform Pipeline** maps source schema to Arrow, applies casts and metadata injection
+4. **Transform Shuttle** maps source schema to Arrow, applies casts and metadata injection
 5. **Hot Buffer** (optional) holds recent rows in-memory for Arrow Flight queries (<100ms latency)
 6. **Iceberg Writer** batches Arrow RecordBatches into Parquet data files + Puffin deletion vector files
 7. **Commit Protocol** atomically commits to the Iceberg catalog with checkpoint update

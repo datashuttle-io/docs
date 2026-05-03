@@ -30,8 +30,8 @@ client = Client(
     token="eyJhbGciOi...",
 )
 
-for pipeline in client.pipelines.list():
-    print(pipeline.name, pipeline.state)
+for shuttle in client.shuttles.list():
+    print(shuttle.name, shuttle.state)
 ```
 
 Supports Python 3.9+. Built on `httpx`; works in both sync and async
@@ -47,8 +47,8 @@ const client = new DataShuttleClient({
   TOKEN: process.env.DATASHUTTLE_TOKEN,
 });
 
-const pipelines = await client.pipelines.listPipelines();
-console.log(pipelines);
+const shuttles = await client.shuttles.listShuttles();
+console.log(shuttles);
 ```
 
 ESM and CJS builds are published; works in Node 18+ and modern

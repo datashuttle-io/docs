@@ -6,7 +6,7 @@
 > `datashuttle_api::tenant::provision_tenant` path. This doc describes an
 > opt-in SaaS build.
 
-The `TenantProvisioner` is a cloud-facing provisioning pipeline built on top
+The `TenantProvisioner` is a cloud-facing provisioning shuttle built on top
 of the [Saga primitive](../concepts/saga.md): each resource creation step
 returns a compensator, and any failure triggers reverse-order rollback. It
 lives in `crates/datashuttle-api/src/provisioning/` and is wired into
@@ -58,7 +58,7 @@ All fields are optional; when `enabled = false` (the default), the
 provisioner is a no-op regardless of the other values.
 
 - `polaris_token_ref` is resolved through the same
-  [`SecretResolver`](./secrets.md) used by pipeline connections. If it is
+  [`SecretResolver`](./secrets.md) used by shuttle connections. If it is
   unset, the provisioner falls back to the `DS_POLARIS_TOKEN` environment
   variable.
 - `aws_region` and AWS credentials follow the standard AWS credential chain
@@ -107,7 +107,7 @@ Clients have two ways to observe completion:
   `create_tenant_policy`, `create_catalog_namespace`, `activate`,
   `failed`.
 - **WebSocket subscription**: subscribers on the existing `/ws/*`
-  channel receive `PipelineEvent` records with `event_type ==
+  channel receive `ShuttleEvent` records with `event_type ==
   "tenant.provisioned"` or `"tenant.provisioning_failed"`. Payload:
   `{ tenant_id, provisioning_id, status }` or `{ tenant_id,
   provisioning_id, error }`.
@@ -128,7 +128,7 @@ the ProvisioningContext to Postgres) is tracked for a future phase.
 
 ## Suspension and hard-delete (task 2.4)
 
-`POST /api/v1/tenants/{id}/suspend` pauses every pipeline in the
+`POST /api/v1/tenants/{id}/suspend` pauses every shuttle in the
 tenant namespace and — when provisioning is enabled — flips the
 Polaris namespace to `readonly = "true"` by PUTting
 `/api/catalog/v1/namespaces/{id}/properties`. A suspended tenant can
@@ -136,7 +136,7 @@ still read data; all new writes are rejected by Polaris until the
 tenant is resumed.
 
 `DELETE /api/v1/tenants/{id}` soft-deletes (30-day grace). The
-hard-delete sweep (`hard_delete_tenant`) drops pipelines, removes the
+hard-delete sweep (`hard_delete_tenant`) drops shuttles, removes the
 tenant row, and calls
 `TenantProvisioner::purge_tenant_resources(tenant_id, force_purge_data)`.
 By default, only the IAM policy, Polaris namespace, and
@@ -156,7 +156,7 @@ iteration will presign a real listing / zip URL.
 |----------------------|-----------------------------------|-------------------------------------|
 | `POST /api/v1/orgs`  | `201 Created` + in-memory tenant  | `202 Accepted` + background saga    |
 | Tenant lifecycle     | in-memory only                    | saga-backed side effects            |
-| `suspend`            | pipeline pause only               | pipeline pause + Polaris read-only  |
+| `suspend`            | shuttle pause only               | shuttle pause + Polaris read-only  |
 | `hard delete`        | in-memory only                    | IAM + Polaris + `.keep` cleanup     |
 | `export`             | JSON dump                         | JSON + presigned S3 export URL      |
 | `POST /api/v1/orgs` idempotency | per org_id                       | per org_id                          |

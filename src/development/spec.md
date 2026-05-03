@@ -1,7 +1,7 @@
 # Specification
 
 This section summarises the DataShuttle engineering contract: the
-pipeline state machine, commit batching semantics, tenant isolation
+shuttle state machine, commit batching semantics, tenant isolation
 invariants, and the Iceberg V3 features (deletion vectors, partition
 evolution) that DataShuttle exploits.
 
@@ -13,9 +13,9 @@ relevant excerpt under NDA.
 
 ## Sections at a glance
 
-- **Pipeline Lifecycle** — the state machine each pipeline walks through
+- **Shuttle Lifecycle** — the state machine each shuttle walks through
   (`Created → Starting → Running → Draining → …`). See
-  [Pipeline Lifecycle](../concepts/pipeline-lifecycle.md) for the
+  [Shuttle Lifecycle](../concepts/shuttle-lifecycle.md) for the
   conceptual overview; the internal spec pins the exact transitions.
 - **Commit Batching** — how CDC events accumulate into Iceberg commits.
   The [Commit Batching](../concepts/iceberg-commit-batching.md) page

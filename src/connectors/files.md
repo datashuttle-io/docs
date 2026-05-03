@@ -34,18 +34,18 @@ CREATE CONNECTION minio_local
   );
 ```
 
-## CREATE PIPELINE
+## CREATE SHUTTLE
 
 ```sql
 -- Parquet files, periodic scan every 5 minutes
-CREATE PIPELINE raw_events
+CREATE SHUTTLE raw_events
   SOURCE data_lake PATH 's3://bucket/events/'
   TARGET warehouse.raw
   SCHEDULE EVERY '5 minutes'
   WITH (file_pattern = '*.parquet');
 
 -- CSV files with options
-CREATE PIPELINE csv_import
+CREATE SHUTTLE csv_import
   SOURCE data_lake PATH 's3://bucket/csv-data/'
   TARGET warehouse.staging
   SCHEDULE EVERY '10 minutes'
@@ -56,7 +56,7 @@ CREATE PIPELINE csv_import
   );
 
 -- JSON files (newline-delimited)
-CREATE PIPELINE json_events
+CREATE SHUTTLE json_events
   SOURCE data_lake PATH 's3://bucket/json-events/'
   TARGET warehouse.raw
   SCHEDULE EVERY '5 minutes'

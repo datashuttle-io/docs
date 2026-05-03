@@ -6,7 +6,7 @@ Read from ClickHouse tables and sync to Iceberg. Supports both standalone ClickH
 
 ClickHouse does not have a native CDC stream. DataShuttle uses **watermark-based incremental reads**: on each scheduled run, it reads only rows where `watermark_column > last_seen_value`. The last seen value is persisted in the checkpoint so the next run continues where the previous left off.
 
-For `SCHEDULE continuous`, the pipeline re-runs at the minimum interval (~30 seconds by default). Use `SCHEDULE EVERY '<interval>'` for explicit control.
+For `SCHEDULE continuous`, the shuttle re-runs at the minimum interval (~30 seconds by default). Use `SCHEDULE EVERY '<interval>'` for explicit control.
 
 ## Prerequisites
 
@@ -61,11 +61,11 @@ CREATE CONNECTION ch_cluster
 | `watermark_column` | No | — | Column for incremental reads (recommended) |
 | `tls` | No | `false` | Enable TLS |
 
-## CREATE PIPELINE
+## CREATE SHUTTLE
 
 ```sql
 -- Incremental sync (recommended)
-CREATE PIPELINE ch_events_sync
+CREATE SHUTTLE ch_events_sync
   SOURCE ch_prod TABLE events
   TARGET warehouse.raw
   SCHEDULE EVERY '5 minutes'
@@ -77,7 +77,7 @@ CREATE PIPELINE ch_events_sync
 For distributed cluster tables, DataShuttle connects to each shard directly (bypassing the coordinator):
 
 ```sql
-CREATE PIPELINE ch_cluster_sync
+CREATE SHUTTLE ch_cluster_sync
   SOURCE ch_cluster TABLE events
   TARGET warehouse.raw
   SCHEDULE EVERY '15 minutes';
@@ -85,7 +85,7 @@ CREATE PIPELINE ch_cluster_sync
 
 ## Incremental reads
 
-When `watermark_column` is configured, the pipeline:
+When `watermark_column` is configured, the shuttle:
 
 1. Reads the last seen watermark value from its checkpoint
 2. Queries `SELECT * FROM table WHERE <watermark_column> > '<last_value>' ORDER BY <watermark_column>`
@@ -104,7 +104,7 @@ When `cluster` is set, DataShuttle queries `system.clusters` to discover shard t
 - Reads go directly to shard-local tables (`<table><local_table_suffix>`)
 - No coordinator bottleneck — throughput scales linearly with shard count
 
-If a DataShuttle node has more nodes than ClickHouse shards, extra nodes are idle for this pipeline (correct behavior — no duplicate data).
+If a DataShuttle node has more nodes than ClickHouse shards, extra nodes are idle for this shuttle (correct behavior — no duplicate data).
 
 ## Type mapping
 
@@ -129,5 +129,5 @@ If a DataShuttle node has more nodes than ClickHouse shards, extra nodes are idl
 ## Limitations
 
 - No native CDC — schema changes or deletes in the source are not automatically propagated. Use `SCHEDULE EVERY` with appropriate watermark to pick up new and updated rows.
-- Deletes in ClickHouse (ReplacingMergeTree, deduplication) are not surfaced as CDC events. If your ClickHouse tables use logical deletes (a `is_deleted` flag or similar), filter accordingly with `WHERE` in the pipeline.
+- Deletes in ClickHouse (ReplacingMergeTree, deduplication) are not surfaced as CDC events. If your ClickHouse tables use logical deletes (a `is_deleted` flag or similar), filter accordingly with `WHERE` in the shuttle.
 - `Array`, `Map`, and `Tuple` types are serialized as strings.

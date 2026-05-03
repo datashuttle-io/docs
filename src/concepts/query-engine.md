@@ -19,10 +19,10 @@ through the cluster.
 
 | Namespace | What it reads | When to pick it |
 |-----------|---------------|-----------------|
-| `source.<conn>.<schema>.<table>` | Rows live in the upstream system (Postgres, MySQL, Kafka, file, REST, ...). A `SELECT` translates into a connector-driver scan. | Ad-hoc peek into production data before building a pipeline; verify row count before a CDC snapshot kicks off. |
-| `iceberg.<ns>.<table>` | Committed Iceberg snapshots from the warehouse. Served via the object store with partition/file pruning. | Stable historical queries; cross-pipeline joins; anything where consistency matters more than freshness. |
-| `buffer.<pipeline>` | The in-memory Arrow Flight ring buffer for a live pipeline. Reflects whatever has arrived from the source but hasn't been committed to Iceberg yet. TTL-bound. | Sub-second freshness for a single pipeline; "did my last INSERT land?" style checks. |
-| `union.<pipeline>` | Iceberg ∪ buffer, deduplicated latest-wins by the pipeline's primary key. **Default** when the SQL doesn't specify. | Fresh *and* complete view — what most operational dashboards want. |
+| `source.<conn>.<schema>.<table>` | Rows live in the upstream system (Postgres, MySQL, Kafka, file, REST, ...). A `SELECT` translates into a connector-driver scan. | Ad-hoc peek into production data before building a shuttle; verify row count before a CDC snapshot kicks off. |
+| `iceberg.<ns>.<table>` | Committed Iceberg snapshots from the warehouse. Served via the object store with partition/file pruning. | Stable historical queries; cross-shuttle joins; anything where consistency matters more than freshness. |
+| `buffer.<shuttle>` | The in-memory Arrow Flight ring buffer for a live shuttle. Reflects whatever has arrived from the source but hasn't been committed to Iceberg yet. TTL-bound. | Sub-second freshness for a single shuttle; "did my last INSERT land?" style checks. |
+| `union.<shuttle>` | Iceberg ∪ buffer, deduplicated latest-wins by the shuttle's primary key. **Default** when the SQL doesn't specify. | Fresh *and* complete view — what most operational dashboards want. |
 
 Resolution happens once per query on the coordinator; each table
 reference is materialized into a `QueryTarget` (see
@@ -42,7 +42,7 @@ Three primitives work together.
    through Arrow Flight `DoGet`.
 3. **`PoolScheduler`.** Selects workers under a resource pool's
    `max_concurrent_queries` + DPU budget. Queries share pool
-   accounting with pipelines, so an over-subscribed tenant gets
+   accounting with shuttles, so an over-subscribed tenant gets
    backpressure on both paths.
 
 The lifecycle of one query:
@@ -77,7 +77,7 @@ operator needs to tune for their cluster.
 |--------|----------------|---------------------|
 | `source.*` | `PlanSource(parallelism_hint)` on the connector — N shards or 1 depending on driver + table. | The supervisor's lazy-spawned sidecar binary for the connector type (any worker the supervisor schedules). Phase 7.2 removed all in-proc driver paths from the api; every `source.*` shard runs in a sidecar process. |
 | `iceberg.*` | File-list split: `ceil(num_files / target_files_per_shard)`. Any worker can read the object store. | Any worker from the pool's eligible set. |
-| `buffer.<p>` | Exactly **one** shard; the buffer only exists on the pipeline's lease-owner node. | `lease.owner_node(p)`. Hard affinity. |
+| `buffer.<p>` | Exactly **one** shard; the buffer only exists on the shuttle's lease-owner node. | `lease.owner_node(p)`. Hard affinity. |
 | `union.<p>` | Composite: one buffer shard on the owner + N iceberg shards as above. Dedup merged on the coordinator. | Mixed, per shard kind. |
 
 ### Retry + partial results
@@ -97,7 +97,7 @@ execution. The pool's new fields (`max_concurrent_queries`,
 `max_query_dpu`) cap total parallelism per pool — not per query.
 Preemption is LRU by query age with priority tiers.
 
-- **Shared pools**: queries and pipelines compete on the same DPU
+- **Shared pools**: queries and shuttles compete on the same DPU
   budget. Dedicated pools (`pool.mode=dedicated`) never let a
   query leak over.
 - **Tenant queue**: once a tenant hits `max_concurrent_queries`
@@ -113,8 +113,8 @@ Four new permissions gate query access:
 |------------|-------------|------------|
 | `query.source` | Connection name, e.g. `pg_prod`. Wildcard `*` for all. | Connection owner or `admin`. |
 | `query.iceberg` | First namespace segment, e.g. `warehouse`. | Catalog ACL or `admin`. |
-| `query.buffer` | Pipeline name. | `admin` or pipeline owner. Implies `monitor_pipeline`. |
-| `query.union` | Pipeline name. | Intersection — caller must hold both `query.iceberg:*` (for the pipeline's target namespace) and `query.buffer:<pipeline>`. |
+| `query.buffer` | Shuttle name. | `admin` or shuttle owner. Implies `monitor_shuttle`. |
+| `query.union` | Shuttle name. | Intersection — caller must hold both `query.iceberg:*` (for the shuttle's target namespace) and `query.buffer:<shuttle>`. |
 
 YAML roles accept both dotted (`query.source:pg_prod`) and
 underscored (`query_source:pg_prod`) short names.
@@ -164,7 +164,7 @@ limit slicing — tracked, not load-bearing in the current workloads.
 ### Cost-aware placement — always on
 
 `rank_eligible_workers` orders peers by
-`cost_score = cpu% + memory% + 10 × pipeline_count` ascending;
+`cost_score = cpu% + memory% + 10 × shuttle_count` ascending;
 ties rotate deterministically by `hash(query_id)` so retries
 preserve cache locality. `allocate_uris_by_weight` splits files
 via the Largest Remainder Method so lighter peers take more

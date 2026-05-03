@@ -4,7 +4,7 @@
 
 If you've ever tried to keep an operational database in sync with a
 lakehouse, you know the drill: Kafka, Debezium, a Flink job, a schema
-registry, a custom pipeline that nobody wants to touch. Four systems
+registry, a custom shuttle that nobody wants to touch. Four systems
 to operate, glue code in between, and a latency that's measured in
 minutes when you wanted seconds.
 
@@ -16,7 +16,7 @@ capture, with deletion vectors, partition evolution, and schema
 evolution built in.
 
 ```sql
-CREATE PIPELINE orders_sync
+CREATE SHUTTLE orders_sync
   SOURCE crm_prod TABLE orders
   TARGET warehouse.raw
   SCHEDULE continuous
@@ -49,10 +49,10 @@ The fastest way to see DataShuttle work is the
 **[interactive Playground](./playground.md)**. Spin it up once with
 Docker Compose and you get a guided sandbox with 18 pre-built
 scenarios: a happy-path Postgres CDC run, schema evolution on a live
-pipeline, Kafka poison messages + replay from the DLQ, MongoDB
+shuttle, Kafka poison messages + replay from the DLQ, MongoDB
 nested-field evolution, ClickHouse time travel, even Tier-4 chaos
 scenarios (network latency, slow consumers, 50 MB BLOBs). Click
-**Start**, watch Iceberg fill up in real time, break the pipeline on
+**Start**, watch Iceberg fill up in real time, break the shuttle on
 purpose, replay. No real data involved.
 
 Once the playground feels familiar, the [Quickstart](./quickstart.md)
@@ -70,7 +70,7 @@ streaming your own data into Iceberg.
 **Understanding the engine**
 
 - [Architecture](./concepts/architecture.md) — shared-nothing, Arrow Flight hot path, Iceberg cold path
-- [Pipeline Lifecycle](./concepts/pipeline-lifecycle.md) — state machine you'll see in the UI
+- [Shuttle Lifecycle](./concepts/shuttle-lifecycle.md) — state machine you'll see in the UI
 - [Safety & Correctness](./concepts/safety.md) — exactly-once, replay, crash recovery
 - [Configuration](./concepts/configuration.md) — `datashuttle.yaml` reference
 

@@ -17,15 +17,15 @@ Configure in `datashuttle.yaml` under `security.auth`:
 
 ---
 
-## Pipelines
+## Shuttles
 
-### List pipelines
+### List shuttles
 
 ```bash
-curl http://localhost:8080/api/v1/pipelines
+curl http://localhost:8080/api/v1/shuttles
 
 # Filter by status
-curl http://localhost:8080/api/v1/pipelines?status=running
+curl http://localhost:8080/api/v1/shuttles?status=running
 ```
 
 **Response** `200 OK`:
@@ -45,28 +45,28 @@ curl http://localhost:8080/api/v1/pipelines?status=running
 ]
 ```
 
-### Create pipeline
+### Create shuttle
 
 ```bash
-curl -X POST http://localhost:8080/api/v1/pipelines \
+curl -X POST http://localhost:8080/api/v1/shuttles \
   -H 'Content-Type: application/json' \
-  -d '{"sql": "CREATE PIPELINE orders_sync SOURCE crm_prod TABLE orders TARGET warehouse.raw"}'
+  -d '{"sql": "CREATE SHUTTLE orders_sync SOURCE crm_prod TABLE orders TARGET warehouse.raw"}'
 ```
 
-**Response** `201 Created` — full pipeline record.
+**Response** `201 Created` — full shuttle record.
 
-### Get pipeline details
+### Get shuttle details
 
 ```bash
-curl http://localhost:8080/api/v1/pipelines/orders_sync
+curl http://localhost:8080/api/v1/shuttles/orders_sync
 ```
 
-**Response** `200 OK` — full pipeline record with options, tables, schedule, and definition SQL.
+**Response** `200 OK` — full shuttle record with options, tables, schedule, and definition SQL.
 
-### Drop pipeline
+### Drop shuttle
 
 ```bash
-curl -X DELETE http://localhost:8080/api/v1/pipelines/orders_sync
+curl -X DELETE http://localhost:8080/api/v1/shuttles/orders_sync
 ```
 
 **Response** `204 No Content`
@@ -74,16 +74,16 @@ curl -X DELETE http://localhost:8080/api/v1/pipelines/orders_sync
 ### Pause / Resume
 
 ```bash
-curl -X POST http://localhost:8080/api/v1/pipelines/orders_sync/pause
-curl -X POST http://localhost:8080/api/v1/pipelines/orders_sync/resume
+curl -X POST http://localhost:8080/api/v1/shuttles/orders_sync/pause
+curl -X POST http://localhost:8080/api/v1/shuttles/orders_sync/resume
 ```
 
-**Response** `200 OK` — updated pipeline record.
+**Response** `200 OK` — updated shuttle record.
 
-### Pipeline status
+### Shuttle status
 
 ```bash
-curl http://localhost:8080/api/v1/pipelines/orders_sync/status
+curl http://localhost:8080/api/v1/shuttles/orders_sync/status
 ```
 
 **Response** `200 OK`:
@@ -102,29 +102,29 @@ curl http://localhost:8080/api/v1/pipelines/orders_sync/status
 }
 ```
 
-### Pipeline history
+### Shuttle history
 
 ```bash
-curl http://localhost:8080/api/v1/pipelines/orders_sync/history?limit=10
+curl http://localhost:8080/api/v1/shuttles/orders_sync/history?limit=10
 ```
 
-### Pipeline clustering
+### Shuttle clustering
 
 Read or modify the partition layout and sort order for an existing
-pipeline. See the
+shuttle. See the
 [Partitioning & Clustering chapter](../concepts/partitioning-clustering.md)
 for the conceptual background.
 
 Clustering is stored **per destination table**: every entry in the
 `tables` map is keyed on a fully qualified source table name (e.g.
 `"analytics.events"`) and carries its own partition layout and sort
-order. The special empty-string key `""` is the pipeline-wide default
+order. The special empty-string key `""` is the shuttle-wide default
 applied to any table without a specific entry.
 
 #### Get clustering
 
 ```bash
-curl http://localhost:8080/api/v1/pipelines/events/clustering
+curl http://localhost:8080/api/v1/shuttles/events/clustering
 ```
 
 **Response** `200 OK`:
@@ -173,7 +173,7 @@ for a given entry. Transforms serialise as the Rust enum format:
 or default entries not present in the request body are cleared.
 
 ```bash
-curl -X PUT http://localhost:8080/api/v1/pipelines/events/clustering \
+curl -X PUT http://localhost:8080/api/v1/shuttles/events/clustering \
   -H 'Content-Type: application/json' \
   -d '{
     "tables": {
@@ -205,8 +205,8 @@ curl -X PUT http://localhost:8080/api/v1/pipelines/events/clustering \
 
 | Field | Type | Description |
 |---|---|---|
-| `tables` | object | Required. Map keyed on fully qualified source table name. The empty string `""` is the pipeline-wide default. Each value is `{ partition_spec, sort_order }`; either sub-field may be `null`. |
-| `apply_to_existing_tables` | bool, default `false` | If true, push the **effective** sort order onto every existing Iceberg table the pipeline writes to via Iceberg `UpdateTable`. Effective order = per-table entry if present, otherwise the default. Existing data files are *not* rewritten — only future writes use the new order. Partition spec changes never affect existing tables. |
+| `tables` | object | Required. Map keyed on fully qualified source table name. The empty string `""` is the shuttle-wide default. Each value is `{ partition_spec, sort_order }`; either sub-field may be `null`. |
+| `apply_to_existing_tables` | bool, default `false` | If true, push the **effective** sort order onto every existing Iceberg table the shuttle writes to via Iceberg `UpdateTable`. Effective order = per-table entry if present, otherwise the default. Existing data files are *not* rewritten — only future writes use the new order. Partition spec changes never affect existing tables. |
 
 **Response** on success: same shape as `GET`, reflecting the persisted
 state after the update.
@@ -223,19 +223,19 @@ and at least one per-table `UpdateTable` failed:
 The registry is always updated first, so the `GET` endpoint reflects
 the new layout even when some live ALTERs failed.
 
-### Pipeline lineage
+### Shuttle lineage
 
-Returns source tables, destination Iceberg tables, and per-table edges for a pipeline.
+Returns source tables, destination Iceberg tables, and per-table edges for a shuttle.
 
 ```bash
-curl http://localhost:8080/api/v1/pipelines/orders_sync/lineage
+curl http://localhost:8080/api/v1/shuttles/orders_sync/lineage
 ```
 
 **Response** `200 OK`:
 
 ```json
 {
-  "pipeline": "orders_sync",
+  "shuttle": "orders_sync",
   "connection": "crm_prod",
   "schedule": "continuous",
   "state": "running",
@@ -304,7 +304,7 @@ curl http://localhost:8080/api/v1/connections/crm_prod/status
   "name": "crm_prod",
   "connection_type": "POSTGRES",
   "is_reachable": true,
-  "dependent_pipelines": ["orders_sync", "users_cdc"],
+  "dependent_shuttles": ["orders_sync", "users_cdc"],
   "error_message": null
 }
 ```
@@ -336,7 +336,7 @@ curl http://localhost:8080/api/v1/connections/crm_prod/tables
 
 ### Discover table schema
 
-Returns column metadata for a specific table. Used by the pipeline creation wizard.
+Returns column metadata for a specific table. Used by the shuttle creation wizard.
 
 ```bash
 curl http://localhost:8080/api/v1/connections/crm_prod/tables/public/orders/schema
@@ -511,7 +511,7 @@ curl -X DELETE http://localhost:8080/api/v1/connectors/custom_source
 
 ### Monitoring stats
 
-Aggregate metrics across all pipelines.
+Aggregate metrics across all shuttles.
 
 ```bash
 curl http://localhost:8080/api/v1/monitoring/stats
@@ -521,7 +521,7 @@ curl http://localhost:8080/api/v1/monitoring/stats
 
 ```json
 {
-  "total_pipelines": 12,
+  "total_shuttles": 12,
   "by_state": {
     "created": 0,
     "snapshotting": 1,
@@ -532,7 +532,7 @@ curl http://localhost:8080/api/v1/monitoring/stats
   },
   "aggregate_rows_per_second": 142000,
   "aggregate_bytes_per_second": 71000000,
-  "pipeline_metrics": [
+  "shuttle_metrics": [
     {
       "name": "orders_sync",
       "state": "running",
@@ -551,8 +551,8 @@ curl http://localhost:8080/api/v1/monitoring/stats
       "name": "default",
       "mode": "shared",
       "priority": "medium",
-      "active_pipelines": 8,
-      "max_pipelines": 0,
+      "active_shuttles": 8,
+      "max_shuttles": 0,
       "active_snapshots": 1,
       "max_snapshots": 0,
       "node_count": 0
@@ -561,8 +561,8 @@ curl http://localhost:8080/api/v1/monitoring/stats
       "name": "critical",
       "mode": "dedicated",
       "priority": "high",
-      "active_pipelines": 4,
-      "max_pipelines": 10,
+      "active_shuttles": 4,
+      "max_shuttles": 10,
       "active_snapshots": 0,
       "max_snapshots": 3,
       "node_count": 2
@@ -590,9 +590,9 @@ curl http://localhost:8080/api/v1/resource-pools
     "mode": "shared",
     "nodes": [],
     "priority": "medium",
-    "limits": { "max_pipelines": 0, "max_concurrent_snapshots": 0, "max_memory_per_pipeline_mb": 0, "max_cpu_percent_per_pipeline": 0, "io_bandwidth_mbps": 0 },
-    "pipeline_count": 5,
-    "active_pipelines": ["orders_sync", "users_sync"]
+    "limits": { "max_shuttles": 0, "max_concurrent_snapshots": 0, "max_memory_per_shuttle_mb": 0, "max_cpu_percent_per_shuttle": 0, "io_bandwidth_mbps": 0 },
+    "shuttle_count": 5,
+    "active_shuttles": ["orders_sync", "users_sync"]
   }
 ]
 ```
@@ -607,7 +607,7 @@ curl -X POST http://localhost:8080/api/v1/resource-pools \
     "mode": "dedicated",
     "priority": "high",
     "nodes": ["node-1", "node-2"],
-    "limits": { "max_pipelines": 10, "max_concurrent_snapshots": 3 }
+    "limits": { "max_shuttles": 10, "max_concurrent_snapshots": 3 }
   }'
 ```
 
@@ -618,7 +618,7 @@ curl -X POST http://localhost:8080/api/v1/resource-pools \
 ```bash
 curl -X PUT http://localhost:8080/api/v1/resource-pools/critical \
   -H 'Content-Type: application/json' \
-  -d '{"name": "critical", "limits": {"max_pipelines": 20}}'
+  -d '{"name": "critical", "limits": {"max_shuttles": 20}}'
 ```
 
 ### Delete pool
@@ -627,7 +627,7 @@ curl -X PUT http://localhost:8080/api/v1/resource-pools/critical \
 curl -X DELETE http://localhost:8080/api/v1/resource-pools/critical
 ```
 
-**Response** `204 No Content`. Fails with `409 Conflict` if pipelines are assigned.
+**Response** `204 No Content`. Fails with `409 Conflict` if shuttles are assigned.
 
 ### Pool nodes
 
@@ -635,10 +635,10 @@ curl -X DELETE http://localhost:8080/api/v1/resource-pools/critical
 curl http://localhost:8080/api/v1/resource-pools/critical/nodes
 ```
 
-### Reassign pipeline to pool
+### Reassign shuttle to pool
 
 ```bash
-curl -X PUT http://localhost:8080/api/v1/pipelines/orders_sync/pool \
+curl -X PUT http://localhost:8080/api/v1/shuttles/orders_sync/pool \
   -H 'Content-Type: application/json' \
   -d '{"pool": "critical"}'
 ```
@@ -649,12 +649,12 @@ curl -X PUT http://localhost:8080/api/v1/pipelines/orders_sync/pool \
 
 ### Execute SQL
 
-General-purpose SQL execution endpoint. Supports all DDL statements (`CREATE PIPELINE`, `CREATE CONNECTION`, `SHOW PIPELINES`, etc.).
+General-purpose SQL execution endpoint. Supports all DDL statements (`CREATE SHUTTLE`, `CREATE CONNECTION`, `SHOW SHUTTLES`, etc.).
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/sql \
   -H 'Content-Type: application/json' \
-  -d '{"sql": "SHOW PIPELINES"}'
+  -d '{"sql": "SHOW SHUTTLES"}'
 ```
 
 ---
@@ -667,7 +667,7 @@ curl -X POST http://localhost:8080/api/v1/sql \
 curl http://localhost:8080/api/v1/settings
 ```
 
-Returns catalog, storage, auth, and pipeline default configuration.
+Returns catalog, storage, auth, and shuttle default configuration.
 
 ### Update settings
 
@@ -682,8 +682,8 @@ curl -X PUT http://localhost:8080/api/v1/settings/storage \
   -H 'Content-Type: application/json' \
   -d '{"endpoint": "http://minio:9000", "region": "us-east-1"}'
 
-# Pipeline defaults
-curl -X PUT http://localhost:8080/api/v1/settings/pipeline_defaults \
+# Shuttle defaults
+curl -X PUT http://localhost:8080/api/v1/settings/shuttle_defaults \
   -H 'Content-Type: application/json' \
   -d '{"commit_interval": "30 seconds", "iceberg_format_version": 3}'
 
@@ -778,13 +778,13 @@ curl http://localhost:8080/metrics
 
 See [Monitoring](../operations/monitoring.md) for metric names and alerting.
 
-### WebSocket — live pipeline events
+### WebSocket — live shuttle events
 
 ```
-ws://localhost:8080/ws/pipelines
+ws://localhost:8080/ws/shuttles
 ```
 
-Streams real-time pipeline events (state changes, commits, errors) as JSON messages.
+Streams real-time shuttle events (state changes, commits, errors) as JSON messages.
 
 ### Embedded documentation
 

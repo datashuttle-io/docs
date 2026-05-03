@@ -70,17 +70,17 @@ CREATE CONNECTION dynamo_local
 | `table_name` | No | — | Specific table; omit to discover all tables |
 | `endpoint_url` | No | — | Custom endpoint URL (LocalStack, DynamoDB Local) |
 
-## CREATE PIPELINE
+## CREATE SHUTTLE
 
 ```sql
 -- Continuous CDC via DynamoDB Streams
-CREATE PIPELINE dynamo_orders
+CREATE SHUTTLE dynamo_orders
   SOURCE dynamo_prod TABLE orders
   TARGET warehouse.raw
   SCHEDULE continuous;
 
 -- Sync all tables
-CREATE PIPELINE dynamo_full
+CREATE SHUTTLE dynamo_full
   SOURCE dynamo_prod TABLE *
   TARGET warehouse.raw
   SCHEDULE EVERY '1 hour';
@@ -92,10 +92,10 @@ DynamoDB has no fixed schema. DataShuttle infers column types from a sample of i
 
 If a new attribute appears in later items that was absent from the sample, it is added as a nullable `string` column via schema evolution.
 
-Use `type_overrides` in the pipeline `WITH` clause to force specific columns to a concrete type:
+Use `type_overrides` in the shuttle `WITH` clause to force specific columns to a concrete type:
 
 ```sql
-CREATE PIPELINE dynamo_orders
+CREATE SHUTTLE dynamo_orders
   SOURCE dynamo_prod TABLE orders
   TARGET warehouse.raw
   SCHEDULE continuous
@@ -127,6 +127,6 @@ DynamoDB attribute types map to Arrow/Iceberg as follows:
 ## Limitations
 
 - `N` (Number) attributes are captured as strings to avoid precision loss. Use `type_overrides` to cast to `DECIMAL`, `INT`, or `BIGINT` as appropriate.
-- DynamoDB Streams retention is 24 hours. If the pipeline is paused beyond 24 hours, the stream position is expired and a full resync is triggered.
+- DynamoDB Streams retention is 24 hours. If the shuttle is paused beyond 24 hours, the stream position is expired and a full resync is triggered.
 - Global Secondary Indexes (GSIs) are not directly readable as separate sources — query the base table instead.
-- DynamoDB charges for reading stream records. High-frequency pipelines on large tables will incur stream read costs.
+- DynamoDB charges for reading stream records. High-frequency shuttles on large tables will incur stream read costs.

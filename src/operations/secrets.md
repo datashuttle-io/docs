@@ -8,7 +8,7 @@ provider.
 > **Scope of this feature (#569).** Server-level credentials — S3 access
 > keys, OAuth2 client secret for the catalog, SMTP password — are resolved
 > via the provider system at startup. Connection-option secrets (source DB
-> passwords, API keys) resolve per-pipeline when the pipeline starts.
+> passwords, API keys) resolve per-shuttle when the shuttle starts.
 
 ## Quick reference
 
@@ -43,7 +43,7 @@ The config post-load pass resolves the following fields automatically:
 - `email.smtp_password`
 
 Connection-option maps (source DB passwords etc.) are resolved by the
-pipeline manager at pipeline-start time. Option keys treated as secrets
+shuttle manager at shuttle-start time. Option keys treated as secrets
 (resolved if the value is a `secret://...` reference): `password`,
 `secret_key`, `api_key`, `token`, `auth_token`, `access_token`.
 
@@ -225,6 +225,6 @@ It does NOT protect against:
 - Trait and provider types: `crates/datashuttle-traits/src/secret.rs`,
   `crates/datashuttle-core/src/secrets.rs`.
 - Post-load config pass: `datashuttle_core::config::resolve_secrets`.
-- Per-pipeline options resolution: `SecretResolver::resolve_options`.
+- Per-shuttle options resolution: `SecretResolver::resolve_options`.
 - Feature gates: `secrets-aws`, `secrets-gcp`, `secrets-azure`,
   `saas-secrets` (umbrella) — defined in `crates/datashuttle-core/Cargo.toml`.

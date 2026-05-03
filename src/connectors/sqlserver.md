@@ -103,17 +103,17 @@ CREATE CONNECTION mssql_ag_replica
 | `trust_server_certificate` | No | `false` | Trust self-signed TLS certificates |
 | `application_intent` | No | `read_write` | `read_write` or `read_only` (AG replicas) |
 
-## CREATE PIPELINE
+## CREATE SHUTTLE
 
 ```sql
 -- Continuous CDC
-CREATE PIPELINE mssql_orders
+CREATE SHUTTLE mssql_orders
   SOURCE mssql_prod TABLE dbo.orders
   TARGET warehouse.raw
   SCHEDULE continuous;
 
 -- Multiple tables
-CREATE PIPELINE mssql_crm
+CREATE SHUTTLE mssql_crm
   SOURCE mssql_prod TABLE dbo.orders, dbo.customers, dbo.payments
   TARGET warehouse.raw
   SCHEDULE continuous
@@ -149,7 +149,7 @@ CREATE PIPELINE mssql_crm
 
 ## Limitations
 
-- **CDC retention**: SQL Server purges CDC tables on a configurable schedule. If the pipeline is paused longer than the CDC retention window (default: 3 days), a full resync is triggered.
-- **Table-level enablement**: CDC must be enabled per-table. Tables added to the pipeline after initial creation require CDC enablement before they stream changes.
+- **CDC retention**: SQL Server purges CDC tables on a configurable schedule. If the shuttle is paused longer than the CDC retention window (default: 3 days), a full resync is triggered.
+- **Table-level enablement**: CDC must be enabled per-table. Tables added to the shuttle after initial creation require CDC enablement before they stream changes.
 - **`geography` / `geometry`**: Captured as raw WKB binary. V3 Geometry type mapping is planned.
 - **Azure SQL Database**: CDC is supported on Standard tier and above. Basic tier supports Change Tracking only — set `cdc_mode = 'change_tracking'`.

@@ -1,11 +1,11 @@
-# Pipelines
+# Shuttles
 
-Pipelines are the core unit of work. A pipeline connects a source to an Iceberg target and keeps them in sync.
+Shuttles are the core unit of work. A shuttle connects a source to an Iceberg target and keeps them in sync.
 
-## CREATE PIPELINE
+## CREATE SHUTTLE
 
 ```sql
-CREATE PIPELINE <name>
+CREATE SHUTTLE <name>
   SOURCE <connection> TABLE <table> [, <table>, ...]
   TARGET <namespace>
   [PARTITION BY (<partition-field>, ...)]
@@ -20,7 +20,7 @@ CREATE PIPELINE <name>
 For file sources:
 
 ```sql
-CREATE PIPELINE <name>
+CREATE SHUTTLE <name>
   SOURCE <connection> PATH '<s3-path>'
   TARGET <namespace>
   [SCHEDULE <schedule>]
@@ -34,11 +34,11 @@ CREATE PIPELINE <name>
 
 | Parameter | Required | Description |
 |-----------|----------|-------------|
-| `name` | Yes | Unique pipeline identifier |
+| `name` | Yes | Unique shuttle identifier |
 | `SOURCE` | Yes | Connection name + table(s) or path |
 | `TARGET` | Yes | Iceberg namespace (e.g., `warehouse.raw`) |
 | `SCHEDULE` | No | Sync schedule (see below) |
-| `WITH` | No | Pipeline options (see below) |
+| `WITH` | No | Shuttle options (see below) |
 
 ### `PARTITION BY (...)` and `CLUSTER BY (...)`
 
@@ -79,7 +79,7 @@ schema and has a compatible type. `year/month/day/hour` require a date
 or timestamp column; `truncate` requires int or string; `bucket` accepts
 int, string, date, or timestamp.
 
-Sort orders can be **modified on a live pipeline** without rewriting
+Sort orders can be **modified on a live shuttle** without rewriting
 data — DataShuttle uses Iceberg's sort-order evolution to push the new
 order onto existing tables. Partition specs can only be set on new
 tables; see the partitioning chapter for details.
@@ -93,11 +93,11 @@ DataShuttle uses a freshness-based sync model. Users specify how often they want
 | `continuous` (default) | Keep data as fresh as the source allows. Achievable latency depends on the source type. |
 | `EVERY '<interval>'` | Sync at specified interval (e.g., `EVERY '15 minutes'`, `EVERY '24 hours'`). |
 
-The initial load is always automatic on first pipeline start — it is not a user-selectable mode.
+The initial load is always automatic on first shuttle start — it is not a user-selectable mode.
 
 Legacy `mode` values are still accepted for backward compatibility and mapped to the equivalent schedule internally.
 
-### Pipeline options
+### Shuttle options
 
 | Option | Default | Values | Description |
 |--------|---------|--------|-------------|
@@ -136,12 +136,12 @@ Legacy `mode` values are still accepted for backward compatibility and mapped to
 
 ```sql
 -- Continuous sync (default schedule)
-CREATE PIPELINE orders_sync
+CREATE SHUTTLE orders_sync
   SOURCE pg_prod TABLE orders
   TARGET warehouse.raw;
 
 -- Explicit continuous schedule with options
-CREATE PIPELINE orders_sync
+CREATE SHUTTLE orders_sync
   SOURCE pg_prod TABLE orders
   TARGET warehouse.raw
   SCHEDULE continuous
@@ -152,7 +152,7 @@ CREATE PIPELINE orders_sync
   );
 
 -- Multi-table with tuned options
-CREATE PIPELINE crm_full
+CREATE SHUTTLE crm_full
   SOURCE pg_prod TABLE orders, customers, payments, products
   TARGET warehouse.crm
   WITH (
@@ -163,7 +163,7 @@ CREATE PIPELINE crm_full
   );
 
 -- Partitioned + clustered events table
-CREATE PIPELINE clickstream
+CREATE SHUTTLE clickstream
   SOURCE pg_prod TABLE events
   TARGET warehouse.analytics
   PARTITION BY (day(event_ts), bucket(32, user_id))
@@ -171,29 +171,29 @@ CREATE PIPELINE clickstream
   SCHEDULE continuous;
 
 -- Periodic sync (every 24 hours)
-CREATE PIPELINE historical_load
+CREATE SHUTTLE historical_load
   SOURCE pg_prod TABLE legacy_orders
   TARGET warehouse.archive
   SCHEDULE EVERY '24 hours';
 
--- Pipeline in a dedicated resource pool
-CREATE PIPELINE critical_orders
+-- Shuttle in a dedicated resource pool
+CREATE SHUTTLE critical_orders
   SOURCE pg_prod TABLE orders
   TARGET warehouse.raw
   WITH (resource_pool = 'critical');
 
 -- S3 file ingestion
-CREATE PIPELINE event_files
+CREATE SHUTTLE event_files
   SOURCE s3_lake PATH 's3://events/2026/'
   TARGET warehouse.raw
   SCHEDULE EVERY '5 minutes'
   WITH (file_pattern = '*.parquet');
 ```
 
-## DROP PIPELINE
+## DROP SHUTTLE
 
 ```sql
-DROP PIPELINE <name>;
+DROP SHUTTLE <name>;
 ```
 
-Drops the pipeline and removes the pipeline definition from the catalog. Does **not** delete the Iceberg table or its data.
+Drops the shuttle and removes the shuttle definition from the catalog. Does **not** delete the Iceberg table or its data.

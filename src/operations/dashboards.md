@@ -5,7 +5,7 @@ alert rule set. They live at:
 
 ```
 deploy/grafana/dashboards/
-  01-pipeline-overview.json
+  01-shuttle-overview.json
   02-cdc-lag.json
   03-resource-pools.json
   04-node-health.json
@@ -62,7 +62,7 @@ at the folder. See the [Grafana provisioning docs][prov] for details.
 
 The bundled alerts at `deploy/prometheus/alerts.yaml` cover:
 
-- **Pipelines** — lag warning/critical, error-rate, stuck pipeline, freshness
+- **Shuttles** — lag warning/critical, error-rate, stuck shuttle, freshness
   SLA violations, queue-backlog.
 - **Nodes** — no-nodes-reporting, node-CPU, node-memory.
 - **Iceberg** — pending files, flush p95 latency, commits stopped.
@@ -92,15 +92,15 @@ Copy `deploy/prometheus/alerts.yaml` to that path and reload Prometheus.
 
 | # | Dashboard | Key metrics |
 |---|-----------|-------------|
-| 01 | Pipeline overview | `datashuttle_active_pipelines`, `datashuttle_pipeline_rows_total`, `datashuttle_pipeline_errors_total`, `datashuttle_pipeline_cdc_lag_seconds` |
-| 02 | CDC lag & freshness | `datashuttle_pipeline_cdc_lag_seconds`, `datashuttle_pipeline_freshness_seconds`, `datashuttle_pipeline_freshness_violation` |
-| 03 | Resource pools | `datashuttle_pipeline_queue_depth`, `datashuttle_pipelines_per_node`, `datashuttle_cooperative_snapshot_pending`, `datashuttle_compaction_pending_files` |
+| 01 | Shuttle overview | `datashuttle_active_shuttles`, `datashuttle_shuttle_rows_total`, `datashuttle_shuttle_errors_total`, `datashuttle_shuttle_cdc_lag_seconds` |
+| 02 | CDC lag & freshness | `datashuttle_shuttle_cdc_lag_seconds`, `datashuttle_shuttle_freshness_seconds`, `datashuttle_shuttle_freshness_violation` |
+| 03 | Resource pools | `datashuttle_shuttle_queue_depth`, `datashuttle_shuttles_per_node`, `datashuttle_cooperative_snapshot_pending`, `datashuttle_compaction_pending_files` |
 | 04 | Node health | `datashuttle_cluster_nodes`, `datashuttle_node_cpu_usage_percent`, `datashuttle_node_memory_usage_bytes` |
-| 05 | Connector errors | `datashuttle_pipeline_errors_total`, `datashuttle_sync_errors_total`, `datashuttle_transform_errors_total` |
+| 05 | Connector errors | `datashuttle_shuttle_errors_total`, `datashuttle_sync_errors_total`, `datashuttle_transform_errors_total` |
 | 06 | Iceberg commits | `datashuttle_iceberg_commits_total`, `datashuttle_iceberg_pending_files`, `datashuttle_iceberg_pending_bytes`, `datashuttle_iceberg_flush_duration_seconds` |
 
 Panels marked `TODO:` in their description reference metrics that are not yet
-emitted (e.g. `datashuttle_pipeline_state`, `datashuttle_fencing_token_total`,
+emitted (e.g. `datashuttle_shuttle_state`, `datashuttle_fencing_token_total`,
 `datashuttle_iceberg_orphan_files_total`). Those panels will populate as soon
 as the emitters land — no dashboard change required.
 
@@ -109,7 +109,7 @@ as the emitters land — no dashboard change required.
 Screenshots live in `docs/book/src/operations/images/dashboards/` once the
 monitoring stack is live in staging.
 
-- `pipeline-overview.png` — _placeholder_
+- `shuttle-overview.png` — _placeholder_
 - `cdc-lag.png` — _placeholder_
 - `resource-pools.png` — _placeholder_
 - `node-health.png` — _placeholder_

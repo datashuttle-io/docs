@@ -2,12 +2,12 @@
 
 Common issues and how to resolve them.
 
-## Pipeline stuck in ERROR state
+## Shuttle stuck in ERROR state
 
 ```bash
 # Check what went wrong
-datashuttle pipeline status <name>
-datashuttle pipeline logs <name>
+datashuttle shuttle status <name>
+datashuttle shuttle logs <name>
 
 # Check dead letters for rows that failed
 datashuttle deadletter list <name>
@@ -20,14 +20,14 @@ datashuttle deadletter list <name>
 | `connection refused` | Source database unreachable | Check network, firewall, credentials |
 | `schema evolution blocked` | Schema change with `schema_evolution = 'strict'` | Approve the change or switch to `compatible` |
 | `dead letter threshold exceeded` | Too many rows failing transform | Review dead letters, fix source data or transform |
-| `sync position lost` | Source pruned its change log | Drop and recreate the pipeline (triggers fresh load) |
+| `sync position lost` | Source pruned its change log | Drop and recreate the shuttle (triggers fresh load) |
 | `permission denied` | User lacks required privileges | Grant the appropriate permissions (see connector docs) |
 
 ### Resolve and resume
 
 ```bash
-# After fixing the root cause, resume the pipeline
-datashuttle sql -e "RESUME PIPELINE <name>"
+# After fixing the root cause, resume the shuttle
+datashuttle sql -e "RESUME SHUTTLE <name>"
 
 # Or replay dead letters after fixing the issue
 datashuttle deadletter replay <name>
@@ -36,7 +36,7 @@ datashuttle deadletter replay <name>
 ## High sync latency
 
 ```bash
-datashuttle pipeline status <name>   # check lag_seconds
+datashuttle shuttle status <name>   # check lag_seconds
 ```
 
 ### Remediation
@@ -45,8 +45,8 @@ datashuttle pipeline status <name>   # check lag_seconds
 
     ```sql
     -- Drop and recreate with higher parallelism
-    DROP PIPELINE orders_sync;
-    CREATE PIPELINE orders_sync
+    DROP SHUTTLE orders_sync;
+    CREATE SHUTTLE orders_sync
       SOURCE pg_prod TABLE orders
       TARGET warehouse.raw
       WITH (parallelism = 8);
@@ -61,7 +61,7 @@ datashuttle pipeline status <name>   # check lag_seconds
 
 3. **Check source database load** — heavy write load on the source increases sync latency
 
-4. **Scale horizontally** — add more DataShuttle nodes to distribute pipelines
+4. **Scale horizontally** — add more DataShuttle nodes to distribute shuttles
 
 ## Connection test fails
 

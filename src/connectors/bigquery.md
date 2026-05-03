@@ -6,7 +6,7 @@ Sync BigQuery tables to Iceberg using watermark-based incremental reads or full 
 
 BigQuery does not provide a native change stream. DataShuttle uses **watermark-based incremental reads**: on each scheduled run it queries only rows where `watermark_column > last_checkpoint_value`. The checkpoint is persisted across runs.
 
-For `SCHEDULE continuous`, the pipeline polls at the minimum interval. Use `SCHEDULE EVERY '<interval>'` for explicit control and to manage BigQuery query costs.
+For `SCHEDULE continuous`, the shuttle polls at the minimum interval. Use `SCHEDULE EVERY '<interval>'` for explicit control and to manage BigQuery query costs.
 
 ## Prerequisites
 
@@ -55,18 +55,18 @@ CREATE CONNECTION bq_prod
 
 \* Provide exactly one of `credentials_json` or `credentials_file`.
 
-## CREATE PIPELINE
+## CREATE SHUTTLE
 
 ```sql
 -- Incremental sync (recommended — minimizes BigQuery costs)
-CREATE PIPELINE bq_events
+CREATE SHUTTLE bq_events
   SOURCE bq_prod TABLE events
   TARGET warehouse.raw
   SCHEDULE EVERY '15 minutes'
   WITH (watermark_column = 'event_timestamp');
 
 -- Full snapshot, periodic
-CREATE PIPELINE bq_daily_dim
+CREATE SHUTTLE bq_daily_dim
   SOURCE bq_prod TABLE dim_product
   TARGET warehouse.raw
   SCHEDULE EVERY '24 hours';

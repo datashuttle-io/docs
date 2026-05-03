@@ -34,10 +34,10 @@ table above falls back to the customer record's stored
 
 `QuotaGuard` is an axum [`FromRequestParts`] extractor wired into:
 
-* `POST /api/v1/pipelines` — pipeline creation
-* `POST /api/v1/sql` — SQL execution (CREATE PIPELINE, ALTER, etc.)
+* `POST /api/v1/shuttles` — shuttle creation
+* `POST /api/v1/sql` — SQL execution (CREATE SHUTTLE, ALTER, etc.)
 
-Read-only endpoints (`GET /pipelines`, `/health`, `/metrics`, the auth
+Read-only endpoints (`GET /shuttles`, `/health`, `/metrics`, the auth
 endpoints, the billing portal itself) **do not** evaluate the guard.
 
 The guard runs *before* the request body is parsed, so a rejected

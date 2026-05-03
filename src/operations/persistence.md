@@ -9,10 +9,10 @@ refuse to migrate between locations without a supervised restart.
 
 | Layer | Location (default) | Survival |
 |-------|--------------------|----------|
-| **Control-plane registry** | `$DS_DATA_DIR/registry.db` (SQLite) **or** a configured Postgres URL | pipelines, connections, users, audit metadata |
+| **Control-plane registry** | `$DS_DATA_DIR/registry.db` (SQLite) **or** a configured Postgres URL | shuttles, connections, users, audit metadata |
 | **Signing + session keys** | `$DS_DATA_DIR/crypto/` | Ed25519 audit key, archived keys, rotation log, session-invalidation marker |
 | **Per-session metrics + WAL** | `$DS_DATA_DIR/time-series/`, `$DS_DATA_DIR/wal/` | Snapshots for dashboards between restarts |
-| **Iceberg table + metadata files** | S3 (or compatible) + REST catalog | every row that ever went through a pipeline |
+| **Iceberg table + metadata files** | S3 (or compatible) + REST catalog | every row that ever went through a shuttle |
 
 The first three live under `DS_DATA_DIR`. The fourth is entirely
 external — backing up the data directory does **not** back up your

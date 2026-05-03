@@ -60,10 +60,10 @@ CREATE CONNECTION sr_cluster
 | `be_hosts` | No | — | Backend hosts for direct reads (comma-separated) |
 | `watermark_column` | No | — | Column for incremental reads |
 
-## CREATE PIPELINE
+## CREATE SHUTTLE
 
 ```sql
-CREATE PIPELINE sr_orders
+CREATE SHUTTLE sr_orders
   SOURCE sr_prod TABLE orders
   TARGET warehouse.raw
   SCHEDULE EVERY '10 minutes'

@@ -42,18 +42,18 @@ CREATE CONNECTION vertica_prod
 | `backup_server_node` | No | — | Failover hosts (comma-separated) |
 | `watermark_column` | No | — | Column for incremental reads |
 
-## CREATE PIPELINE
+## CREATE SHUTTLE
 
 ```sql
 -- Incremental sync (recommended)
-CREATE PIPELINE vertica_sales
+CREATE SHUTTLE vertica_sales
   SOURCE vertica_prod TABLE public.fact_sales
   TARGET warehouse.raw
   SCHEDULE EVERY '15 minutes'
   WITH (watermark_column = 'updated_at');
 
 -- Full snapshot, periodic
-CREATE PIPELINE vertica_dim
+CREATE SHUTTLE vertica_dim
   SOURCE vertica_prod TABLE public.dim_product
   TARGET warehouse.raw
   SCHEDULE EVERY '1 hour';
@@ -61,7 +61,7 @@ CREATE PIPELINE vertica_dim
 
 ## Incremental reads
 
-When `watermark_column` is configured, the pipeline:
+When `watermark_column` is configured, the shuttle:
 
 1. Reads the last watermark value from its checkpoint
 2. Queries `SELECT * FROM <table> WHERE <watermark_column> > '<last_value>' ORDER BY <watermark_column>`

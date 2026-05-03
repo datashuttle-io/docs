@@ -62,10 +62,10 @@ CREATE CONNECTION crdb_cloud
 | `cluster_id` | No | — | Cluster identifier (CockroachDB Cloud) |
 | `changefeed_format` | No | `json` | `json` or `avro` |
 
-## CREATE PIPELINE
+## CREATE SHUTTLE
 
 ```sql
-CREATE PIPELINE crdb_orders
+CREATE SHUTTLE crdb_orders
   SOURCE crdb_prod TABLE orders
   TARGET warehouse.raw
   SCHEDULE continuous
@@ -100,4 +100,4 @@ CockroachDB is wire-compatible with PostgreSQL. Full type mapping follows the [P
 
 - Webhook-mode changefeeds (used by DataShuttle) are available on all CockroachDB tiers including free. Core changefeeds to external sinks (Kafka, cloud storage) require an Enterprise license.
 - `ARRAY` types are serialized as JSON strings.
-- Schema changes (e.g. `ADD COLUMN`) in CockroachDB are auto-detected and applied in `compatible` evolution mode. Column drops and renames require pipeline restart.
+- Schema changes (e.g. `ADD COLUMN`) in CockroachDB are auto-detected and applied in `compatible` evolution mode. Column drops and renames require shuttle restart.

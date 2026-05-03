@@ -1,13 +1,13 @@
 # GitOps
 
-Manage pipelines as SQL files in Git. Use `datashuttle apply/diff/validate` for CI/CD integration.
+Manage shuttles as SQL files in Git. Use `datashuttle apply/diff/validate` for CI/CD integration.
 
-## Pipeline-as-Code
+## Shuttle-as-Code
 
-Store pipeline definitions as SQL files:
+Store shuttle definitions as SQL files:
 
 ```
-pipelines/
+shuttles/
 ├── crm/
 │   ├── orders.sql
 │   └── customers.sql
@@ -15,7 +15,7 @@ pipelines/
     └── clickstream.sql
 ```
 
-Each file contains a `CREATE PIPELINE` (or `CREATE CONNECTION`) statement.
+Each file contains a `CREATE SHUTTLE` (or `CREATE CONNECTION`) statement.
 
 ## Commands
 
@@ -24,7 +24,7 @@ Each file contains a `CREATE PIPELINE` (or `CREATE CONNECTION`) statement.
 Check syntax and references without applying:
 
 ```bash
-datashuttle validate -f pipelines/
+datashuttle validate -f shuttles/
 ```
 
 Returns exit code 0 if all files are valid. Ideal for CI pre-merge checks.
@@ -34,13 +34,13 @@ Returns exit code 0 if all files are valid. Ideal for CI pre-merge checks.
 Show what would change compared to the running cluster:
 
 ```bash
-datashuttle diff -f pipelines/
+datashuttle diff -f shuttles/
 ```
 
 Output:
 
 ```
-+ orders_sync (new pipeline)
++ orders_sync (new shuttle)
 ~ customers_sync (modified: commit_interval 30s → 15s)
 - legacy_import (not in files, would be pruned)
 ```
@@ -50,33 +50,33 @@ Output:
 Apply the desired state:
 
 ```bash
-# Apply changes (additive — does not remove unlisted pipelines)
-datashuttle apply -f pipelines/
+# Apply changes (additive — does not remove unlisted shuttles)
+datashuttle apply -f shuttles/
 
-# Apply and remove pipelines not in the files
-datashuttle apply -f pipelines/ --prune
+# Apply and remove shuttles not in the files
+datashuttle apply -f shuttles/ --prune
 ```
 
 ### Generate
 
-Generate SQL files from existing running pipelines:
+Generate SQL files from existing running shuttles:
 
 ```bash
-datashuttle generate --source pg_prod --target warehouse --output pipelines/
+datashuttle generate --source pg_prod --target warehouse --output shuttles/
 ```
 
-Useful for bootstrapping pipeline-as-code from an existing cluster.
+Useful for bootstrapping shuttle-as-code from an existing cluster.
 
 ## CI/CD integration
 
 ### GitHub Actions example
 
 ```yaml
-name: Pipeline Deploy
+name: Shuttle Deploy
 on:
   push:
     branches: [main]
-    paths: ['pipelines/**']
+    paths: ['shuttles/**']
 
 jobs:
   deploy:
@@ -84,19 +84,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Validate
-        run: datashuttle validate -f pipelines/
+        run: datashuttle validate -f shuttles/
       - name: Diff
-        run: datashuttle diff -f pipelines/
+        run: datashuttle diff -f shuttles/
       - name: Apply
-        run: datashuttle apply -f pipelines/ --prune
+        run: datashuttle apply -f shuttles/ --prune
 ```
 
 ### Pre-merge validation
 
-Add validation to your PR pipeline:
+Add validation to your PR shuttle:
 
 ```yaml
 on: pull_request
 steps:
-  - run: datashuttle validate -f pipelines/
+  - run: datashuttle validate -f shuttles/
 ```

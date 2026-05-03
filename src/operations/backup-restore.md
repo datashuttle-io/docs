@@ -19,8 +19,8 @@ anchor.
 backup-20260414T120000Z.tar.zst
 ├── manifest.json               # metadata + per-entry SHA-256 + signing key id
 ├── manifest.json.sig           # detached Ed25519 signature of manifest.json
-├── registry.json               # portable registry export (pipelines, connections, history)
-├── checkpoints/                # one file per pipeline checkpoint
+├── registry.json               # portable registry export (shuttles, connections, history)
+├── checkpoints/                # one file per shuttle checkpoint
 │   ├── orders.checkpoint
 │   └── …
 ├── audit/
@@ -142,7 +142,7 @@ Safety rules:
 6. Reconcile the redacted config — `config.redacted.yaml` inside the
    archive has secrets replaced with `<redacted>`. Merge real secret
    values from your secret store before starting the server.
-7. `systemctl start datashuttle` (or equivalent). Pipelines resume
+7. `systemctl start datashuttle` (or equivalent). Shuttles resume
    from the checkpoints embedded in the restored registry.
 
 ---

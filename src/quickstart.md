@@ -85,12 +85,12 @@ docker exec datashuttle-datashuttle-1 datashuttle sql -e "
 > publication `datashuttle_pub` is created by the init script on
 > first boot.
 
-## Step 3 — Create a pipeline
+## Step 3 — Create a shuttle
 
 Replicate three tables in one statement:
 
 ```sql
-CREATE PIPELINE ecommerce_sync
+CREATE SHUTTLE ecommerce_sync
   SOURCE demo_pg SCHEMA public TABLES (orders, customers, products)
   TARGET warehouse.raw
   SCHEDULE continuous
@@ -113,19 +113,19 @@ That one line does four things:
 Check status in the SQL console:
 
 ```sql
-SHOW PIPELINE STATUS ecommerce_sync;
+SHOW SHUTTLE STATUS ecommerce_sync;
 ```
 
 Or from the CLI:
 
 ```bash
-docker exec datashuttle-datashuttle-1 datashuttle pipeline status ecommerce_sync
+docker exec datashuttle-datashuttle-1 datashuttle shuttle status ecommerce_sync
 ```
 
-The pipeline should be `running` once the initial snapshot finishes
+The shuttle should be `running` once the initial snapshot finishes
 (2,600 rows total — a second or two).
 
-The Web UI at <http://localhost:8080> has a live pipeline dashboard
+The Web UI at <http://localhost:8080> has a live shuttle dashboard
 with rows/sec, commit cadence, and per-table progress.
 
 ### Replicate a change
@@ -147,19 +147,19 @@ full rewrites.
 
 ```sql
 -- List everything
-SHOW PIPELINES;
+SHOW SHUTTLES;
 SHOW CONNECTIONS;
 
 -- Inspect
-DESCRIBE PIPELINE ecommerce_sync;
+DESCRIBE SHUTTLE ecommerce_sync;
 DESCRIBE CONNECTION demo_pg;
 
 -- Pause + resume
-PAUSE PIPELINE ecommerce_sync;
-RESUME PIPELINE ecommerce_sync;
+PAUSE SHUTTLE ecommerce_sync;
+RESUME SHUTTLE ecommerce_sync;
 ```
 
-Prometheus metrics at <http://localhost:9090/metrics> include per-pipeline
+Prometheus metrics at <http://localhost:9090/metrics> include per-shuttle
 counters (bytes, rows, commits, DLQ events) and the Arrow Flight
 hot-buffer latency histogram.
 
@@ -183,7 +183,7 @@ docker compose down -v
 - **Monitor it** — [Monitoring & alerting](./operations/monitoring.md)
   walks through Prometheus rules and the Grafana dashboard the Helm
   chart ships.
-- **Manage pipelines as code** — [GitOps](./operations/gitops.md)
+- **Manage shuttles as code** — [GitOps](./operations/gitops.md)
   (`datashuttle apply / diff / validate`).
 - **Learn the full syntax** — [SQL Reference](./sql-reference/connections.md).
 

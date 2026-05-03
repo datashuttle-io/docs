@@ -234,8 +234,8 @@ Stripe so customers are billed correctly for what they used.
   bucket back to zero and return the previous value. Called by the
   reporter only after Stripe acknowledges the usage record.
 
-Call sites that have a `tenant_id` (e.g. the pipeline manager, since
-`PipelineRecord.tenant_id` is populated on tenant-scoped pipelines)
+Call sites that have a `tenant_id` (e.g. the shuttle manager, since
+`ShuttleRecord.tenant_id` is populated on tenant-scoped shuttles)
 should use the `record_*_for_tenant` variants on `DpuCounters`.
 Anything that doesn't know the tenant — system metrics, infra-level
 ingest — leaves the per-tenant map alone and only updates the global

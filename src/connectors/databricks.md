@@ -20,7 +20,7 @@ ALTER TABLE my_catalog.my_schema.orders
   SET TBLPROPERTIES (delta.enableChangeDataFeed = true);
 ```
 
-CDF must be enabled before the pipeline starts. Enabling it later does not backfill historical changes.
+CDF must be enabled before the shuttle starts. Enabling it later does not backfill historical changes.
 
 ## CREATE CONNECTION
 
@@ -46,17 +46,17 @@ CREATE CONNECTION dbx_prod
 | `schema` | No | `default` | Schema name |
 | `warehouse_id` | Yes | — | SQL Warehouse ID |
 
-## CREATE PIPELINE
+## CREATE SHUTTLE
 
 ```sql
 -- Delta CDF mode (captures inserts/updates/deletes)
-CREATE PIPELINE dbx_orders
+CREATE SHUTTLE dbx_orders
   SOURCE dbx_prod TABLE orders
   TARGET warehouse.raw
   SCHEDULE EVERY '10 minutes';
 
 -- Watermark-based for append-only tables
-CREATE PIPELINE dbx_events
+CREATE SHUTTLE dbx_events
   SOURCE dbx_prod TABLE events
   TARGET warehouse.raw
   SCHEDULE EVERY '15 minutes'
@@ -86,7 +86,7 @@ CREATE PIPELINE dbx_events
 
 ## Limitations
 
-- **Delta CDF must be enabled before pipeline creation.** Enabling CDF after the pipeline starts does not backfill — only new changes from that point forward are captured.
+- **Delta CDF must be enabled before shuttle creation.** Enabling CDF after the shuttle starts does not backfill — only new changes from that point forward are captured.
 - `ARRAY`, `MAP`, and `STRUCT` types are serialized as JSON strings.
-- Schema changes (column additions) are auto-detected in `compatible` evolution mode. Column drops and renames require pipeline restart.
+- Schema changes (column additions) are auto-detected in `compatible` evolution mode. Column drops and renames require shuttle restart.
 - Databricks Runtime 12.0+ is required for `TIMESTAMP_NTZ` support.

@@ -1,6 +1,6 @@
 # Safety & Correctness
 
-DataShuttle handles production data pipelines. It uses a 5-layer defense-in-depth strategy for data integrity.
+DataShuttle handles production data shuttles. It uses a 5-layer defense-in-depth strategy for data integrity.
 
 ## Layer 1: Formal specification (TLA+)
 
@@ -10,13 +10,13 @@ Four TLA+ specifications are model-checked with TLC before implementation:
 |------|------------------|
 | `iceberg_commit.tla` | No lost commits under concurrent writers. No orphan files. Retry correctness. |
 | `cdc_checkpoint.tla` | Exactly-once: no duplicates after crash recovery. No missed events. |
-| `lease_ownership.tla` | No two nodes own the same pipeline simultaneously. Correct lease handoff. |
+| `lease_ownership.tla` | No two nodes own the same shuttle simultaneously. Correct lease handoff. |
 | `buffer_flush.tla` | No data loss during flush. No duplicates after crash mid-flush. |
 
 ## Layer 2: Defensive runtime
 
 - **Crash-stop on invariant violation** — assertions halt the process rather than silently continuing with corrupt state
-- **Circuit breakers** — anomaly detection pauses pipelines automatically (e.g., sudden row count drop, schema mismatch)
+- **Circuit breakers** — anomaly detection pauses shuttles automatically (e.g., sudden row count drop, schema mismatch)
 - **Write fencing** — monotonic fencing tokens prevent stale nodes from writing after losing a lease
 - **Idempotent commits** — every batch carries a UUID `batch_id`; duplicate commits are detected and skipped
 
@@ -34,7 +34,7 @@ Four TLA+ specifications are model-checked with TLC before implementation:
 
 ## Layer 5: Operational safety
 
-- **Canary pipelines** — route a fraction of traffic through a new version before full rollout
+- **Canary shuttles** — route a fraction of traffic through a new version before full rollout
 - **Automatic rollback** — revert to last known good state on corruption detection
 - **Background reconciliation** — continuous verification tasks that alert on drift
 
@@ -78,7 +78,7 @@ The contract pieces:
 3. **Catalog as source of truth.** The same `(column, value)`
    pair is written into the snapshot summary properties on every
    commit (`datashuttle.snapshot_position.*`). On startup, the
-   pipeline manager reads the latest snapshot of every target
+   shuttle manager reads the latest snapshot of every target
    table; if the catalog value is ahead of the local checkpoint,
    the local checkpoint is overwritten.
 4. **WAL-recovery coordination.** When `recover_wal` commits
@@ -90,7 +90,7 @@ The contract pieces:
 
 The remaining piece of the original #461 plan — per-shard cursors
 for parallel snapshots across multiple physical shards — is
-tracked as a follow-up. Single-shard / single-worker pipelines
+tracked as a follow-up. Single-shard / single-worker shuttles
 (the dominant case) get exactly-once guarantees today; multi-
 shard parallel snapshots get the per-table guarantees but the
 collapsed cross-shard cursor uses the conservative `min` of all

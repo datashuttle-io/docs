@@ -108,10 +108,10 @@ operation.
 
 ### Server-wide defaults
 
-Set the defaults in `datashuttle.yaml` under `pipeline_defaults`:
+Set the defaults in `datashuttle.yaml` under `shuttle_defaults`:
 
 ```yaml
-pipeline_defaults:
+shuttle_defaults:
   # Snapshot phase — bulk loads.
   commit_batch_files: 1000
   commit_batch_bytes: "256 MB"
@@ -123,17 +123,17 @@ pipeline_defaults:
   cdc_commit_batch_interval: "5 seconds"
 ```
 
-These are also editable in the **Settings → Pipeline Defaults → Iceberg
+These are also editable in the **Settings → Shuttle Defaults → Iceberg
 Commit Batching** panel of the Web UI, and writable via
-`PUT /api/v1/settings/pipeline_defaults`.
+`PUT /api/v1/settings/shuttle_defaults`.
 
-### Per-pipeline overrides
+### Per-shuttle overrides
 
-Override either or both phases per pipeline using the `WITH (...)`
+Override either or both phases per shuttle using the `WITH (...)`
 clause:
 
 ```sql
-CREATE PIPELINE big_load
+CREATE SHUTTLE big_load
 FROM postgres://...
 TO iceberg.warehouse.events
 WITH (
@@ -145,7 +145,7 @@ WITH (
 );
 ```
 
-Pipeline-level options always win over the server defaults.
+Shuttle-level options always win over the server defaults.
 
 ## Crash safety — the WAL
 
@@ -158,20 +158,20 @@ To prevent that, every `stage_batch()` call appends to a **pending
 files write-ahead log** at:
 
 ```text
-<data_dir>/iceberg-wal/<pipeline>__<namespace>__<table>.json
+<data_dir>/iceberg-wal/<shuttle>__<namespace>__<table>.json
 ```
 
 The WAL entry records the file path, schema, partition spec, sort
-order, row count, and byte size. On startup the pipeline calls
+order, row count, and byte size. On startup the shuttle calls
 `recover_wal()`, which:
 
-1. Reads every pending WAL file owned by this pipeline.
+1. Reads every pending WAL file owned by this shuttle.
 2. `HEAD`s each parquet to confirm it still exists in S3.
 3. Loads the surviving entries into the staging buffer.
 4. Issues one final flush per `(namespace, table)`.
 
 After a successful flush the WAL file for that slot is removed.
-Recovery is idempotent — replaying it on a healthy pipeline simply
+Recovery is idempotent — replaying it on a healthy shuttle simply
 finds an empty WAL.
 
 ## Observability
@@ -180,10 +180,10 @@ Four Prometheus metrics surface the buffer state:
 
 | Metric | Type | Labels | Description |
 |---|---|---|---|
-| `datashuttle_iceberg_pending_files` | Gauge | `pipeline`, `table` | Files currently in the staging slot. |
-| `datashuttle_iceberg_pending_bytes` | Gauge | `pipeline`, `table` | Bytes currently staged. |
-| `datashuttle_iceberg_flushes_total` | Counter | `pipeline`, `reason` | Flush count, where `reason` is `auto`, `final`, or `wal_recovery`. |
-| `datashuttle_iceberg_flush_duration_seconds` | Histogram | `pipeline` | Wall-clock duration of each flush. |
+| `datashuttle_iceberg_pending_files` | Gauge | `shuttle`, `table` | Files currently in the staging slot. |
+| `datashuttle_iceberg_pending_bytes` | Gauge | `shuttle`, `table` | Bytes currently staged. |
+| `datashuttle_iceberg_flushes_total` | Counter | `shuttle`, `reason` | Flush count, where `reason` is `auto`, `final`, or `wal_recovery`. |
+| `datashuttle_iceberg_flush_duration_seconds` | Histogram | `shuttle` | Wall-clock duration of each flush. |
 
 Useful queries:
 
@@ -196,7 +196,7 @@ rate(datashuttle_iceberg_flush_duration_seconds_sum[5m])
   / rate(datashuttle_iceberg_flush_duration_seconds_count[5m])
 
 # Anything stuck in the buffer right now
-sum by (pipeline, table) (datashuttle_iceberg_pending_files)
+sum by (shuttle, table) (datashuttle_iceberg_pending_files)
 ```
 
 ## Tradeoffs
@@ -210,7 +210,7 @@ sum by (pipeline, table) (datashuttle_iceberg_pending_files)
   reduces this window.
 - **Memory.** The staging slot keeps `DataFile` metadata in memory.
   At 1000 files per slot the footprint is on the order of a few MB —
-  well below normal pipeline overhead.
+  well below normal shuttle overhead.
 
 ## Internals (for contributors)
 
@@ -220,9 +220,9 @@ sum by (pipeline, table) (datashuttle_iceberg_pending_files)
   - `set_wal_dir()`, `recover_wal()`, `sanitize_wal_segment()`
   - `commit_to_catalog_batch()` is the one-shot commit path that
     accepts a `&[DataFile]` and rewrites the manifest list once.
-- Wiring: `crates/datashuttle-api/src/pipeline_manager.rs`
+- Wiring: `crates/datashuttle-api/src/shuttle_manager.rs`
   - `resolve_batching_thresholds()` layers writer defaults → server
-    defaults → pipeline overrides.
+    defaults → shuttle overrides.
 - Tracking issue: [#457](https://github.com/datashuttle-ai/datashuttle/issues/457).
 - File-size targeting layer: [#460](https://github.com/datashuttle-ai/datashuttle/issues/460).
 
@@ -250,7 +250,7 @@ three thresholds trips:
 | `target_file_interval` | `60 seconds` | Force-cut if the oldest row in the buffer has been waiting this long, so a slow trickle still produces files. The commit-batching `commit_batch_interval` (default 30s) still drains the buffer on every commit, so the user-visible latency floor is `commit_batch_interval`, not this. Pre-#460 follow-up runs with this set to 10s saw the time axis fire on every read pause and starve the bytes axis. |
 | `parquet_row_group_size` | `128 MB` | Intra-file knob: max bytes per parquet row group. Newly exposed (was hard-coded). |
 
-CDC pipelines use tighter built-in defaults (`32_000` rows / `8 MB`
+CDC shuttles use tighter built-in defaults (`32_000` rows / `8 MB`
 / `2 seconds`) because freshness matters more than file size on
 the streaming path.
 
@@ -288,24 +288,24 @@ on the original `commit_batch_*` thresholds.
 
 #### Server-wide defaults
 
-Add to `pipeline_defaults` in `datashuttle.yaml`:
+Add to `shuttle_defaults` in `datashuttle.yaml`:
 
 ```yaml
-pipeline_defaults:
+shuttle_defaults:
   target_file_rows:        256000
   target_file_bytes:       "64 MB"
   target_file_interval:    "10 seconds"
   parquet_row_group_size:  "128 MB"
 ```
 
-Same panel in the Web UI: **Settings → Pipeline Defaults → File
+Same panel in the Web UI: **Settings → Shuttle Defaults → File
 Size Targeting** (above the existing Commit Batching panel).
-Writable via `PUT /api/v1/settings/pipeline_defaults`.
+Writable via `PUT /api/v1/settings/shuttle_defaults`.
 
-#### Per-pipeline overrides
+#### Per-shuttle overrides
 
 ```sql
-CREATE PIPELINE big_load
+CREATE SHUTTLE big_load
 SOURCE clickhouse TARGET warehouse.events
 CONNECTION ch_main TABLES (events)
 WITH (
@@ -316,7 +316,7 @@ WITH (
 );
 ```
 
-Pipeline-level options always win over server defaults, which in
+Shuttle-level options always win over server defaults, which in
 turn win over the writer's built-in `BatchingThresholds::default()`.
 Invalid values fall through to the next layer with a warning;
 `target_file_rows = 0` is rejected by the SQL parser at create

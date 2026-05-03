@@ -306,16 +306,16 @@ the connector respects that value instead of its own backoff calculation.
 | Malformed JSON | Fail immediately |
 | Pagination loop detected | Stop pagination with warning |
 
-## CREATE PIPELINE
+## CREATE SHUTTLE
 
 ```sql
 -- Sync all endpoints from a REST API connection
-CREATE PIPELINE api_sync
+CREATE SHUTTLE api_sync
   SOURCE github_api
   TARGET warehouse.raw;
 
 -- Sync specific endpoint
-CREATE PIPELINE repo_sync
+CREATE SHUTTLE repo_sync
   SOURCE github_api TABLE repos
   TARGET warehouse.github
   WITH (

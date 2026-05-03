@@ -47,16 +47,16 @@ CREATE CONNECTION mysql_prod
   );
 ```
 
-## CREATE PIPELINE
+## CREATE SHUTTLE
 
 ```sql
 -- Single table, continuous schedule (default)
-CREATE PIPELINE orders_sync
+CREATE SHUTTLE orders_sync
   SOURCE mysql_prod TABLE orders
   TARGET warehouse.raw;
 
 -- Multiple tables with options
-CREATE PIPELINE crm_sync
+CREATE SHUTTLE crm_sync
   SOURCE mysql_prod TABLE orders, customers
   TARGET warehouse.raw
   WITH (
@@ -66,7 +66,7 @@ CREATE PIPELINE crm_sync
   );
 
 -- Periodic sync
-CREATE PIPELINE nightly_load
+CREATE SHUTTLE nightly_load
   SOURCE mysql_prod TABLE reports
   TARGET warehouse.analytics
   SCHEDULE EVERY '1 hour';

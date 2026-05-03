@@ -9,7 +9,7 @@ The `TRANSFORM AS (...)` clause replaces the legacy column-level transforms
 (COLUMNS, EXCLUDE, MASK, ADD COLUMNS) with a single SQL expression:
 
 ```sql
-CREATE PIPELINE orders_masked
+CREATE SHUTTLE orders_masked
   SOURCE postgres CONNECTION prod_db
   TARGET iceberg.warehouse.orders
   TRANSFORM AS (
@@ -36,22 +36,22 @@ The following clauses still work and are translated to DataFusion SQL internally
 
 ```sql
 -- Column selection
-CREATE PIPELINE ... COLUMNS (id, name, email) ...
+CREATE SHUTTLE ... COLUMNS (id, name, email) ...
 
 -- Column exclusion
-CREATE PIPELINE ... EXCLUDE (debug_data, internal_flag) ...
+CREATE SHUTTLE ... EXCLUDE (debug_data, internal_flag) ...
 
 -- Type overrides
-CREATE PIPELINE ... WITH (type_overrides = '[["id", "BIGINT"]]') ...
+CREATE SHUTTLE ... WITH (type_overrides = '[["id", "BIGINT"]]') ...
 
 -- WHERE filtering
-CREATE PIPELINE ... WHERE status != 'deleted' ...
+CREATE SHUTTLE ... WHERE status != 'deleted' ...
 
 -- PII masking
-CREATE PIPELINE ... MASK COLUMNS (email WITH SHA256, phone WITH PARTIAL) ...
+CREATE SHUTTLE ... MASK COLUMNS (email WITH SHA256, phone WITH PARTIAL) ...
 
 -- Computed columns
-CREATE PIPELINE ... ADD COLUMNS (status = 'active', version = 1) ...
+CREATE SHUTTLE ... ADD COLUMNS (status = 'active', version = 1) ...
 ```
 
 ## Custom UDFs
@@ -94,18 +94,18 @@ SELECT check_range(amount, 0, 1000000) AS amount FROM source
 
 ### ds_meta(key)
 
-Returns pipeline runtime metadata. Available keys:
+Returns shuttle runtime metadata. Available keys:
 
 | Key | Description |
 |-----|-------------|
-| `pipeline_name` | Name of the running pipeline |
+| `shuttle_name` | Name of the running shuttle |
 | `table_name` | Current source table |
 | `batch_id` | Unique ID for this batch |
 | `timestamp` | Current UTC timestamp (RFC 3339) |
 | `node_id` | DataShuttle cluster node ID |
 
 ```sql
-SELECT *, ds_meta('pipeline_name') AS _ds_pipeline FROM source
+SELECT *, ds_meta('shuttle_name') AS _ds_shuttle FROM source
 ```
 
 ### ds_hash(columns...)
@@ -149,7 +149,7 @@ No factory, no registry, no trait hierarchy. One function, one registration call
 ```
 Before (legacy):                     After (DataFusion):
 Transform trait ─────────────────→   DELETED
-TransformChain ──────────────────→   TransformPipeline (DataFusion SQL)
+TransformChain ──────────────────→   TransformShuttle (DataFusion SQL)
 10 hand-written impls (~1500 LOC) →  6 UDFs + SQL (~300 LOC)
 filter.rs (300+ LOC) ───────────→   DataFusion WHERE clause
 ```

@@ -60,8 +60,8 @@ Since #816 releases ship two flavours of binary:
 | Binary | Intended audience | Size (stripped) | Notes |
 |---|---|---|---|
 | `datashuttle-client` | Developer workstations | ~15-25 MB | Talks to a remote daemon over HTTP. No server, no connector drivers, no embedded UI. Set `DS_SERVER` env var or pass `--server http://host:3000`. |
-| `datashuttle` / `datashuttled` | Operators running the cluster | ~150 MB | Identical contents; `datashuttled` is the daemon-flavoured alias under systemd / launchd. Includes every CLI command (backup, crypto rotate, registry migrate, doctor, …). After Phase 7.2 (#831 epic) the api binary contains zero connector driver code — it spawns the matching sidecar binary on first pipeline. |
-| `datashuttle-connector-<X>` | Required next to `datashuttled` (×22) | ~10 MB each | One sidecar binary per connector type. The release tarball + Debian/RPM packages place these under `/usr/lib/datashuttle/connectors/`. Lazy-spawned — only the connectors a pipeline references ever start; reaped after 10 min idle. |
+| `datashuttle` / `datashuttled` | Operators running the cluster | ~150 MB | Identical contents; `datashuttled` is the daemon-flavoured alias under systemd / launchd. Includes every CLI command (backup, crypto rotate, registry migrate, doctor, …). After Phase 7.2 (#831 epic) the api binary contains zero connector driver code — it spawns the matching sidecar binary on first shuttle. |
+| `datashuttle-connector-<X>` | Required next to `datashuttled` (×22) | ~10 MB each | One sidecar binary per connector type. The release tarball + Debian/RPM packages place these under `/usr/lib/datashuttle/connectors/`. Lazy-spawned — only the connectors a shuttle references ever start; reaped after 10 min idle. |
 
 Developer install example:
 
@@ -70,7 +70,7 @@ Developer install example:
 curl -fsSL https://datashuttle.ai/install.sh | bash -s -- --client-only
 export DS_SERVER=https://datashuttle.example.com
 datashuttle-client status
-datashuttle-client pipeline list
+datashuttle-client shuttle list
 ```
 
 Operator install example — same as before, ships `datashuttle` +
@@ -93,7 +93,7 @@ on the host, not what the api was compiled with.
 
 The api binary itself stays slim (~150 MB; pre-Phase-7.2 was 173 MB
 with drivers in-process) and lazy-spawns sidecars only when a
-pipeline references them. Idle workers get reaped after 10 minutes.
+shuttle references them. Idle workers get reaped after 10 minutes.
 
 Building from source:
 
