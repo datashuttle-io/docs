@@ -34,8 +34,12 @@ table above falls back to the customer record's stored
 
 `QuotaGuard` is an axum [`FromRequestParts`] extractor wired into:
 
-* `POST /api/v1/shuttles` — shuttle creation
-* `POST /api/v1/sql` — SQL execution (CREATE SHUTTLE, ALTER, etc.)
+* `POST /api/v1/shuttles` — shuttle creation (CREATE SHUTTLE DDL body)
+* `POST /api/v1/connections` — connection creation (CREATE CONNECTION DDL body)
+
+The historical generic `/api/v1/sql` execution surface that used to
+gate here too was removed in PR #1032 — there is no longer a generic
+SQL endpoint; the REST routes above accept the parsed DDL directly.
 
 Read-only endpoints (`GET /shuttles`, `/health`, `/metrics`, the auth
 endpoints, the billing portal itself) **do not** evaluate the guard.

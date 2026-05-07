@@ -55,7 +55,7 @@ The Postgres container comes pre-loaded with e-commerce data:
 
 ## Step 2 — Create a connection
 
-Open the Web UI at <http://localhost:8080/ui/sql> and run:
+Open the Web UI at <http://localhost:8080/sql> and run:
 
 ```sql
 CREATE CONNECTION demo_pg

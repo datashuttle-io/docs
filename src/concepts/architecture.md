@@ -50,9 +50,9 @@ DataShuttle ships as a workspace of ~13 Rust crates. Cloud-only concerns are iso
 | `datashuttle-connector-supervisor` | `ProcessManager`, manifest loader, ed25519 trust store, lazy-spawn (`ensure_worker_for`), idle reaper. Owned by the api; reads connector binaries from the manifest at boot, terminates them post-`Capabilities`, respawns on first shuttle that needs them. |
 | `datashuttle-flight` | Arrow Flight hot buffer, flush worker, Raft replication, backpressure |
 | `datashuttle-gossip` | Cluster membership via SWIM gossip, lease-based ownership, rebalancing |
-| `datashuttle-api` | REST API, WebSocket, Prometheus `/metrics`, auth, pool scheduler, time-series metrics, cgroups. **Cloud-free dep graph** — no sqlx / aws-sdk / redis pulled in by default |
-| `datashuttle-playground` | Interactive demo runtime — sessions, TCP dispatcher, per-user quota, prometheus bundle, `/playground/*` handlers |
-| `datashuttle-cloud` | SaaS-only augmentations: Postgres control-plane repos, Redis kv, AWS tenant provisioning, admin-console handlers, enterprise SSO, cloud playground dispatcher |
+| `datashuttle-api-{core,shuttles,connections,runtime}` | REST API, WebSocket, Prometheus `/metrics`, auth, pool scheduler, time-series metrics, cgroups. The legacy `datashuttle-api` was split into four crates in PR #1008 (Phase 1.C). **Cloud-free dep graph** — no sqlx / aws-sdk / redis pulled in by default |
+| ~~`datashuttle-playground`~~ | Extracted to a public standalone repo at <https://github.com/evgenyestepanov-star/datashuttle-playground> in PR #1047 (Phase 5.A). Integrated into OSS via the `playground.url` config knob (PR #1049, Phase 5.B) — the api reverse-proxies `/api/v1/playground/*` when configured. |
+| ~~`datashuttle-cloud`~~ | Extracted to a private repo at `evgenyestepanov-star/datashuttle-cloud` in PR #1041 / removed from this workspace in PR #1042 (Phase 2.A/B). SaaS-only augmentations (Postgres control-plane, Redis kv, AWS tenant provisioning, admin-console, enterprise SSO) now plug into OSS only via the extension traits in `crates/datashuttle-api-core/src/extensions/`. |
 | `datashuttle-client` | Thin HTTP-only client crate backing the `datashuttle` CLI binary (~12MB, zero server deps) |
 | `datashuttle-ui` | Embedded React Web UI (rust-embed) + mdBook docs; served from any node, CDN-hostable as a separate tarball |
 | `datashuttle-cli` | Binary crate(s): `datashuttle` thin client, `datashuttled` server daemon. Only crate that can pull all others together behind the `saas` feature |

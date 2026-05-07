@@ -1,12 +1,16 @@
 # First-Run Setup Wizard
 
-*Cross-Grade #6 (issue #567, SaaS plan phase 7.7).*
+*Cross-Grade #6 (issue #567, SaaS plan phase 7.7). Unified `/welcome`
+shell since #672. Catalog/storage/sample-data fields became
+no-longer-no-ops after the cleanup commit that ships alongside this
+doc revision.*
 
-Fresh DataShuttle deployments ship with a guided five-step wizard
-that takes a new operator from zero to a working shuttle ingesting
-sample data in under five minutes. The wizard fires automatically
-the first time the Web UI is opened and is also available from the
-command line for headless installs.
+Fresh DataShuttle deployments ship with a guided wizard at
+`http://localhost:8080/welcome` that takes a new operator from zero
+to a working shuttle ingesting sample data in under five minutes.
+The wizard fires automatically the first time the Web UI is opened
+and is also available from the command line for headless installs.
+Legacy `/setup` and `/onboarding` URLs 301 to `/welcome`.
 
 ## When does the wizard run?
 
@@ -37,52 +41,80 @@ lifetime of that deployment.
 
 ## UI walk-through
 
-Point your browser at the server (`http://localhost:8080/` by
-default) and the app will redirect to `/setup` automatically.
+The wizard renders up to six steps. Some are skipped based on the
+detected `deployment.kind` (see
+[`WelcomePage.tsx`](https://github.com/evgenyestepanov-star/datashuttle/blob/main/ui/src/pages/WelcomePage.tsx)
+for the visibility predicate).
 
-### Step 1 — Admin
+### Step 1 — Welcome
 
-![Step 1 screenshot placeholder](./images/setup-step1.png)
+A short orientation screen tailored to the detected deployment kind
+(`solo`, `airgapped`, `enterprise_sso`, `cloud`, or generic
+self-hosted). No form fields.
 
-Fill in the name, email and password of the first admin user. This
-calls `POST /api/v1/auth/register` with the role implied by the
-empty user store (first user is the owner). Password must be at
-least 8 characters.
+### Step 2 — Account *(hidden for `cloud`, `enterprise_sso`, `solo`)*
 
-### Step 2 — Catalog
+Admin email, display name, password (≥ 8 chars). Cloud signup
+collects this on the marketing site instead; SSO deployments
+delegate to the IdP; solo installs run with `auth.mode=none`.
 
-![Step 2 screenshot placeholder](./images/setup-step2.png)
+### Step 3 — Organization
 
-Pick between the **in-memory catalog** (great for laptop trials,
-data lives only in the process) and an **Iceberg REST** endpoint
-(Nessie, Polaris, Apache Iceberg REST, etc.). The choice is
-remembered and shown in the summary — you commit it to
-`datashuttle.yaml` on your own in Step 5.
+Workspace name (shown in sidebar + invite emails). Cloud tenants
+also pick a plan tier — `community` / `team` / `business` /
+`enterprise`. Self-hosted hands tier through the license file.
 
-### Step 3 — Storage
+### Step 4 — Catalog & storage *(hidden for `cloud`)*
 
-![Step 3 screenshot placeholder](./images/setup-step3.png)
+Catalog choice maps to `storage.catalog_type` in `datashuttle.yaml`:
 
-Local filesystem or S3-compatible. The wizard never prompts for
-cloud credentials; those belong in `datashuttle.yaml` or env vars
-and are applied on server restart.
+| Wizard option | Persists as |
+|---|---|
+| In-memory | (default — REST/Polaris on `localhost:8181`) |
+| Hive Metastore | `hive` |
+| Polaris | `rest` |
+| AWS Glue | `glue` |
 
-### Step 4 — Sample data
+Storage choice maps to `storage.storage_type`:
 
-![Step 4 screenshot placeholder](./images/setup-step4.png)
+| Wizard option | Persists as |
+|---|---|
+| Local file system | (default — built-in local FS adapter) |
+| S3 / GCS / MinIO | `s3` / `gcs` / `minio` |
+| Azure Blob | `adls` |
 
-Clicking **Load 100 sample orders** issues
-`POST /api/v1/setup/sample-data`. The server materializes a CSV
-with 100 synthetic `orders` rows under
-`$DS_DATA_DIR/sample/orders.csv` and returns the absolute path.
+The wizard never prompts for cloud credentials — those belong in
+env vars or the Settings → Storage UI. Catalog and storage take
+effect on the **next daemon restart**; the runtime catalog/storage
+adapter does not hot-reload. The post-Finish toast tells you
+whether the choice was persisted (`storage_config_persisted=true`)
+or dropped because no `--config` path was set.
 
-### Step 5 — Done
+### Step 5 — First connection
 
-![Step 5 screenshot placeholder](./images/setup-step5.png)
+Pick a source kind (Sample / PostgreSQL / MySQL / MongoDB / S3) and
+optionally tick "Pre-seed a sample Iceberg namespace on first boot".
+Both signals materialize the sample CSV under
+`$DS_DATA_DIR/sample/orders.csv` (100 rows of synthetic orders) on
+the server and stash the path in `sessionStorage` for the shuttle
+wizard. The kind itself is forwarded to
+`/shuttles/new?connection_kind=<kind>` so the next page lands with
+the right source preset.
 
-Renders a summary and drops the completion marker via
-`POST /api/v1/setup/complete`. Clicking **Go to Shuttles** takes
-you to the normal shuttle list.
+### Step 6 — Ready
+
+Confirmation screen. Clicking **Finish** posts the full
+`WizardPayload` to `POST /api/v1/setup/complete`, which atomically:
+
+1. Creates the admin user + org + owner membership.
+2. Mints a session JWT (stashed in `sessionStorage` so RequireAuth
+   passes without a `/login` round-trip).
+3. Persists `catalog` / `storage` to `datashuttle.yaml`.
+4. Materializes the sample CSV when requested.
+5. Writes `$DS_DATA_DIR/setup_completed_at`.
+
+The UI then routes to `/shuttles/new` (with `?connection_kind=` set
+when the operator picked a non-sample source).
 
 ## Skip link
 

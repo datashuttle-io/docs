@@ -645,17 +645,37 @@ curl -X PUT http://localhost:8080/api/v1/shuttles/orders_sync/pool \
 
 ---
 
-## SQL Execution
+## DDL execution
 
-### Execute SQL
-
-General-purpose SQL execution endpoint. Supports all DDL statements (`CREATE SHUTTLE`, `CREATE CONNECTION`, `SHOW SHUTTLES`, etc.).
+`POST /api/v1/sql` and the rest of the historical SQL surface were
+removed in PR #1032 (Phase 4.A of the simplification epic #978).
+Lifecycle DDL now flows through the same `/api/v1/{shuttles,connections}`
+handlers that own list / get / delete:
 
 ```bash
-curl -X POST http://localhost:8080/api/v1/sql \
+# CREATE SHUTTLE — the SQL parser still validates the body, the route
+# is just narrower than the old generic /api/v1/sql.
+curl -X POST http://localhost:8080/api/v1/shuttles \
   -H 'Content-Type: application/json' \
-  -d '{"sql": "SHOW SHUTTLES"}'
+  -d '{"sql": "CREATE SHUTTLE my_shuttle FROM my_conn TABLES (\"public.orders\") INTO \"iceberg.warehouse.orders\";"}'
+
+# DROP — REST verb instead of `DROP SHUTTLE`.
+curl -X DELETE http://localhost:8080/api/v1/shuttles/my_shuttle
+
+# Connections follow the same shape:
+curl -X POST http://localhost:8080/api/v1/connections \
+  -H 'Content-Type: application/json' -d '{"sql": "CREATE CONNECTION ..."}'
 ```
+
+`SELECT` and arbitrary query execution are out of scope — DataShuttle
+is an ingestion product. Point a dedicated query engine (DuckDB,
+Trino, ClickHouse) at the landed Iceberg tables. `SHOW SHUTTLES`
+maps to `GET /api/v1/shuttles`.
+
+The Web UI's mini SQL console at `/sql` accepts the same DDL grammar
+and dispatches to these REST endpoints client-side — convenient for
+copy-paste or ALTER PAUSE/RESUME on the existing `/pause` and
+`/resume` routes.
 
 ---
 
