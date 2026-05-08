@@ -68,6 +68,7 @@
 - [Per-tenant Observability](./operations/per-tenant-observability.md)
 - [GitOps](./operations/gitops.md)
 - [Cluster Management](./operations/cluster.md)
+- [External Connectors](./operations/external-connectors.md)
 - [Registry Backends](./operations/registry-backends.md)
 - [Upgrades & Schema Migrations](./operations/upgrades.md)
 - [Local Auth Mode](./operations/auth-local.md)
