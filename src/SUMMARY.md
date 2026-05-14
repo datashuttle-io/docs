@@ -46,6 +46,7 @@
 - [Apache Cassandra](./connectors/cassandra.md)
 - [Amazon DynamoDB](./connectors/dynamodb.md)
 - [Amazon Kinesis](./connectors/kinesis.md)
+- [Redis Streams](./connectors/redis.md)
 - [S3 / File Sources](./connectors/files.md)
 - [REST API](./connectors/rest-api.md)
 

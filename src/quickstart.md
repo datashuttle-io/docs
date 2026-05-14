@@ -3,7 +3,7 @@
 Get DataShuttle running and replicate your first Postgres table into
 Iceberg in about five minutes.
 
-> 💡 **Even faster: try the [Playground](./playground.md) first.**
+> 💡 **Even faster: try the [Playground](https://github.com/evgenyestepanov-star/datashuttle-playground/blob/main/docs/playground.md) first.**
 > It's the same stack but with 18 pre-built scenarios (happy-path
 > CDC, schema evolution, DLQ replay, ClickHouse time travel, network
 > chaos, and more). No real data touched, no SQL to write — click
@@ -55,7 +55,8 @@ The Postgres container comes pre-loaded with e-commerce data:
 
 ## Step 2 — Create a connection
 
-Open the Web UI at <http://localhost:8080/sql> and run:
+Open the Web UI at <http://localhost:8080> and use the **New Connection**
+form (or the equivalent mini-DDL surface in the Shuttles page) to run:
 
 ```sql
 CREATE CONNECTION demo_pg
@@ -171,7 +172,7 @@ docker compose down -v
 
 ## Where to go next
 
-- **[Playground](./playground.md)** — 18 guided scenarios: schema
+- **[Playground](https://github.com/evgenyestepanov-star/datashuttle-playground/blob/main/docs/playground.md)** — 18 guided scenarios: schema
   evolution, DLQ replay, Kafka throughput, MongoDB nested fields,
   network chaos. Same stack, zero setup beyond Docker.
 - **Connect your own sources** — [PostgreSQL](./connectors/postgresql.md),

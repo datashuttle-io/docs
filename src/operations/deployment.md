@@ -2,6 +2,16 @@
 
 DataShuttle supports multiple deployment models — from a single Docker container to a multi-node Kubernetes cluster.
 
+> **Build-time feature flags (#997).** A default `cargo build` produces
+> a lean OSS binary — single-node, no OpenTelemetry SDK, no
+> enterprise stack. The three opt-in feature flags `cluster`,
+> `enterprise`, and `otel` are **off by default**. Pre-built artefacts
+> from `ghcr.io/datashuttle-ai/datashuttle` ship with `--features full`
+> enabled; if you build from source and need cluster gossip, OTel
+> exporters, or any enterprise gate, pass them explicitly. See
+> [Build from source](https://github.com/evgenyestepanov-star/datashuttle/blob/main/docs/DEPLOYMENT.md#build-time-feature-flags-997)
+> for the full matrix.
+
 ## Docker
 
 ```bash

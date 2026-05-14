@@ -1,5 +1,13 @@
 # MySQL Connector
 
+> **Tier-2 connector.** This connector lives in the
+> [`datashuttle-connectors-extra`](https://github.com/evgenyestepanov-star/datashuttle-connectors-extra)
+> repo and is **not** compiled into the default OSS build. To run it
+> against a running OSS install, follow the
+> [External Connectors operator runbook](../operations/external-connectors.md)
+> — package the sidecar binary, register it in `connectors.json`, and
+> the runtime registry will pick the connector type up at startup.
+
 Continuously sync MySQL tables to Iceberg.
 
 ## Prerequisites

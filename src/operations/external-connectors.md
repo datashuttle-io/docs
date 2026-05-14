@@ -5,11 +5,13 @@ OSS DataShuttle ships nine connector types out of the box (the
 `redshift` (in-process via `datashuttle-connector-pgfamily`), plus
 `kafka`, `file`, `rest`, and `mock` as standalone sidecars. Phase 3.C
 ([#1031](https://github.com/evgenyestepanov-star/datashuttle/pull/1031))
-moved 18 "Tier-2" connectors — MySQL, MongoDB, Snowflake, BigQuery,
-Oracle, SQL Server, Cassandra, ClickHouse, Databricks, Hadoop, plus
-the cloud object stores — out of the OSS workspace and into the
-sibling repo
+moved an initial 18 "Tier-2" connectors — MySQL, MongoDB, Snowflake,
+BigQuery, Oracle, SQL Server, Cassandra, ClickHouse, Databricks,
+Hadoop, plus the cloud object stores — out of the OSS workspace and
+into the sibling repo
 [`datashuttle-connectors-extra`](https://github.com/evgenyestepanov-star/datashuttle-connectors-extra).
+A 19th Tier-2 connector, Redis Streams, was added later
+([`datashuttle-connector-redis`](https://github.com/evgenyestepanov-star/datashuttle-connectors-extra/tree/main/crates/datashuttle-connector-redis)).
 
 This page covers what you do as an operator when you need one of
 those Tier-2 connectors on your OSS install.

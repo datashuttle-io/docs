@@ -10,8 +10,8 @@ DataShuttle uses a **shared-nothing architecture** where every node is equal and
 │                                                                  │
 │  ┌────────────┐   ┌─────────────┐   ┌────────────────────────┐  │
 │  │ SQL Parser  │──▶│  Shuttle   │──▶│   Source Connectors    │  │
-│  │ (DDL)       │   │  Registry   │   │  23 connector types    │  │
-│  └────────────┘   └─────────────┘   │  (see connector list)  │  │
+│  │ (DDL)       │   │  Registry   │   │  Tier-1 in OSS +       │  │
+│  └────────────┘   └─────────────┘   │  Tier-2 in -extra repo │  │
 │                                      └───────────┬────────────┘  │
 │                                                  │               │
 │  ┌────────────┐   ┌─────────────┐   ┌───────────▼────────────┐  │

@@ -46,7 +46,7 @@ within seconds of being written to the source.
 ## Try it in 2 minutes — no install needed
 
 The fastest way to see DataShuttle work is the
-**[interactive Playground](./playground.md)**. Spin it up once with
+**[interactive Playground](https://github.com/evgenyestepanov-star/datashuttle-playground/blob/main/docs/playground.md)**. Spin it up once with
 Docker Compose and you get a guided sandbox with 18 pre-built
 scenarios: a happy-path Postgres CDC run, schema evolution on a live
 shuttle, Kafka poison messages + replay from the DLQ, MongoDB
@@ -64,7 +64,7 @@ streaming your own data into Iceberg.
 **Getting started**
 
 - [Quickstart](./quickstart.md) — end-to-end demo in 5 minutes
-- [Playground](./playground.md) — guided scenarios, no setup beyond Docker
+- [Playground](https://github.com/evgenyestepanov-star/datashuttle-playground/blob/main/docs/playground.md) — guided scenarios, no setup beyond Docker
 - [Installation](./installation/docker.md) — Docker, Homebrew, DEB/RPM, binary
 
 **Understanding the engine**

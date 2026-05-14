@@ -24,10 +24,23 @@ to the usage ledger.
 ## Stripe Integration (Cloud)
 
 - Subscriptions managed via Stripe: Team, Business, Enterprise plans
-- Community tier: 10,000 DPU credit automatically applied
-- Usage-based billing: DPU consumption reported at billing cycle end
-- Overage: billed at next-tier-down rate
-- Customer portal: manage payment methods, view invoices
+  (compiled in via the `saas` cargo feature; OSS / self-hosted builds
+  ship the in-memory `BillingRepository` and never reach Stripe).
+- **Community is the entry tier**, not a credit/trial — every approved
+  Cloud signup lands here with a 10 000 DPU/month grant. There is no
+  time-boxed paid trial; Community is perpetual and card-free. Upgrades
+  to Team / Business take effect immediately on first successful charge.
+- Usage-based billing: DPU consumption pushed to Stripe daily by the
+  per-tenant `usage_reporter` cron (action=`set` for idempotency).
+- Overage: paid tiers carry a small `overage_allowance` on top of the
+  included DPUs; past that, mutating requests are rejected with `429`.
+- Dunning: 3 failed Stripe charges suspend the tenant; 14 days in
+  `PastDue` downgrades back to Community with data intact.
+- Customer portal: manage payment methods, view invoices.
+
+The full state machine, dunning timeline, and audit hooks live in the
+private cloud repo at
+`datashuttle-cloud/docs/cloud/billing.md`.
 
 ## API Endpoints
 

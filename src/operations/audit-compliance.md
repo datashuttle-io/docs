@@ -21,7 +21,12 @@ additional configuration.
   (`$DATA_DIR/crypto/ed25519.key`, mode 0600). Auditors who hold the
   public key can verify the chain offline.
 - **Persistence.** Events are written to `$DATA_DIR/audit.jsonl` with
-  fsync per record so a crash never loses recent entries.
+  fsync per record so a crash never loses recent entries. The JSONL
+  sink is the OSS / self-hosted default. The Postgres sink and S3
+  archive ingest live in the private `datashuttle-cloud` repo
+  (`crates/datashuttle-cloud/src/audit/{pg_sink,s3_archive}.rs`,
+  Phase 5 / #1055) and only activate in cloud builds compiled with
+  the `saas` cargo feature.
 - **Optional SIEM mirroring** (webhook / RFC 5424 syslog).
 
 ## Anatomy of an event
