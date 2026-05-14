@@ -5,7 +5,7 @@
 # Getting Started
 
 - [Quickstart](./quickstart.md)
-- [Interactive Playground](./playground.md)
+- [Interactive Playground](https://github.com/evgenyestepanov-star/datashuttle-playground/blob/main/docs/playground.md)
 
 # Installation
 
@@ -86,10 +86,11 @@
 
 # Cloud / SaaS
 
-- [Tenant Provisioning](./cloud/provisioning.md)
-- [Billing & Dunning](./cloud/billing.md)
-- [Quotas & Tiers](./cloud/quotas.md)
-- [Onboarding & SSO](./cloud/onboarding.md)
+> The DataShuttle Cloud control plane (tenant provisioning, billing &
+> dunning, quotas, onboarding & SSO) lives in the private
+> `datashuttle-cloud` repository. Documentation:
+> <https://github.com/evgenyestepanov-star/datashuttle-cloud/tree/main/docs/cloud>
+> (read access requires a license / GitHub invite).
 
 # Development
 
