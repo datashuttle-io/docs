@@ -1,7 +1,7 @@
 # MySQL Connector
 
 > **Tier-2 connector.** This connector lives in the
-> [`datashuttle-connectors-extra`](https://github.com/datashuttle-io/datashuttle-connectors-extra)
+> [`datashuttle-connectors-extra`](https://github.com/datashuttle-io/connectors-extra)
 > repo and is **not** compiled into the default OSS build. To run it
 > against a running OSS install, follow the
 > [External Connectors operator runbook](../operations/external-connectors.md)

@@ -217,5 +217,5 @@ you'd like to see covered (a specific connector edge case, a chaos
 profile, a schema-evolution corner), email <hello@datashuttle.ai> with
 a reproducer and it goes on the roadmap for the next manifest rev.
 
-See also: [examples/STATUS.md](https://github.com/datashuttle-io/datashuttle-playground/blob/main/examples/STATUS.md) for the per-scenario
+See also: [examples/STATUS.md](https://github.com/datashuttle-io/playground/blob/main/examples/STATUS.md) for the per-scenario
 verification status snapshot.

@@ -42,7 +42,7 @@ After starting, open [http://localhost:8080](http://localhost:8080) to access th
 > Source databases are **not included** — connect DataShuttle to your existing PostgreSQL, MySQL, or MongoDB. See the [Quickstart](../quickstart.md) for a step-by-step walkthrough.
 
 > **Want the interactive Playground?** It now ships from the sister repo
-> [`datashuttle-playground`](https://github.com/datashuttle-io/datashuttle-playground)
+> [`datashuttle-playground`](https://github.com/datashuttle-io/playground)
 > as a separate `datashuttle/playground` image + Helm chart. The demo
 > bundle's `playground` compose profile pulls it in when you run
 > `docker compose --profile playground up -d`; OSS api reverse-proxies

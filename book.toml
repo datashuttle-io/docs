@@ -19,9 +19,9 @@ additional-js = ["theme/theme-sync.js"]
 # subdomain overrides this to "/" at build time:
 #   sed -i 's|site-url = "/docs/"|site-url = "/"|' book.toml && mdbook build
 site-url = "/docs/"
-# Public docs repo — source lives at datashuttle-io/datashuttle-docs
+# Public docs repo — source lives at datashuttle-io/docs
 # (Cloudflare-Pages-deployed mdbook). The main monorepo pulls it in
 # as a git submodule at docs/book/. "Edit this page" lets readers
 # open issues / PRs against the public docs repo.
-git-repository-url = "https://github.com/datashuttle-io/datashuttle-docs"
-edit-url-template = "https://github.com/datashuttle-io/datashuttle-docs/edit/main/src/{path}"
+git-repository-url = "https://github.com/datashuttle-io/docs"
+edit-url-template = "https://github.com/datashuttle-io/docs/edit/main/src/{path}"

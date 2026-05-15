@@ -9,9 +9,9 @@ moved an initial 18 "Tier-2" connectors — MySQL, MongoDB, Snowflake,
 BigQuery, Oracle, SQL Server, Cassandra, ClickHouse, Databricks,
 Hadoop, plus the cloud object stores — out of the OSS workspace and
 into the sibling repo
-[`datashuttle-connectors-extra`](https://github.com/datashuttle-io/datashuttle-connectors-extra).
+[`datashuttle-connectors-extra`](https://github.com/datashuttle-io/connectors-extra).
 A 19th Tier-2 connector, Redis Streams, was added later
-([`datashuttle-connector-redis`](https://github.com/datashuttle-io/datashuttle-connectors-extra/tree/main/crates/datashuttle-connector-redis)).
+([`datashuttle-connector-redis`](https://github.com/datashuttle-io/connectors-extra/tree/main/crates/datashuttle-connector-redis)).
 
 This page covers what you do as an operator when you need one of
 those Tier-2 connectors on your OSS install.
@@ -108,7 +108,7 @@ sudo datashuttle connectors install \
 
 # HTTP(S) source (downloads + verifies in a tempdir, then copies)
 sudo datashuttle connectors install \
-  https://github.com/datashuttle-io/datashuttle-connectors-extra/releases/download/v0.2.0/datashuttle-connector-snowflake-linux-x64 \
+  https://github.com/datashuttle-io/connectors-extra/releases/download/v0.2.0/datashuttle-connector-snowflake-linux-x64 \
   --connector-type snowflake \
   --install-dir /opt/datashuttle/connectors
 
@@ -167,13 +167,13 @@ sudo systemctl restart datashuttled
 ## Building from source
 
 If you maintain a fork or want to ship a connector that isn't in
-[`datashuttle-connectors-extra`](https://github.com/datashuttle-io/datashuttle-connectors-extra)
+[`datashuttle-connectors-extra`](https://github.com/datashuttle-io/connectors-extra)
 yet, follow the connector-author guide
 [`docs/connectors/writing-your-first-connector.md`](../../../connectors/writing-your-first-connector.md).
 The short version:
 
 ```bash
-git clone https://github.com/datashuttle-io/datashuttle-connectors-extra
+git clone https://github.com/datashuttle-io/connectors-extra
 cd datashuttle-connectors-extra
 cargo build --release -p datashuttle-connector-snowflake
 
