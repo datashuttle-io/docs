@@ -21,7 +21,7 @@ Docker Compose file that starts DataShuttle alongside all the
 supporting services it needs:
 
 ```bash
-curl -LO https://github.com/datashuttle-ai/datashuttle/releases/latest/download/datashuttle-demo.tar.gz
+curl -LO https://github.com/datashuttle-io/datashuttle/releases/latest/download/datashuttle-demo.tar.gz
 tar xzf datashuttle-demo.tar.gz && cd datashuttle-demo
 docker compose up -d
 ```

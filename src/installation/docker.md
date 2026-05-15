@@ -5,15 +5,15 @@ The official multi-arch Docker image is the fastest way to run DataShuttle.
 ## Pull and run
 
 ```bash
-docker pull ghcr.io/datashuttle-ai/datashuttle:latest
-docker run -p 8080:8080 ghcr.io/datashuttle-ai/datashuttle:latest
+docker pull ghcr.io/datashuttle-io/datashuttle:latest
+docker run -p 8080:8080 ghcr.io/datashuttle-io/datashuttle:latest
 ```
 
 ## Image details
 
 | Property | Value |
 |----------|-------|
-| Registry | `ghcr.io/datashuttle-ai/datashuttle` |
+| Registry | `ghcr.io/datashuttle-io/datashuttle` |
 | Base | `debian:bookworm-slim` |
 | Platforms | `linux/amd64`, `linux/arm64` |
 | PID 1 | `tini` (proper signal handling) |
@@ -26,7 +26,7 @@ A minimal-infrastructure bundle (DataShuttle + MinIO object storage +
 Apache Polaris catalog) ships with every release as a compose tarball:
 
 ```bash
-curl -LO https://github.com/datashuttle-ai/datashuttle/releases/latest/download/datashuttle-demo.tar.gz
+curl -LO https://github.com/datashuttle-io/datashuttle/releases/latest/download/datashuttle-demo.tar.gz
 tar xzf datashuttle-demo.tar.gz && cd datashuttle-demo
 docker compose up -d
 ```
@@ -42,7 +42,7 @@ After starting, open [http://localhost:8080](http://localhost:8080) to access th
 > Source databases are **not included** — connect DataShuttle to your existing PostgreSQL, MySQL, or MongoDB. See the [Quickstart](../quickstart.md) for a step-by-step walkthrough.
 
 > **Want the interactive Playground?** It now ships from the sister repo
-> [`datashuttle-playground`](https://github.com/evgenyestepanov-star/datashuttle-playground)
+> [`datashuttle-playground`](https://github.com/datashuttle-io/datashuttle-playground)
 > as a separate `datashuttle/playground` image + Helm chart. The demo
 > bundle's `playground` compose profile pulls it in when you run
 > `docker compose --profile playground up -d`; OSS api reverse-proxies
@@ -94,7 +94,7 @@ docker run -d \
   -p 8080:8080 \
   -p 9090:9090 \
   -v /path/to/datashuttle.yaml:/etc/datashuttle/datashuttle.yaml:ro \
-  ghcr.io/datashuttle-ai/datashuttle:latest
+  ghcr.io/datashuttle-io/datashuttle:latest
 ```
 
 Or use environment variables instead of a config file:
@@ -110,7 +110,7 @@ docker run -d \
   -e DS_S3_ENDPOINT=http://minio:9000 \
   -e DS_S3_ACCESS_KEY=minioadmin \
   -e DS_S3_SECRET_KEY=minioadmin \
-  ghcr.io/datashuttle-ai/datashuttle:latest
+  ghcr.io/datashuttle-io/datashuttle:latest
 ```
 
 See [Configuration](../concepts/configuration.md) for all available options.
@@ -119,7 +119,7 @@ See [Configuration](../concepts/configuration.md) for all available options.
 
 ```bash
 # Check version
-docker run --rm ghcr.io/datashuttle-ai/datashuttle:latest --version
+docker run --rm ghcr.io/datashuttle-io/datashuttle:latest --version
 
 # Health check
 curl http://localhost:8080/health

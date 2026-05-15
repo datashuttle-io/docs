@@ -98,7 +98,7 @@ DataShuttle runs the same binary in three modes:
 | Mode | Who it's for | Setup |
 |---|---|---|
 | **DataShuttle Cloud** (private beta) | Teams that want zero-ops, managed Iceberg ingestion | Sign up at [app.datashuttle.ai](https://app.datashuttle.ai) |
-| **Self-hosted** | VPC or on-prem with internet egress | `docker pull ghcr.io/datashuttle-ai/datashuttle:latest` |
+| **Self-hosted** | VPC or on-prem with internet egress | `docker pull ghcr.io/datashuttle-io/datashuttle:latest` |
 | **Airgapped** | Regulated / disconnected networks | Binary download, local signed ledger, quarterly usage export |
 
 Same licence, same features, same binary.

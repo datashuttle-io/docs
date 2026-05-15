@@ -5,7 +5,7 @@ Available on macOS and Linux via Homebrew.
 ## Install
 
 ```bash
-brew tap datashuttle-ai/tap
+brew tap datashuttle-io/tap
 brew install datashuttle
 ```
 
@@ -47,7 +47,7 @@ For a production install managed by `launchd` directly (rather than
 via `brew services`), use the hardened plist shipped in the repo:
 
 ```bash
-curl -LO https://raw.githubusercontent.com/datashuttle-ai/datashuttle/main/packaging/launchd/ai.datashuttle.server.plist
+curl -LO https://raw.githubusercontent.com/datashuttle-io/datashuttle/main/packaging/launchd/ai.datashuttle.server.plist
 sudo cp ai.datashuttle.server.plist /Library/LaunchDaemons/
 sudo chown root:wheel /Library/LaunchDaemons/ai.datashuttle.server.plist
 sudo chmod 644 /Library/LaunchDaemons/ai.datashuttle.server.plist

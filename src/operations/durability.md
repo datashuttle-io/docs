@@ -71,5 +71,5 @@ above is the contract.
 - [#970] — hot-buffer durability gap (this doc closes option B).
 - `docs/tla/buffer_flush.tla` — formal model of the flush state machine.
 
-[#970]: https://github.com/evgenyestepanov-star/datashuttle/issues/970
-[issue #970]: https://github.com/evgenyestepanov-star/datashuttle/issues/970
+[#970]: https://github.com/datashuttle-io/datashuttle/issues/970
+[issue #970]: https://github.com/datashuttle-io/datashuttle/issues/970

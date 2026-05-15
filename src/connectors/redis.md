@@ -1,7 +1,7 @@
 # Redis Streams Connector
 
 > **Tier-2 connector.** This connector lives in the
-> [`datashuttle-connectors-extra`](https://github.com/evgenyestepanov-star/datashuttle-connectors-extra)
+> [`datashuttle-connectors-extra`](https://github.com/datashuttle-io/datashuttle-connectors-extra)
 > repo and is **not** compiled into the default OSS build. To run it
 > against a running OSS install, follow the
 > [External Connectors operator runbook](../operations/external-connectors.md)
@@ -105,6 +105,6 @@ output.
 
 ## See also
 
-- OSS [Connector limitations](https://github.com/evgenyestepanov-star/datashuttle/blob/main/docs/CONNECTOR-LIMITATIONS.md) — caveats shared across all Tier-2 connectors.
+- OSS [Connector limitations](https://github.com/datashuttle-io/datashuttle/blob/main/docs/CONNECTOR-LIMITATIONS.md) — caveats shared across all Tier-2 connectors.
 - OSS [External Connectors](../operations/external-connectors.md) — installation & operations.
-- OSS [Connector SDK protocol](https://github.com/evgenyestepanov-star/datashuttle/blob/main/docs/connectors/protocol.md) — the wire contract.
+- OSS [Connector SDK protocol](https://github.com/datashuttle-io/datashuttle/blob/main/docs/connectors/protocol.md) — the wire contract.

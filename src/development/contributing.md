@@ -1,7 +1,7 @@
 # Contributing
 
 DataShuttle's source is developed in a private repository; the public
-product repo (<https://github.com/datashuttle-ai/datashuttle>) carries
+product repo (<https://github.com/datashuttle-io/datashuttle>) carries
 binaries, the Helm chart, and the docker image only. External
 contribution is by invitation — file bug reports against that repo's
 Issues tab or email the team at <hello@datashuttle.ai>.

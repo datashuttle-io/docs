@@ -6,10 +6,10 @@ DataShuttle supports multiple deployment models — from a single Docker contain
 > a lean OSS binary — single-node, no OpenTelemetry SDK, no
 > enterprise stack. The three opt-in feature flags `cluster`,
 > `enterprise`, and `otel` are **off by default**. Pre-built artefacts
-> from `ghcr.io/datashuttle-ai/datashuttle` ship with `--features full`
+> from `ghcr.io/datashuttle-io/datashuttle` ship with `--features full`
 > enabled; if you build from source and need cluster gossip, OTel
 > exporters, or any enterprise gate, pass them explicitly. See
-> [Build from source](https://github.com/evgenyestepanov-star/datashuttle/blob/main/docs/DEPLOYMENT.md#build-time-feature-flags-997)
+> [Build from source](https://github.com/datashuttle-io/datashuttle/blob/main/docs/DEPLOYMENT.md#build-time-feature-flags-997)
 > for the full matrix.
 
 ## Docker
@@ -20,7 +20,7 @@ docker run -d \
   -p 8080:8080 \
   -p 9090:9090 \
   -v /path/to/datashuttle.yaml:/etc/datashuttle/datashuttle.yaml:ro \
-  ghcr.io/datashuttle-ai/datashuttle:latest
+  ghcr.io/datashuttle-io/datashuttle:latest
 ```
 
 See [Docker installation](../installation/docker.md) for image details.
@@ -53,11 +53,11 @@ journalctl -u datashuttle -f
 
 ## Kubernetes (Helm)
 
-The Helm chart is attached as a `.tgz` to every [GitHub Release](https://github.com/datashuttle-ai/datashuttle/releases). Download it once, then use standard `helm install`:
+The Helm chart is attached as a `.tgz` to every [GitHub Release](https://github.com/datashuttle-io/datashuttle/releases). Download it once, then use standard `helm install`:
 
 ```bash
 # Fetch the latest chart
-curl -fsSLO https://github.com/datashuttle-ai/datashuttle/releases/latest/download/datashuttle-chart.tgz
+curl -fsSLO https://github.com/datashuttle-io/datashuttle/releases/latest/download/datashuttle-chart.tgz
 
 # Single-node
 helm install datashuttle ./datashuttle-chart.tgz
@@ -183,7 +183,7 @@ CRDs available:
 
 ## Standalone binary
 
-Download from [GitHub Releases](https://github.com/datashuttle-ai/datashuttle/releases) and run directly:
+Download from [GitHub Releases](https://github.com/datashuttle-io/datashuttle/releases) and run directly:
 
 ```bash
 datashuttle start --config /etc/datashuttle/datashuttle.yaml

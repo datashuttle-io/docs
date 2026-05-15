@@ -223,8 +223,8 @@ sum by (shuttle, table) (datashuttle_iceberg_pending_files)
 - Wiring: `crates/datashuttle-api/src/shuttle_manager.rs`
   - `resolve_batching_thresholds()` layers writer defaults → server
     defaults → shuttle overrides.
-- Tracking issue: [#457](https://github.com/datashuttle-ai/datashuttle/issues/457).
-- File-size targeting layer: [#460](https://github.com/datashuttle-ai/datashuttle/issues/460).
+- Tracking issue: [#457](https://github.com/datashuttle-io/datashuttle/issues/457).
+- File-size targeting layer: [#460](https://github.com/datashuttle-io/datashuttle/issues/460).
 
 ## File size targeting (#460)
 

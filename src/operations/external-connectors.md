@@ -4,14 +4,14 @@ OSS DataShuttle ships nine connector types out of the box (the
 "Tier-1" set) — `postgres`, `greenplum`, `cockroachdb`, `vertica`,
 `redshift` (in-process via `datashuttle-connector-pgfamily`), plus
 `kafka`, `file`, `rest`, and `mock` as standalone sidecars. Phase 3.C
-([#1031](https://github.com/evgenyestepanov-star/datashuttle/pull/1031))
+([#1031](https://github.com/datashuttle-io/datashuttle/pull/1031))
 moved an initial 18 "Tier-2" connectors — MySQL, MongoDB, Snowflake,
 BigQuery, Oracle, SQL Server, Cassandra, ClickHouse, Databricks,
 Hadoop, plus the cloud object stores — out of the OSS workspace and
 into the sibling repo
-[`datashuttle-connectors-extra`](https://github.com/evgenyestepanov-star/datashuttle-connectors-extra).
+[`datashuttle-connectors-extra`](https://github.com/datashuttle-io/datashuttle-connectors-extra).
 A 19th Tier-2 connector, Redis Streams, was added later
-([`datashuttle-connector-redis`](https://github.com/evgenyestepanov-star/datashuttle-connectors-extra/tree/main/crates/datashuttle-connector-redis)).
+([`datashuttle-connector-redis`](https://github.com/datashuttle-io/datashuttle-connectors-extra/tree/main/crates/datashuttle-connector-redis)).
 
 This page covers what you do as an operator when you need one of
 those Tier-2 connectors on your OSS install.
@@ -36,7 +36,7 @@ When a manifest is found, the supervisor spawns each declared binary,
 calls its `Capabilities` RPC, registers the advertised connector type
 in the runtime registry, and terminates the worker. Idle workers stay
 dead until a shuttle claims them
-([#840](https://github.com/evgenyestepanov-star/datashuttle/issues/840)
+([#840](https://github.com/datashuttle-io/datashuttle/issues/840)
 lazy-spawn).
 
 ## Manifest schema
@@ -88,7 +88,7 @@ to sign their own builds (forks, internal-only connectors) generate a
 new keypair and drop the public half into the trust dir.
 
 The supervisor refuses to spawn unverified binaries — this is the
-[#831](https://github.com/evgenyestepanov-star/datashuttle/issues/831)
+[#831](https://github.com/datashuttle-io/datashuttle/issues/831)
 plug-and-play security invariant.
 
 ## Installing a connector — the easy path
@@ -108,7 +108,7 @@ sudo datashuttle connectors install \
 
 # HTTP(S) source (downloads + verifies in a tempdir, then copies)
 sudo datashuttle connectors install \
-  https://github.com/evgenyestepanov-star/datashuttle-connectors-extra/releases/download/v0.2.0/datashuttle-connector-snowflake-linux-x64 \
+  https://github.com/datashuttle-io/datashuttle-connectors-extra/releases/download/v0.2.0/datashuttle-connector-snowflake-linux-x64 \
   --connector-type snowflake \
   --install-dir /opt/datashuttle/connectors
 
@@ -167,13 +167,13 @@ sudo systemctl restart datashuttled
 ## Building from source
 
 If you maintain a fork or want to ship a connector that isn't in
-[`datashuttle-connectors-extra`](https://github.com/evgenyestepanov-star/datashuttle-connectors-extra)
+[`datashuttle-connectors-extra`](https://github.com/datashuttle-io/datashuttle-connectors-extra)
 yet, follow the connector-author guide
 [`docs/connectors/writing-your-first-connector.md`](../../../connectors/writing-your-first-connector.md).
 The short version:
 
 ```bash
-git clone https://github.com/evgenyestepanov-star/datashuttle-connectors-extra
+git clone https://github.com/datashuttle-io/datashuttle-connectors-extra
 cd datashuttle-connectors-extra
 cargo build --release -p datashuttle-connector-snowflake
 

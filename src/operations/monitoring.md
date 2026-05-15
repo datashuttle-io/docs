@@ -37,10 +37,10 @@ scrape_configs:
     metrics_path: /metrics
 ```
 
-For Kubernetes with the Prometheus operator, enable the ServiceMonitor via the Helm chart attached to every [GitHub Release](https://github.com/datashuttle-ai/datashuttle/releases):
+For Kubernetes with the Prometheus operator, enable the ServiceMonitor via the Helm chart attached to every [GitHub Release](https://github.com/datashuttle-io/datashuttle/releases):
 
 ```bash
-curl -fsSLO https://github.com/datashuttle-ai/datashuttle/releases/latest/download/datashuttle-chart.tgz
+curl -fsSLO https://github.com/datashuttle-io/datashuttle/releases/latest/download/datashuttle-chart.tgz
 helm install datashuttle ./datashuttle-chart.tgz \
   --set serviceMonitor.enabled=true
 ```

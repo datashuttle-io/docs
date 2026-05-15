@@ -1,6 +1,6 @@
 # Binary Download
 
-Pre-built binaries are attached to every [GitHub Release](https://github.com/datashuttle-ai/datashuttle/releases), each with a SHA256 checksum file.
+Pre-built binaries are attached to every [GitHub Release](https://github.com/datashuttle-io/datashuttle/releases), each with a SHA256 checksum file.
 
 ## Quick install (recommended)
 
@@ -35,8 +35,8 @@ DATASHUTTLE_VERSION=v0.1.0 DATASHUTTLE_INSTALL_DIR=~/.local/bin bash install.sh
 
 ```bash
 # Download binary + checksum
-curl -LO https://github.com/datashuttle-ai/datashuttle/releases/latest/download/datashuttle-linux-amd64.tar.gz
-curl -LO https://github.com/datashuttle-ai/datashuttle/releases/latest/download/datashuttle-linux-amd64.tar.gz.sha256
+curl -LO https://github.com/datashuttle-io/datashuttle/releases/latest/download/datashuttle-linux-amd64.tar.gz
+curl -LO https://github.com/datashuttle-io/datashuttle/releases/latest/download/datashuttle-linux-amd64.tar.gz.sha256
 
 # Verify integrity
 sha256sum -c datashuttle-linux-amd64.tar.gz.sha256

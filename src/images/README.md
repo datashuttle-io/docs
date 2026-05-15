@@ -7,7 +7,7 @@ and the link-check pass without 404s.
 
 ## Replacing with real screenshots
 
-Per the original spec ([#636](https://github.com/evgenyestepanov-star/datashuttle/issues/636)):
+Per the original spec ([#636](https://github.com/datashuttle-io/datashuttle/issues/636)):
 
 | File | What it should show |
 |---|---|

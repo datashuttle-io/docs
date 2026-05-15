@@ -196,7 +196,7 @@ existing background sweep.
 ## Kubernetes probe example
 
 The Helm chart (attached as `datashuttle-chart.tgz` to every
-[GitHub Release](https://github.com/datashuttle-ai/datashuttle/releases))
+[GitHub Release](https://github.com/datashuttle-io/datashuttle/releases))
 configures all three probes out of the box:
 
 ```yaml

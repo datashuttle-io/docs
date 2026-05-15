@@ -2,7 +2,7 @@
 
 The DataShuttle Helm chart lives at `deploy/helm/datashuttle` in the
 repo and ships as an OCI artifact at
-`oci://ghcr.io/datashuttle-ai/charts/datashuttle` on every release.
+`oci://ghcr.io/datashuttle-io/charts/datashuttle` on every release.
 
 The chart deploys:
 
@@ -22,7 +22,7 @@ install Polaris and MinIO via their own charts first.
 ## Minimal install
 
 ```bash
-helm install datashuttle oci://ghcr.io/datashuttle-ai/charts/datashuttle \
+helm install datashuttle oci://ghcr.io/datashuttle-io/charts/datashuttle \
   --namespace datashuttle --create-namespace \
   --set replicaCount=3 \
   --set persistence.size=50Gi \
@@ -80,7 +80,7 @@ non-tmpfs, writable PVC path.
 ## Upgrade
 
 ```bash
-helm upgrade datashuttle oci://ghcr.io/datashuttle-ai/charts/datashuttle \
+helm upgrade datashuttle oci://ghcr.io/datashuttle-io/charts/datashuttle \
   --namespace datashuttle \
   --set image.tag=v0.2.0
 ```

@@ -43,7 +43,7 @@ lifetime of that deployment.
 
 The wizard renders up to six steps. Some are skipped based on the
 detected `deployment.kind` (see
-[`WelcomePage.tsx`](https://github.com/evgenyestepanov-star/datashuttle/blob/main/ui/src/pages/WelcomePage.tsx)
+[`WelcomePage.tsx`](https://github.com/datashuttle-io/datashuttle/blob/main/ui/src/pages/WelcomePage.tsx)
 for the visibility predicate).
 
 ### Step 1 — Welcome
