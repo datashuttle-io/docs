@@ -15,12 +15,13 @@ preferred-dark-theme = "navy"
 additional-css = ["theme/brand-v5.css"]
 additional-js = ["theme/theme-sync.js"]
 # Default for the binary-embedded build (served at /docs/ on the api).
-# The website Dockerfile overrides this to "/" at build time for the
-# standalone docs.datashuttle.ai subdomain. See website/Dockerfile.
+# The Cloudflare Pages build for the standalone docs.datashuttle.ai
+# subdomain overrides this to "/" at build time:
+#   sed -i 's|site-url = "/docs/"|site-url = "/"|' book.toml && mdbook build
 site-url = "/docs/"
-# Public product repo — source still lives in a private mirror, but
-# docs are kept in-sync and the "Edit this page" link lets readers
-# open issues / PRs against the public repo. If the docs sync ever
-# drifts from the private source, update these two lines.
-git-repository-url = "https://github.com/datashuttle-ai/datashuttle"
-edit-url-template = "https://github.com/datashuttle-ai/datashuttle/edit/main/docs/book/src/{path}"
+# Public docs repo — source lives at datashuttle-io/datashuttle-docs
+# (Cloudflare-Pages-deployed mdbook). The main monorepo pulls it in
+# as a git submodule at docs/book/. "Edit this page" lets readers
+# open issues / PRs against the public docs repo.
+git-repository-url = "https://github.com/datashuttle-io/datashuttle-docs"
+edit-url-template = "https://github.com/datashuttle-io/datashuttle-docs/edit/main/src/{path}"
