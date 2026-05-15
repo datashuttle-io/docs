@@ -92,8 +92,8 @@ evolution is purely additive on the consumer side.
 
 The `redis-streams-events` cloud-eligible scenario is the live
 demo for this connector. See the
-[`datashuttle-playground` docs](https://github.com/evgenyestepanov-star/datashuttle-playground/blob/main/docs/playground.md)
-for the actions and expected output.
+[Playground guide](../playground.md) for the actions and expected
+output.
 
 ## Limitations
 

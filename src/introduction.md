@@ -45,15 +45,15 @@ within seconds of being written to the source.
 
 ## Try it in 2 minutes — no install needed
 
-The fastest way to see DataShuttle work is the **in-product
-Playground** in [DataShuttle Cloud](https://app.datashuttle.ai) —
-sign up for the private beta and the Playground panel gives you 18
-pre-built scenarios: a happy-path Postgres CDC run, schema evolution
-on a live shuttle, Kafka poison messages + replay from the DLQ,
-MongoDB nested-field evolution, ClickHouse time travel, even Tier-4
-chaos scenarios (network latency, slow consumers, 50 MB BLOBs).
-Click **Start**, watch Iceberg fill up in real time, break the
-shuttle on purpose, replay. No real data involved.
+The fastest way to see DataShuttle work is the
+[interactive Playground](./playground.md). Spin it up once with
+Docker Compose and you get a guided sandbox with 18 pre-built
+scenarios: a happy-path Postgres CDC run, schema evolution on a live
+shuttle, Kafka poison messages + replay from the DLQ, MongoDB
+nested-field evolution, ClickHouse time travel, even Tier-4 chaos
+scenarios (network latency, slow consumers, 50 MB BLOBs). Click
+**Start**, watch Iceberg fill up in real time, break the shuttle on
+purpose, replay. No real data involved.
 
 Once the playground feels familiar, the [Quickstart](./quickstart.md)
 takes ~5 minutes to connect DataShuttle to a real Postgres and start
@@ -64,7 +64,7 @@ streaming your own data into Iceberg.
 **Getting started**
 
 - [Quickstart](./quickstart.md) — end-to-end demo in 5 minutes
-- [DataShuttle Cloud](https://app.datashuttle.ai) — sign up for the private beta and try the in-product Playground (18 guided scenarios)
+- [Playground](./playground.md) — guided scenarios, no setup beyond Docker
 - [Installation](./installation/docker.md) — Docker, Homebrew, DEB/RPM, binary
 
 **Understanding the engine**

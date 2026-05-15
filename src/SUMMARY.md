@@ -5,6 +5,7 @@
 # Getting Started
 
 - [Quickstart](./quickstart.md)
+- [Interactive Playground](./playground.md)
 
 # Installation
 
