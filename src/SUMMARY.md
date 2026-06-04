@@ -78,6 +78,7 @@
 - [Secret Management](./operations/secrets.md)
 - [TLS & ACME / Let's Encrypt](./operations/tls-acme.md)
 - [Licensing](./operations/licensing.md)
+- [Connector Tiers (Tier-1 vs Tier-2)](./licensing/connector-tiers.md)
 - [Billing](./operations/billing.md)
 - [Audit & Compliance](./operations/audit-compliance.md)
 - [GDPR Compliance](./operations/gdpr-compliance.md)

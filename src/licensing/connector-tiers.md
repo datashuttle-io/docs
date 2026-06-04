@@ -1,0 +1,1 @@
+../../../licensing/connector-tiers.md
