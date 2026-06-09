@@ -1,6 +1,7 @@
 # Transforms
 
-DataShuttle provides SQL-native transforms powered by Apache DataFusion.
+DataShuttle provides SQL-native transforms powered by a self-contained,
+lightweight SQL engine (`sqlparser` + Apache Arrow compute — no DataFusion).
 Transform your data inline as it flows from source to Iceberg.
 
 ## TRANSFORM AS
@@ -28,11 +29,22 @@ CREATE SHUTTLE orders_masked
 ```
 
 The `source` table is a virtual table representing the incoming batch.
-All DataFusion SQL is available: functions, CAST, WHERE, expressions.
+Transforms are **row-wise**: a projection (`SELECT` list) and an optional
+`WHERE` filter over `source`. Supported: column references, literals, `CAST`
+(`x::TYPE`), arithmetic/comparison/boolean operators, `IS [NULL]`, `CASE`,
+and scalar function calls. Aggregates, `GROUP BY`, `JOIN`, window functions,
+subqueries, and CTEs are intentionally **not** supported (use dbt/SQLMesh for
+those).
+
+A library of built-in scalar functions is available — string (`upper`,
+`lower`, `trim`/`ltrim`/`rtrim`, `length`, `substr`, `concat`, `replace`),
+conditional (`coalesce`, `nullif`), numeric (`abs`, `ceil`, `floor`, `round`,
+`power`, `mod`), and datetime (`now`, `to_timestamp`, `date_part`) — plus the
+custom UDFs below. New functions are easy to add (see *How to Add a New UDF*).
 
 ## Legacy Syntax (Backward Compatible)
 
-The following clauses still work and are translated to DataFusion SQL internally:
+The following clauses still work and are translated to SQL internally:
 
 ```sql
 -- Column selection
@@ -56,7 +68,7 @@ CREATE SHUTTLE ... ADD COLUMNS (status = 'active', version = 1) ...
 
 ## Custom UDFs
 
-DataShuttle registers these UDFs in every transform context:
+DataShuttle registers these UDFs in every transform alongside the built-ins:
 
 ### mask(column, algorithm [, salt])
 
@@ -119,40 +131,57 @@ SELECT *, ds_hash(id, updated_at) AS _row_hash FROM source
 
 ## How to Add a New UDF
 
-Adding a custom transform is a single Rust function + registration call:
+Implement the datafusion-free `ScalarFn` trait and register it — no DataFusion
+types involved. The same trait powers the built-ins, the custom UDFs, and any
+**external/caller-supplied** function (and is the seam for future
+out-of-process / WASM functions):
 
 ```rust
-use datafusion::prelude::*;
-use datafusion::logical_expr::{ScalarUDF, ScalarUDFImpl, Signature, Volatility};
+use std::sync::Arc;
+use arrow_array::{ArrayRef, StringArray};
+use arrow_schema::DataType;
+use datashuttle_core::transform::function::{
+    FnRegistry, FnSignature, ScalarFn, Value,
+};
+use datashuttle_core::Result;
 
-#[derive(Debug, Hash, PartialEq, Eq)]
-struct MyUdf { signature: Signature }
+#[derive(Debug)]
+struct MyUdf;
 
-impl ScalarUDFImpl for MyUdf {
+impl ScalarFn for MyUdf {
     fn name(&self) -> &str { "my_func" }
-    fn signature(&self) -> &Signature { &self.signature }
-    fn return_type(&self, _: &[DataType]) -> Result<DataType> { Ok(DataType::Utf8) }
-    fn invoke_with_args(&self, args: ScalarFunctionArgs) -> Result<ColumnarValue> {
-        // Your logic here
-        todo!()
+    fn signatures(&self) -> Vec<FnSignature> {
+        vec![FnSignature::Exact(vec![DataType::Utf8])]
+    }
+    fn return_type(&self, _args: &[DataType]) -> Result<DataType> {
+        Ok(DataType::Utf8)
+    }
+    fn invoke(&self, args: &[Value], n: usize) -> Result<ArrayRef> {
+        // `args` are already coerced to a matching signature; `n` is the row
+        // count so scalar-only calls can size their output. Return an ArrayRef.
+        let _ = (args, n);
+        Ok(Arc::new(StringArray::from(vec!["..."; n])))
     }
 }
 
-// Register it:
-ctx.register_udf(ScalarUDF::from(MyUdf::new()));
+// Register via a registrar handed to `TransformShuttle::with_udfs`:
+let registrar = Arc::new(|reg: &mut FnRegistry| {
+    reg.insert("my_func".into(), Arc::new(MyUdf));
+});
 ```
 
-No factory, no registry, no trait hierarchy. One function, one registration call.
+No factory, no trait hierarchy, no DataFusion. One trait impl, one insert.
 
 ## Architecture
 
 ```
-Before (legacy):                     After (DataFusion):
+Before (legacy):                     Now (self-contained, datafusion-free):
 Transform trait ─────────────────→   DELETED
-TransformChain ──────────────────→   TransformShuttle (DataFusion SQL)
-10 hand-written impls (~1500 LOC) →  6 UDFs + SQL (~300 LOC)
-filter.rs (300+ LOC) ───────────→   DataFusion WHERE clause
+TransformChain ──────────────────→   TransformShuttle (sqlparser → arrow)
+10 hand-written impls (~1500 LOC) →  built-ins + 5 UDFs (ScalarFn) + SQL
+filter.rs (300+ LOC) ───────────→   WHERE clause → arrow::compute::filter
 ```
 
-All transforms run through DataFusion's query optimizer, getting free
-type coercion, null handling, and expression optimization.
+The engine parses SQL with `sqlparser`, binds it to a typed expression IR
+(resolving columns/types and applying coercion), and evaluates directly via
+`arrow::compute` kernels. DataFusion was removed in 2026-06.
