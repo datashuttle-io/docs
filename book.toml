@@ -6,13 +6,14 @@ src = "src"
 
 [output.html]
 # Respect the visitor's OS preference — light by default, navy when the
-# system prefers dark. The brand overlay at theme/brand-v2.css retints
-# both onto the quiet-technical palette (paper + ink + slate-teal accent).
-# File is versioned (brand-v2.css) to bypass Cloudflare's 30-day edge
-# cache on the prior v1 brand.css.
+# system prefers dark. The brand overlay at theme/brand-v6.css rebuilds
+# both onto Design System v3 (cool paper + ink, vivid spring-teal accent
+# #1FC3A1 primary, slate-teal calm secondary, Inter Tight + JetBrains Mono
+# + Source Serif 4, v3 syntax tokens). File is versioned (brand-v6.css) to
+# bypass Cloudflare's 30-day edge cache on the prior brand-v5.css.
 default-theme = "light"
 preferred-dark-theme = "navy"
-additional-css = ["theme/brand-v5.css"]
+additional-css = ["theme/brand-v6.css"]
 additional-js = ["theme/theme-sync.js"]
 # Default for the binary-embedded build (served at /docs/ on the api).
 # The Cloudflare Pages build for the standalone docs.datashuttle.ai

@@ -1,0 +1,520 @@
+/* =========================================================================
+   DataShuttle Docs — Design System v3 theme overlay for mdBook.
+   ------------------------------------------------------------------------
+   Rebuilt on top of the canonical v3 token file (colors_and_type.css):
+   vivid spring-teal accent (--vivid-400 #1FC3A1) as PRIMARY, slate-teal
+   (--accent-400) as the calm secondary, Inter Tight chrome + headings,
+   JetBrains Mono code, Source Serif 4 long-form prose, v3 syntax tokens,
+   layered elevation + softened radii.
+
+   Loaded via `additional-css` in book.toml; this file is the LAST stylesheet
+   mdBook injects, so its values win over the upstream variables bundle.
+   It retints mdBook's theme classes (.light / .navy / .coal / .ayu / .rust)
+   onto v3 light/dark tokens, matching ui_kits/docs/index{,-dark}.html.
+
+   File is versioned (brand-v6.css) to bypass Cloudflare's 30-day edge
+   cache on the prior brand-v5.css.
+   ========================================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&display=swap');
+
+/* =========================================================================
+   1. v3 TOKENS — raw palette + non-theme-dependent semantics.
+   Inlined (not @import of colors_and_type.css) so mdBook ships a single,
+   self-contained overlay that builds offline and orders deterministically.
+   ========================================================================= */
+:root {
+  /* Paper — cool off-whites */
+  --paper-50:#FAFAFB; --paper-100:#F4F4F6; --paper-200:#EAEAED; --paper-300:#DDDDE1; --paper-400:#BCBCC2;
+  /* Ink — neutral graphite */
+  --ink-900:#121316; --ink-800:#1C1D21; --ink-700:#2A2B30; --ink-600:#45464D; --ink-500:#696B73;
+  --ink-400:#8C8E96; --ink-300:#B2B3BA; --ink-200:#D1D2D7; --ink-100:#E7E7EB;
+  /* Accent — muted slate-teal (calm secondary: links, info) */
+  --accent-50:#EEF3F3; --accent-100:#D9E3E3; --accent-200:#B4C5C5; --accent-300:#7F9898;
+  --accent-400:#527273; --accent-500:#3D5A5B; --accent-600:#2B4142;
+  /* Vivid — spring-teal (PRIMARY: active, focus, CTAs) */
+  --vivid-50:#E6FBF6; --vivid-100:#C2F4E9; --vivid-200:#8DE9D5; --vivid-300:#4FD8BC;
+  --vivid-400:#1FC3A1; --vivid-500:#10A083; --vivid-600:#0C7A66; --vivid-700:#0A5E50;
+  /* Iris — decorative duotone */
+  --iris-400:#6366F1;
+  /* Status */
+  --success-400:#4FA17C; --success-500:#3A7B5E; --warning-400:#C79237; --warning-500:#936A22;
+  --danger-400:#C6584A; --danger-500:#993B30;
+
+  /* Legacy aliases */
+  --signal-400:var(--accent-400); --cargo-400:var(--accent-400); --rust-400:var(--danger-400);
+  --moss-400:var(--success-400); --amber-400:var(--warning-400);
+
+  /* Typography */
+  --font-sans:'Inter Tight', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono:'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --font-serif:'Source Serif 4', ui-serif, Georgia, 'Times New Roman', serif;
+
+  /* Radius — v3 softened */
+  --radius-xs:6px; --radius-sm:10px; --radius-md:14px; --radius-lg:20px; --radius-pill:999px;
+
+  /* Motion */
+  --ease-out:cubic-bezier(0.22,1,0.36,1);
+  --dur-fast:140ms; --dur-med:240ms;
+
+  /* Gradients */
+  --grad-duo:linear-gradient(120deg, var(--vivid-400) 0%, var(--iris-400) 100%);
+
+  /* mdBook needs the brand mono surfaced under its own var name. */
+  --mono-font: var(--font-mono);
+}
+
+/* =========================================================================
+   2. BASE FONTS
+   ========================================================================= */
+html, body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+code, pre, kbd, .hljs { font-family: var(--font-mono); }
+
+/* =========================================================================
+   3. LIGHT THEME — v3 light tokens mapped onto mdBook variables.
+   `.light` is the explicit light class; `html:not(.js)` is the no-JS
+   fallback mdBook applies before the theme bootstraps.
+   ========================================================================= */
+.light, html:not(.js) {
+  /* v3 semantic — light */
+  --bg:              var(--paper-50);
+  --bg-raised:       #FFFFFF;
+  --bg-sunken:       var(--paper-100);
+  --bg-muted:        var(--paper-200);
+  --fg:              var(--ink-900);
+  --fg-2:            var(--ink-700);
+  --fg-3:            var(--ink-500);
+  --fg-4:            var(--ink-400);
+  --border:          var(--ink-100);
+  --border-strong:   var(--ink-200);
+  --brand:           var(--vivid-400);
+  --brand-hover:     var(--vivid-500);
+  --brand-tint:      var(--vivid-50);
+  --accent:          var(--accent-400);
+  --accent-hover:    var(--accent-500);
+  --glass-bg:        color-mix(in oklab, #FFFFFF 72%, transparent);
+  --glass-border:    color-mix(in oklab, #FFFFFF 60%, var(--ink-200));
+  --glass-blur:      14px;
+  --shadow-1:        0 1px 2px rgba(18,19,22,0.05), 0 1px 3px rgba(18,19,22,0.04);
+  --ring:            0 0 0 3px color-mix(in oklab, var(--vivid-400) 38%, transparent);
+
+  /* v3 syntax — light */
+  --syn-keyword:var(--vivid-600); --syn-string:var(--success-500); --syn-number:var(--ink-700);
+  --syn-comment:var(--ink-400);   --syn-fn:var(--ink-900);          --syn-punc:var(--ink-500);
+
+  /* mdBook variable bridge */
+  --sidebar-bg: var(--bg-sunken);
+  --sidebar-fg: var(--fg-2);
+  --sidebar-non-existant: var(--fg-4);
+  --sidebar-active: var(--brand);
+  --sidebar-spacer: var(--border);
+  --sidebar-header-border-color: var(--border);
+
+  --scrollbar: var(--paper-400);
+  --icons: var(--fg-3);
+  --icons-hover: var(--fg);
+  --links: var(--accent);
+  --inline-code-color: var(--accent-500);
+
+  --theme-popup-bg: var(--bg-raised);
+  --theme-popup-border: var(--border-strong);
+  --theme-hover: var(--bg-muted);
+
+  --quote-bg: var(--bg-sunken);
+  --quote-border: var(--border);
+
+  --warning-border: var(--warning-400);
+
+  --table-border-color: var(--border);
+  --table-header-bg: var(--bg-sunken);
+  --table-alternate-bg: var(--paper-50);
+
+  --searchbar-border-color: var(--border-strong);
+  --searchbar-bg: var(--bg-raised);
+  --searchbar-fg: var(--fg);
+  --searchbar-shadow-color: var(--vivid-400);
+  --searchresults-header-fg: var(--fg-3);
+  --searchresults-border-color: var(--border);
+  --searchresults-li-bg: var(--bg-sunken);
+  --search-mark-bg: color-mix(in oklab, var(--vivid-400) 30%, transparent);
+
+  --color-scheme: light;
+  --footnote-highlight: var(--vivid-400);
+  --overlay-bg: rgba(18,19,22,0.4);
+
+  --blockquote-note-color: var(--accent-400);
+  --blockquote-tip-color: var(--success-400);
+  --blockquote-important-color: var(--vivid-500);
+  --blockquote-warning-color: var(--warning-400);
+  --blockquote-caution-color: var(--danger-400);
+}
+
+/* =========================================================================
+   4. DARK THEMES — v3 dark tokens. navy is the preferred-dark; coal / ayu /
+   rust ride the same deep cool-graphite palette so theme switching is
+   coherent. Vivid stays bright (vivid-300), slate calms.
+   ========================================================================= */
+html.navy, html.coal, html.ayu, html.rust {
+  --bg:        #0B0C0E;
+  --bg-raised: #16181B;
+  --bg-sunken: #1A1C1F;
+  --bg-muted:  #212327;
+  --fg:   #ECEDEF;
+  --fg-2: #C4C6CB;
+  --fg-3: #8B8D94;
+  --fg-4: #5B5D64;
+  --border:        #26282C;
+  --border-strong: #383B40;
+  --brand:       var(--vivid-300);
+  --brand-hover: var(--vivid-200);
+  --brand-tint:  color-mix(in oklab, var(--vivid-400) 16%, transparent);
+  --accent:      var(--accent-300);
+  --accent-hover:var(--accent-200);
+  --glass-bg:    color-mix(in oklab, #16181B 70%, transparent);
+  --glass-border:color-mix(in oklab, #FFFFFF 12%, transparent);
+  --glass-blur:  14px;
+  --shadow-1:    0 1px 2px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.4);
+  --ring:        0 0 0 3px color-mix(in oklab, var(--vivid-400) 38%, transparent);
+
+  /* v3 syntax — dark (brightened) */
+  --syn-keyword:var(--vivid-300); --syn-string:var(--success-400); --syn-number:var(--ink-200);
+  --syn-comment:var(--ink-400);   --syn-fn:#ECEDEF;                 --syn-punc:var(--ink-300);
+
+  /* mdBook variable bridge */
+  --sidebar-bg: var(--bg-sunken);
+  --sidebar-fg: var(--fg-2);
+  --sidebar-non-existant: var(--fg-4);
+  --sidebar-active: var(--brand);
+  --sidebar-spacer: var(--border);
+  --sidebar-header-border-color: var(--border);
+
+  --scrollbar: #484851;
+  --icons: var(--fg-3);
+  --icons-hover: var(--fg);
+  --links: var(--accent);
+  --inline-code-color: var(--fg-2);
+
+  --theme-popup-bg: var(--bg-raised);
+  --theme-popup-border: var(--border-strong);
+  --theme-hover: var(--bg-muted);
+
+  --quote-bg: var(--bg-sunken);
+  --quote-border: var(--border);
+
+  --warning-border: var(--warning-400);
+
+  --table-border-color: var(--border);
+  --table-header-bg: var(--bg-sunken);
+  --table-alternate-bg: var(--bg-raised);
+
+  --searchbar-border-color: var(--border-strong);
+  --searchbar-bg: var(--bg-sunken);
+  --searchbar-fg: var(--fg);
+  --searchbar-shadow-color: var(--vivid-400);
+  --searchresults-header-fg: var(--fg-3);
+  --searchresults-border-color: var(--border-strong);
+  --searchresults-li-bg: var(--bg-raised);
+  --search-mark-bg: color-mix(in oklab, var(--vivid-400) 28%, transparent);
+
+  --color-scheme: dark;
+  --footnote-highlight: var(--vivid-400);
+  --overlay-bg: rgba(0,0,0,0.6);
+
+  --blockquote-note-color: var(--accent-300);
+  --blockquote-tip-color: var(--success-400);
+  --blockquote-important-color: var(--vivid-300);
+  --blockquote-warning-color: var(--warning-400);
+  --blockquote-caution-color: var(--danger-400);
+}
+
+/* =========================================================================
+   5. CHROME — menu-bar (topbar) + search, matching ui_kits .topbar / .search
+   ========================================================================= */
+.menu-bar {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  border-bottom: 1px solid var(--border);
+}
+.menu-bar .menu-title {
+  font: 600 15px var(--font-sans);
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+.menu-bar i, .menu-bar .icon-button { color: var(--icons); }
+.menu-bar .icon-button:hover { color: var(--icons-hover); }
+
+/* Search box — v3 sunken pill with vivid focus ring (ui_kits .search). */
+#searchbar {
+  background: var(--searchbar-bg);
+  border: 1px solid var(--searchbar-border-color);
+  border-radius: var(--radius-sm);
+  color: var(--searchbar-fg);
+  font: 500 13px var(--font-sans);
+  transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+}
+#searchbar:focus {
+  border-color: var(--vivid-400);
+  box-shadow: var(--ring);
+  outline: none;
+}
+#searchresults mark {
+  background: var(--search-mark-bg);
+  color: var(--fg);
+  border-radius: 3px;
+  padding: 0 2px;
+}
+.searchresults-outer { border-radius: var(--radius-md); }
+
+/* =========================================================================
+   6. SIDEBAR — v3 group labels + vivid active pill with duotone rail
+   (ui_kits aside.nav).
+   ========================================================================= */
+.sidebar { font-family: var(--font-sans); }
+.sidebar .sidebar-scrollbox { padding: 16px 12px; }
+
+/* Section headers ("part-title") rendered as v3 mono eyebrow labels. */
+.chapter li.part-title {
+  font: 500 11px var(--font-mono);
+  color: var(--fg-3);
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  margin: 22px 0 6px;
+  padding: 0 12px;
+}
+
+.chapter li a {
+  display: block;
+  padding: 7px 12px;
+  color: var(--sidebar-fg);
+  font: 400 13px var(--font-sans);
+  border-radius: var(--radius-sm);
+  line-height: 1.4;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.chapter li a:hover { background: var(--bg-muted); color: var(--fg); }
+
+.chapter li a.active {
+  position: relative;
+  background: var(--brand-tint);
+  color: var(--fg);
+  font-weight: 600;
+}
+.chapter li a.active::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 7px; bottom: 7px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--grad-duo);
+}
+.chapter li.chapter-item { line-height: 1.4; margin: 1px 0; }
+
+/* =========================================================================
+   7. CONTENT TYPOGRAPHY — Inter Tight headings, Source Serif 4 reading body
+   (ui_kits article + .prose).
+   ========================================================================= */
+.content { font-family: var(--font-sans); }
+.content main { max-width: var(--content-max-width); }
+
+.content h1, .content h2, .content h3, .content h4, .content h5 {
+  font-family: var(--font-sans);
+  color: var(--fg);
+}
+.content h1 { font: 600 40px var(--font-sans); letter-spacing: -0.03em; margin: 0 0 16px; }
+.content h2 {
+  font: 600 24px var(--font-sans);
+  letter-spacing: -0.02em;
+  margin: 44px 0 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.content h3 { font: 600 18px var(--font-sans); letter-spacing: -0.01em; margin: 28px 0 8px; }
+.content h4 { font: 600 15px var(--font-sans); margin: 22px 0 8px; }
+
+/* Long-form reading body uses the serif — the ONE place serif is correct. */
+.content p, .content li {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  line-height: 1.68;
+  color: var(--fg);
+}
+.content ul, .content ol { padding-left: 1.4em; }
+.content li { margin: 0.3em 0; }
+
+/* Inline code stays mono regardless of the surrounding serif. */
+.content code { font-family: var(--font-mono); font-size: 0.88em; }
+
+/* Links — slate-teal in prose, vivid underline on hover (v3 link role). */
+.content a { color: var(--links); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: color-mix(in oklab, var(--links) 40%, transparent); }
+.content a:hover { color: var(--accent-hover); text-decoration-color: currentColor; }
+
+::selection { background: color-mix(in oklab, var(--vivid-400) 28%, transparent); color: var(--fg); }
+
+/* =========================================================================
+   8. CODE BLOCKS — v3 raised card, sunken pre, v3 syntax tokens
+   (ui_kits .code-block).
+   ========================================================================= */
+.content pre {
+  background: var(--bg-sunken) !important;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
+  padding: 16px 20px;
+  font: 500 13px/1.65 var(--font-mono);
+  overflow-x: auto;
+}
+.content pre > code, .content pre .hljs {
+  background: transparent !important;
+  color: var(--syn-fn);
+  font-family: var(--font-mono);
+}
+
+/* Inline code — subtle raised pill, both themes (ui_kits .prose code). */
+.content :not(pre) > code {
+  background: var(--bg-sunken);
+  color: var(--inline-code-color);
+  padding: 1px 6px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+}
+
+/* ── v3 syntax-highlight token mapping for highlight.js ─────────────────
+ * mdBook ships highlight.css / tomorrow-night.css / ayu-highlight.css with
+ * bright primaries that fight v3. Remap onto --syn-* so SQL/code reads like
+ * the ui_kits code blocks. Light + dark resolve via the --syn-* tokens set
+ * per theme above. */
+.hljs-comment, .hljs-quote { color: var(--syn-comment); font-style: italic; }
+
+.hljs-keyword, .hljs-selector-tag, .hljs-built_in,
+.hljs-name, .hljs-tag { color: var(--syn-keyword); font-weight: 600; }
+
+.hljs-string, .hljs-symbol, .hljs-bullet, .hljs-regexp,
+.hljs-meta-string, .hljs-addition { color: var(--syn-string); }
+
+.hljs-number, .hljs-literal, .hljs-meta { color: var(--syn-number); }
+
+.hljs-title, .hljs-section, .hljs-function .hljs-title,
+.hljs-attr, .hljs-attribute, .hljs-variable,
+.hljs-template-variable, .hljs-selector-id, .hljs-selector-class { color: var(--syn-fn); }
+
+.hljs-punctuation, .hljs-operator { color: var(--syn-punc); }
+
+.hljs-type, .hljs-params { color: var(--syn-number); }
+
+/* Copy button keeps to the chrome icon color. */
+.buttons .clip-button, pre > .buttons { color: var(--icons); }
+
+/* =========================================================================
+   9. TABLES — v3 param-table (ui_kits .param-table). mdBook wraps tables in
+   .table-wrapper; SQL-reference param tables get the mono header + types.
+   ========================================================================= */
+.content table {
+  border-collapse: collapse;
+  border: 1px solid var(--table-border-color);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin: 18px 0;
+  width: 100%;
+}
+.content thead th {
+  text-align: left;
+  font: 500 11px var(--font-mono);
+  color: var(--fg-3);
+  letter-spacing: 0.02em;
+  background: var(--table-header-bg);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--table-border-color);
+}
+.content tbody td {
+  text-align: left;
+  font: 400 14px var(--font-sans);
+  color: var(--fg-2);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--table-border-color);
+  vertical-align: top;
+}
+.content tbody tr:last-child td { border-bottom: 0; }
+.content tbody tr:nth-child(even) { background: var(--table-alternate-bg); }
+/* First column of a table often holds the parameter/identifier name → mono. */
+.content tbody td:first-child { font-family: var(--font-mono); font-weight: 500; color: var(--fg); white-space: nowrap; }
+
+/* =========================================================================
+   10. BLOCKQUOTES / CALLOUTS — v3 vivid callout (ui_kits .callout).
+   GitHub-style alert blockquotes ([!NOTE] etc.) inherit mdBook's
+   --blockquote-*-color tokens we set above.
+   ========================================================================= */
+.content blockquote {
+  border: 1px solid color-mix(in oklab, var(--vivid-400) 28%, var(--border));
+  border-left: 3px solid var(--vivid-400);
+  border-radius: var(--radius-md);
+  background: var(--brand-tint);
+  box-shadow: var(--shadow-1);
+  padding: 14px 18px;
+  margin: 20px 0;
+  color: var(--fg-2);
+}
+.content blockquote p { color: var(--fg-2); }
+.content blockquote p:last-child { margin-bottom: 0; }
+
+/* =========================================================================
+   11. PAGINATION + EDIT-THIS-PAGE + THEME POPUP
+   ========================================================================= */
+.nav-chapters, .mobile-nav-chapters {
+  color: var(--icons);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.nav-chapters:hover, .mobile-nav-chapters:hover { color: var(--brand); background: transparent; }
+
+/* "Edit this page" / repo + right-button icons. */
+.right-buttons a, .right-buttons .icon-button { color: var(--icons); }
+.right-buttons a:hover, .right-buttons .icon-button:hover { color: var(--brand); }
+
+.theme-popup {
+  background: var(--theme-popup-bg);
+  border: 1px solid var(--theme-popup-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
+  font-family: var(--font-sans);
+}
+.theme-popup .theme:hover { background: var(--theme-hover); }
+.theme-popup .theme.theme-selected { color: var(--brand); }
+
+/* =========================================================================
+   12. UNDERLINE HYGIENE — chrome links read as buttons, never underlined.
+   Only prose (.content a) keeps the affordance underline (set above).
+   ========================================================================= */
+.sidebar a, .sidebar a:hover, .sidebar a:focus,
+.chapter a, .chapter a:hover, .chapter a:focus,
+.menu-bar a, .menu-bar a:hover, .menu-bar a:focus,
+.nav-chapters a, .nav-chapters a:hover, .nav-chapters a:focus,
+.mobile-nav-chapters a, .mobile-nav-chapters a:hover, .mobile-nav-chapters a:focus,
+.theme-popup a, .theme-popup a:hover, .theme-popup a:focus,
+nav.pagetoc a, nav.pagetoc a:hover, nav.pagetoc a:focus,
+.previous a, .next a, .previous a:hover, .next a:hover,
+a.header, a.header:hover, a.header:focus,
+.right-buttons a, .right-buttons a:hover, .right-buttons a:focus {
+  text-decoration: none !important;
+}
+
+/* =========================================================================
+   13. FOCUS + MOTION — vivid focus ring; respect reduced-motion.
+   ========================================================================= */
+a:focus-visible, button:focus-visible, .chapter li a:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: var(--radius-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
