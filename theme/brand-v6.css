@@ -77,6 +77,27 @@ html, body {
 code, pre, kbd, .hljs { font-family: var(--font-mono); }
 
 /* =========================================================================
+   2b. AMBIENT DUST BACKDROP — matches the docs kit's .doc-dust: a fixed band
+   at the top of the viewport, the v3 Holi-dust render faded to 16% and masked
+   out by 88%, sitting behind all content. Dark themes swap to the dark render.
+   ========================================================================= */
+/* Page bg lives on <html> so the dust (a fixed body::before behind content)
+   isn't painted over by an opaque body/wrapper background. */
+html { background: var(--bg); }
+body, #page-wrapper, .page-wrapper, .page, #content { background: transparent; }
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto 0; height: 540px; z-index: 0; pointer-events: none;
+  background: url('../images/hero-dust-light.jpg') right top / cover no-repeat; opacity: 0.18;
+  -webkit-mask: linear-gradient(180deg, #000 0%, transparent 88%);
+          mask: linear-gradient(180deg, #000 0%, transparent 88%);
+}
+/* keep real content above the dust band */
+#page-wrapper, .page-wrapper, .sidebar, #menu-bar { position: relative; z-index: 1; }
+html.navy body::before, html.coal body::before, html.ayu body::before, html.rust body::before {
+  background-image: url('../images/hero-dust-dark.jpg');
+}
+
+/* =========================================================================
    3. LIGHT THEME — v3 light tokens mapped onto mdBook variables.
    `.light` is the explicit light class; `html:not(.js)` is the no-JS
    fallback mdBook applies before the theme bootstraps.
