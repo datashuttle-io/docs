@@ -16,7 +16,9 @@
    cache on the prior brand-v5.css.
    ========================================================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&display=swap');
+/* Fonts are loaded via a parallel <link> injected through theme/head.hbs,
+   NOT a remote @import here — a remote @import is render-blocking and serial
+   (it stalled first paint by ~1.4s while fetching the Google Fonts CSS). */
 
 /* =========================================================================
    1. v3 TOKENS — raw palette + non-theme-dependent semantics.
